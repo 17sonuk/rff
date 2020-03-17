@@ -1,0 +1,144 @@
+version: "2"
+
+volumes:
+  orderer.csr.com:
+  peer0.corporate.csr.com:
+  peer1.corporate.csr.com:
+  peer0.creditsauthority.csr.com:
+  peer1.creditsauthority.csr.com:
+  peer0.ngo.csr.com:
+  peer1.ngo.csr.com:
+  # peer0.itdepartment.csr.com:
+  # peer1.itdepartment.csr.com:
+  # peer0.citizen.csr.com:
+  # peer1.citizen.csr.com:
+
+networks:
+  csr:
+
+services:
+  
+  orderer.csr.com:
+    extends:
+      file: base/docker-compose-base.yaml
+      service: orderer.csr.com
+    container_name: orderer.csr.com
+    networks:
+      - csr
+
+  peer0.corporate.csr.com:
+    container_name: peer0.corporate.csr.com
+    extends:
+      file: base/docker-compose-base.yaml
+      service: peer0.corporate.csr.com
+    networks:
+      - csr
+
+  peer1.corporate.csr.com:
+    container_name: peer1.corporate.csr.com
+    extends:
+      file: base/docker-compose-base.yaml
+      service: peer1.corporate.csr.com
+    networks:
+      - csr
+
+  peer0.creditsauthority.csr.com:
+    container_name: peer0.creditsauthority.csr.com
+    extends:
+      file: base/docker-compose-base.yaml
+      service: peer0.creditsauthority.csr.com
+    networks:
+      - csr
+
+  peer1.creditsauthority.csr.com:
+    container_name: peer1.creditsauthority.csr.com
+    extends:
+      file: base/docker-compose-base.yaml
+      service: peer1.creditsauthority.csr.com
+    networks:
+      - csr
+
+  peer0.ngo.csr.com:
+    container_name: peer0.ngo.csr.com
+    extends:
+      file: base/docker-compose-base.yaml
+      service: peer0.ngo.csr.com
+    networks:
+      - csr
+
+  peer1.ngo.csr.com:
+    container_name: peer1.ngo.csr.com
+    extends:
+      file: base/docker-compose-base.yaml
+      service: peer1.ngo.csr.com
+    networks:
+      - csr
+
+  # peer0.itdepartment.csr.com:
+  #   container_name: peer0.itdepartment.csr.com
+  #   extends:
+  #     file: base/docker-compose-base.yaml
+  #     service: peer0.itdepartment.csr.com
+  #   networks:
+  #     - csr
+
+  # peer1.itdepartment.csr.com:
+  #   container_name: peer1.itdepartment.csr.com
+  #   extends:
+  #     file: base/docker-compose-base.yaml
+  #     service: peer1.itdepartment.csr.com
+  #   networks:
+  #     - csr
+
+  # peer0.citizen.csr.com:
+  #   container_name: peer0.citizen.csr.com
+  #   extends:
+  #     file: base/docker-compose-base.yaml
+  #     service: peer0.citizen.csr.com
+  #   networks:
+  #     - csr
+
+  # peer1.citizen.csr.com:
+  #   container_name: peer1.citizen.csr.com
+  #   extends:
+  #     file: base/docker-compose-base.yaml
+  #     service: peer1.citizen.csr.com
+  #   networks:
+  #     - csr
+
+  cli:
+    container_name: cli
+    image: hyperledger/fabric-tools
+    tty: true
+    environment:
+      - SYS_CHANNEL=$SYS_CHANNEL
+      - GOPATH=/opt/gopath
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - FABRIC_LOGGING_SPEC=info
+      - CORE_PEER_ID=cli
+      - CORE_PEER_ADDRESS=peer0.corporate.csr.com:7051
+      - CORE_PEER_LOCALMSPID=CorporateMSP
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/corporate.csr.com/peers/peer0.corporate.csr.com/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/corporate.csr.com/peers/peer0.corporate.csr.com/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/corporate.csr.com/peers/peer0.corporate.csr.com/tls/ca.crt
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/corporate.csr.com/users/Admin@corporate.csr.com/msp
+      - CORE_CHAINCODE_KEEPALIVE=10
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: /bin/bash
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./../chaincode/src/github.com/csrcc/go:/opt/gopath/src/github.com/chaincode/
+      - ./crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+      - ./scripts:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/
+      - ./channel-artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+    depends_on:
+      - orderer.csr.com
+      - peer0.corporate.csr.com
+      - peer1.corporate.csr.com
+      - peer0.creditsauthority.csr.com
+      - peer1.creditsauthority.csr.com
+      - peer0.ngo.csr.com
+      - peer1.ngo.csr.com
+    networks:
+      - csr

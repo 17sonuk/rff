@@ -1,0 +1,1 @@
+network/scripts/script.sh: line 19: peer: command not found
