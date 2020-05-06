@@ -13,7 +13,7 @@ var projectModel;
 var txDescriptionModel;
 var orgModel;
 
-setInterval(connectFunction,30000)
+setInterval(connectFunction, 30000)
 
 function connectFunction() {
     Mongoose.connect(url, options).then((database) => {
@@ -22,7 +22,7 @@ function connectFunction() {
         txDescriptionModel = Mongoose.model('TxDescription', txDescriptionSchema)
         orgModel = Mongoose.model('OrganisationProfile', orgSchema)
     }).catch(() => {
-    
+        
     })
 }
 

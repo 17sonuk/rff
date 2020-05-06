@@ -218,7 +218,7 @@ func (s *SmartContract) getCorporateDetails(APIstub shim.ChaincodeStubInterface)
 	for _,org := range organisations {
 
 		//get value of how much amount that csr has issued to corporate
-		queryString := "{\"selector\":{\"docType\":\"Transaction\",\"txType\":\"assignTokens\",\"to\":\"" + org + "\"},\"fields\":[\"qty\"]}"
+		queryString := "{\"selector\":{\"docType\":\"Transaction\",\"txType\":\"AssignToken\",\"to\":\"" + org + "\"},\"fields\":[\"qty\"]}"
 		queryResults, err := tempgetQueryResultForQueryString(APIstub, queryString)
 		if err != nil {
 			return shim.Error(err.Error())

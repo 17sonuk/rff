@@ -73,23 +73,21 @@ func (s *SmartContract) reserveFundsForProject(APIstub shim.ChaincodeStubInterfa
 	}
 
 	//check snapshot exists or not if yes take the quentity fron the snapshot
-	var snapshotBalance = 0.0
+	snapshotBalance := 0.0
 	snapshotExistsBytes, _ := APIstub.GetState("snapshot_exists")
 	if snapshotExistsBytes == nil {
 		return shim.Error("Failed to get snapshot Exists: " + err.Error())
 	}
 
-	var snapshotKey = fromAddress + "_snapshot"
+	snapshotKey := fromAddress + "_snapshot"
 	//get snapshot balance if present
 	if string(snapshotExistsBytes) == "1" {
 		
 		//Get the balance in Snapshot for corporate
 		snapShotBalanceInBytes, _ := APIstub.GetState(snapshotKey)
-		if snapShotBalanceInBytes == nil {
-			return shim.Error("Failed to get token balance from snapshot: " + err.Error())
+		if snapShotBalanceInBytes != nil {
+			snapshotBalance, _ = strconv.ParseFloat(string(snapShotBalanceInBytes), 64)
 		}
-
-		snapshotBalance, _ = strconv.ParseFloat(string(snapShotBalanceInBytes), 64)
 	}
 
 	//get normal credit balance of the corpoate
@@ -213,21 +211,21 @@ func (s *SmartContract) reserveFundsForProject(APIstub shim.ChaincodeStubInterfa
 	APIstub.PutState(accountKey, unspentCSRAccountASBytes)
 
 	if(normalBalanceFlag == true) {
-		err = createTransaction(APIstub, fromAddress, accountKey, float64(normalBalanceUSed), date, "FundsToEscrowAccount", accountKey, txId, -1)
+		err = createTransaction(APIstub, fromAddress, ngoId, float64(normalBalanceUSed), date, "FundsToEscrowAccount", accountKey, txId, -1)
 		if err != nil {
 			return shim.Error("Failed to add a Tx: " + err.Error())
 		}
 	}
 
 	if(flagSnapshot == true){
-		err = createTransaction(APIstub, fromAddress, accountKey, float64(snapshotTokenUsed), date, "FundsToEscrowAccount_snapshot", accountKey, txId, -1)
+		err = createTransaction(APIstub, fromAddress, ngoId, float64(snapshotTokenUsed), date, "FundsToEscrowAccount_snapshot", accountKey, txId, -1)
 		if err != nil {
 			return shim.Error("Failed to add a Tx: " + err.Error())
 		}
 	}
-	
 
-	eventPayload := "Reserved " + fmt.Sprintf("%0.2f", float64(qty)) + " credits to project with id : " + projectId + "."
+	splitName := strings.SplitN(fromAddress, ".", -1)
+	eventPayload := splitName[0] + " has reserved " + fmt.Sprintf("%0.2f", float64(qty)) + " credits for the project: " + projectState.ProjectName + "."
 	notification := &Notification{TxId: txId, Description: eventPayload, Users: []string{ngoId}}
 	notificationtAsBytes, err := json.Marshal(notification)
 	APIstub.SetEvent("Notification", notificationtAsBytes)

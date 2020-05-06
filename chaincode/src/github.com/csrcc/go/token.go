@@ -395,7 +395,7 @@ func (s *SmartContract) transferTokens(APIstub shim.ChaincodeStubInterface, args
 	logger.Info("current logged in user:", commonName, "with mspId:", mspId)
 
 	if len(args) != 8 {
-		return shim.Error("Incorrect number of arguments. Expecting 7")
+		return shim.Error("Incorrect number of arguments. Expecting 8")
 	} else if len(args[0]) <= 0 {
 		return shim.Error("1st argument must be a non-empty string")
 	} else if len(args[1]) <= 0 {
@@ -410,6 +410,8 @@ func (s *SmartContract) transferTokens(APIstub shim.ChaincodeStubInterface, args
 		return shim.Error("6th argument must be a non-empty string")
 	} else if len(args[6]) <= 0 {
 		return shim.Error("7th argument must be a non-empty string")
+	} else if len(args[7]) <= 0 {
+		return shim.Error("8th argument must be a non-empty string")
 	}
 
 	var flagSnapshot = false
@@ -448,11 +450,13 @@ func (s *SmartContract) transferTokens(APIstub shim.ChaincodeStubInterface, args
 	projectObj := Project{}
 	err = json.Unmarshal(projectAsBytes, &projectObj)
 	if err != nil {
-		return shim.Error("error in unmarshalling: " + err.Error())
+		return shim.Error("error in unmarshalling project: " + err.Error())
 	}
+	logger.Info("A project found...")
 
 	//to be used during actual run.
 	if projectObj.Phases[phaseNumber].PhaseState == "Open For Funding" || projectObj.Phases[phaseNumber].PhaseState == "Partially Funded" {
+		logger.Info("FUNDING IS ALLOWED...")
 		if projectObj.Phases[phaseNumber].OutstandingQty <= qty {
 			qtyToTransfer = projectObj.Phases[phaseNumber].OutstandingQty
 			qty = qtyToTransfer
@@ -469,6 +473,7 @@ func (s *SmartContract) transferTokens(APIstub shim.ChaincodeStubInterface, args
 			projectObj.ProjectState = "Partially Funded"
 		}
 	} else {
+		logger.Info("FUNDING NOT ALLOWED...")
 		return shim.Error("Funding is not allowed to this phase!")
 	}
 
@@ -484,69 +489,73 @@ func (s *SmartContract) transferTokens(APIstub shim.ChaincodeStubInterface, args
 	//save the updated project
 	updatedProjectAsBytes, err := json.Marshal(projectObj)
 	if err != nil {
-		return shim.Error("Json convert error" + err.Error())
+		return shim.Error("Json convert error " + err.Error())
 	}
 
 	err = APIstub.PutState(pId, updatedProjectAsBytes)
 	if err != nil {
-		return shim.Error("error saving/updating project" + err.Error())
+		return shim.Error("error saving/updating project " + err.Error())
 	}
+	logger.Info("PROJECT UPDATED...")
 
 	snapshotExistsBytes, _ := APIstub.GetState("snapshot_exists")
 	if snapshotExistsBytes == nil {
+		logger.Info("SNAPSHOT EXISTS: nil...")
 		return shim.Error("Failed to get snapshot Exists: " + err.Error())
 	}
 
-	//check if there is a snapshot (flag  = true) and if there are any funds in snapshot
+	//check if there is a snapshot (flag = true) and if there are any funds in snapshot
 	if string(snapshotExistsBytes) == "1" {
+		logger.Info("SNAPSHOT = 1...")
 		snapshotKey := fromAddress + "_snapshot"
+
+		snapshotBalance := 0.0
 
 		//Get the balance in Snapshot for corporate
 		snapShotBalanceInBytes, _ := APIstub.GetState(snapshotKey)
-		if snapShotBalanceInBytes == nil {
-			return shim.Error("Failed to get token balance from snapshot: " + err.Error())
+		if snapShotBalanceInBytes != nil {
+			snapshotBalance, _ = strconv.ParseFloat(string(snapShotBalanceInBytes), 64)
+			logger.Info("SNAPSHOT BALANCE = ", snapshotBalance)
 		}
 
-		snapshotBalance, _ := strconv.ParseFloat(string(snapShotBalanceInBytes), 64)
-
-		if snapshotBalance >= qty {
-			//use the snapshot funds and then use the current fund
-			balance := fmt.Sprintf("%0.2f", snapshotBalance-qty)
-
-			//take account of how much snapshot account is used to create transaction
+		if snapshotBalance > 0.0 {
 			flagSnapshot = true
-			snapshotTokenUsed = qty
-			logger.Info("a")
-			logger.Info(snapshotTokenUsed)
-
-			APIstub.PutState(snapshotKey, []byte(balance))
-			qty = 0
-		} else {
-			qty -= snapshotBalance
-
-			//take account of how much snapshot account is used to create transaction
-			flagSnapshot = true
-			snapshotTokenUsed = snapshotBalance
-			logger.Info("b")
-			logger.Info(snapshotTokenUsed)
-			
-			APIstub.PutState(snapshotKey, []byte("0"))
+			if snapshotBalance >= qty {
+				//use the snapshot funds and then use the current fund
+				balance := fmt.Sprintf("%0.2f", snapshotBalance - qty)
+	
+				//take account of how much snapshot account is used to create transaction
+				snapshotTokenUsed = qty
+				logger.Info("SNAPSHOT IS MORE THAN QTY...", qty)
+				APIstub.PutState(snapshotKey, []byte(balance))
+				qty = 0.0
+			} else {
+				qty -= snapshotBalance
+	
+				//take account of how much snapshot account is used to create transaction
+				snapshotTokenUsed = snapshotBalance
+				logger.Info("SNAPSHOT IS LESS THAN QTY...", snapshotBalance)
+				APIstub.PutState(snapshotKey, []byte("0.0"))
+			}
 		}
 	}
 
-	//if there is no snapshot, use the current account
+	//if qty is still remaining, use the current account
 	if qty > 0.0 {
 		//reduce token balance from sender
+		logger.Info("QTY LEFT AFTER DEDUCTING SNAPSHOT BALANCE = ", qty)
 		tokenBalanceInBytes, _ := APIstub.GetState(fromAddress)
 		if tokenBalanceInBytes == nil {
-			return shim.Error("Failed to get token balance to transfer: ")
+			return shim.Error("Failed to get token balance to transfer!")
 		}
 		tokenBalance, _ := strconv.ParseFloat(string(tokenBalanceInBytes), 64)
 
 		if tokenBalance >= qty {
-			finalQty := fmt.Sprintf("%0.2f", tokenBalance-qty)
+			logger.Info("BALANCE IS SUFFICIENT...")
+			finalQty := fmt.Sprintf("%0.2f", tokenBalance - qty)
 			APIstub.PutState(fromAddress, []byte(finalQty))
 		} else {
+			logger.Info("INSUFFICIENT BALANCE...")
 			return shim.Error("Not enough balance " + fromAddress + ".Available balance:" + string(tokenBalanceInBytes))
 		}
 	}
@@ -558,7 +567,7 @@ func (s *SmartContract) transferTokens(APIstub shim.ChaincodeStubInterface, args
 		receiverTokenBalance, _ = strconv.ParseFloat(string(receiverTokenBalanceAsBytes), 64)
 	}
 
-	receiverFinalBal := fmt.Sprintf("%0.2f", receiverTokenBalance+qtyToTransfer)
+	receiverFinalBal := fmt.Sprintf("%0.2f", receiverTokenBalance + qtyToTransfer)
 	APIstub.PutState(projectObj.NGO, []byte(receiverFinalBal))
 	
 	if(qty > 0.0){
@@ -629,11 +638,11 @@ func (s *SmartContract) snapshotCurrentCorporateBalances(APIstub shim.ChaincodeS
 
 	//loop through each corporate and create new corporate address and copy non zero balances into corporateAddress_snapshot
 	for _, corporate := range corporates {
-		qtyBytes, err := APIstub.GetState(corporate)
-		if err != nil {
-			return shim.Error("Failed to get token balance to transfer: " + err.Error())
+		qtyBytes, _ := APIstub.GetState(corporate)
+		tokenBalance := 0.0
+		if qtyBytes != nil {
+			tokenBalance, _ = strconv.ParseFloat(string(qtyBytes), 64)
 		}
-		tokenBalance, _ := strconv.ParseFloat(string(qtyBytes), 64)
 
 		if tokenBalance > 0.0 {
 			notificationUsers = append(notificationUsers, corporate)
@@ -649,7 +658,7 @@ func (s *SmartContract) snapshotCurrentCorporateBalances(APIstub shim.ChaincodeS
 			
 			APIstub.PutState(corporate+"_snapshot", []byte(fmt.Sprintf("%0.2f", snapBalance + tokenBalance)))
 			//reset the original token balance to 0
-			APIstub.PutState(corporate, []byte("0"))
+			APIstub.PutState(corporate, []byte("0.0"))
 			objRef += corporate + ":" + fmt.Sprintf("%0.2f", tokenBalance) + ","
 		}
 	}

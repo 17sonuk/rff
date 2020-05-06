@@ -47,7 +47,7 @@ client:
     # not.
     cryptoStore:
       # Specific to the underlying KeyValueStore that backs the crypto key store.
-      path: "/tmp/fabric-client-kv-corporate"
+      path: "./cryptostore/fabric-client-kv-corporate"
 
     # [Optional]. Specific to Composer environment
     wallet: wallet-name

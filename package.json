@@ -1,7 +1,7 @@
 {
-  "name": "rewardapp",
+  "name": "CSRApp",
   "version": "1.0.0",
-  "description": "This project handles the parametric insurance use case.",
+  "description": "This project handles the CSR use case.",
   "main": "app.js",
   "directories": {
     "lib": "lib"
