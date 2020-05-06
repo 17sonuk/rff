@@ -1595,4 +1595,123 @@ router.get('/getNgoContributionDetails', async function (req, res) {
     res.send(response);
 });
 
+// get All TokenRequests
+router.get('/getAllTokenRequests', async function (req, res) {
+    logger.debug('==================== QUERY BY CHAINCODE: getAllTokenRequests ==================');
+    var channelName = req.header('channelName');
+    var chaincodeName = req.header('chaincodeName');
+    var peer = "peer0." + req.orgname.toLowerCase() + ".csr.com";
+    var userDLTName = req.username + "." + req.orgname.toLowerCase() + ".csr.com";
+    
+    logger.debug('channelName : ' + channelName);
+    logger.debug('chaincodeName : ' + chaincodeName);
+
+    if (!chaincodeName) {
+        res.json(getErrorMessage('\'chaincodeName\''));
+        return;
+    }
+    if (!channelName) {
+        res.json(getErrorMessage('\'channelName\''));
+        return;
+    }
+
+    let queryString = {
+        "selector": {
+            "docType": "TokenRequest"
+        }
+    }
+    
+    if(req.orgname === 'CreditsAuthority') {
+        console.log('CA has requested...')
+    }
+    else if(req.orgname === 'Corporate') {
+        queryString['selector']['from'] = userDLTName
+    }
+    else {
+        res.send({ success: false, message: 'Unauthorised token tx request access...'})
+    }
+    
+    var args = [JSON.stringify(queryString)]
+    logger.debug('args : ' + args[0]);
+
+    let message = await query.queryChaincode(peer, channelName, chaincodeName, args, "generalQueryFunction", req.username, req.orgname);
+    var newObject = new Object()
+    if (message.toString().includes("Error:")) {
+        newObject.success = false
+        newObject.message = message.toString().split("Error:")[1].trim()
+        return res.send(newObject)
+    }
+    else {
+        newObject = new Object()
+        newObject = JSON.parse(message.toString())
+
+        for(var i=0; i<newObject.length; i++) {
+            newObject[i]['Record']['from'] = splitOrgName(newObject[i]['Record']['from'])
+            newObject[i]['Record']['role'] = splitOrgName(newObject[i]['Record']['role'])
+        }
+
+        newObject.success = true;
+        res.send(newObject);
+    }
+});
+
+// get All Redeem Requests
+router.get('/getAllRedeemRequests', async function (req, res) {
+    logger.debug('==================== QUERY BY CHAINCODE: getAllRedeemRequests ==================');
+    var channelName = req.header('channelName');
+    var chaincodeName = req.header('chaincodeName');
+    var peer = "peer0." + req.orgname.toLowerCase() + ".csr.com";
+    var userDLTName = req.username + "." + req.orgname.toLowerCase() + ".csr.com";
+    
+    logger.debug('channelName : ' + channelName);
+    logger.debug('chaincodeName : ' + chaincodeName);
+
+    if (!chaincodeName) {
+        res.json(getErrorMessage('\'chaincodeName\''));
+        return;
+    }
+    if (!channelName) {
+        res.json(getErrorMessage('\'channelName\''));
+        return;
+    }
+
+    let queryString = {
+        "selector": {
+            "docType": "Redeem"
+        }
+    }
+    
+    if(req.orgname === 'CreditsAuthority') {
+        console.log('CA has requested...')
+    }
+    else if(req.orgname === 'Ngo') {
+        queryString['selector']['from'] = userDLTName
+    }
+    else {
+        res.send({ success: false, message: 'Unauthorised token tx request access...'})
+    }
+    
+    var args = [JSON.stringify(queryString)]
+    logger.debug('args : ' + args[0]);
+
+    let message = await query.queryChaincode(peer, channelName, chaincodeName, args, "generalQueryFunction", req.username, req.orgname);
+    var newObject = new Object()
+    if (message.toString().includes("Error:")) {
+        newObject.success = false
+        newObject.message = message.toString().split("Error:")[1].trim()
+        return res.send(newObject)
+    }
+    else {
+        newObject = new Object()
+        newObject = JSON.parse(message.toString())
+
+        for(var i=0; i<newObject.length; i++) {
+            newObject[i]['Record']['from'] = splitOrgName(newObject[i]['Record']['from'])
+        }
+
+        newObject.success = true;
+        res.send(newObject);
+    }
+});
+
 module.exports = router;
