@@ -1618,7 +1618,8 @@ router.get('/getAllTokenRequests', async function (req, res) {
     let queryString = {
         "selector": {
             "docType": "TokenRequest"
-        }
+        },
+        "sort": [{ "date": "asc" }]
     }
     
     if(req.orgname === 'CreditsAuthority') {
@@ -1678,7 +1679,8 @@ router.get('/getAllRedeemRequests', async function (req, res) {
     let queryString = {
         "selector": {
             "docType": "Redeem"
-        }
+        },
+        "sort": [{ "date": "asc" }]
     }
     
     if(req.orgname === 'CreditsAuthority') {
@@ -1702,7 +1704,6 @@ router.get('/getAllRedeemRequests', async function (req, res) {
         return res.send(newObject)
     }
     else {
-        newObject = new Object()
         newObject = JSON.parse(message.toString())
 
         for(var i=0; i<newObject.length; i++) {
@@ -1712,6 +1713,105 @@ router.get('/getAllRedeemRequests', async function (req, res) {
         newObject.success = true;
         res.send(newObject);
     }
+});
+
+// get balance
+router.get('/getBalance', async function (req, res) {
+    logger.debug('==================== QUERY BY CHAINCODE: getBalance ==================');
+    var channelName = req.header('channelName');
+    var chaincodeName = req.header('chaincodeName');
+    var peer = "peer0." + req.orgname.toLowerCase() + ".csr.com";
+    var userDLTName = req.username + "." + req.orgname.toLowerCase() + ".csr.com";
+    
+    logger.debug('channelName : ' + channelName);
+    logger.debug('chaincodeName : ' + chaincodeName);
+
+    if (!chaincodeName) {
+        res.json(getErrorMessage('\'chaincodeName\''));
+        return;
+    }
+    if (!channelName) {
+        res.json(getErrorMessage('\'channelName\''));
+        return;
+    }
+
+    var response = {
+        'balance': 0,
+        'snapshotBalance': 0,
+        'escrowBalance': 0
+    }
+
+    let queryString = {
+        "selector": {
+            "_id": { 
+                "$in": [
+                    userDLTName, 
+                    userDLTName + '_snapshot'
+                ]
+            }
+        }
+    }
+    
+    var args = [JSON.stringify(queryString)]
+    logger.debug('args : ' + args[0]);
+
+    //query normal and snapshot balance
+    let message = await query.queryChaincode(peer, channelName, chaincodeName, args, "generalQueryFunction", req.username, req.orgname);
+    var newObject = new Object()
+    if (message.toString().includes("Error:")) {
+        newObject.success = false
+        newObject.message = message.toString().split("Error:")[1].trim()
+        return res.send(newObject)
+    }
+    else {
+        newObject = JSON.parse(message.toString())
+
+        for(var i=0; i<newObject.length; i++) {
+            if(newObject[i]['Key'] === userDLTName) {
+                response['balance'] = Number(newObject[i]['Record'])
+            }
+            else if(newObject[i]['Key'] === userDLTName + '_snapshot') {
+                response['snapshotBalance'] = Number(newObject[i]['Record'])
+            }
+        }
+        response.success = true;
+    }
+
+    if(req.orgname === 'Corporate') {
+        queryString = {
+            'selector': {
+                'docType': "EscrowDetails",
+                'corporate': userDLTName
+            },
+            'fields': ['funds']
+        }
+
+        args[0] = JSON.stringify(queryString)
+        logger.debug('args : ' + args[0]);
+
+        //query esrow balance
+        message = await query.queryChaincode(peer, channelName, chaincodeName, args, "generalQueryFunction", req.username, req.orgname);
+        console.log('reponse message: ' + message.toString())
+        newObject = new Object()
+        if (message.toString().includes("Error:")) {
+            newObject.success = false
+            newObject.message = message.toString().split("Error:")[1].trim()
+            return res.send(newObject)
+        }
+        else {
+            newObject = JSON.parse(message.toString())
+
+            for(var i=0; i<newObject.length; i++) {
+                var funds = newObject[i]['Record']['funds']
+                for(var j=0; j<funds.length; j++) {
+                    response['escrowBalance'] += funds[j]['qty']
+                }
+            }
+            response.success = true;
+        }
+    }
+
+    res.send(response)
 });
 
 module.exports = router;
