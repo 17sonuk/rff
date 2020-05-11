@@ -178,51 +178,58 @@ router.get('/getAllProjects', async function (req, res) {
         finalResponse["metaData"]["RecordsCount"] = responseMetaObj[0]["ResponseMetadata"]["RecordsCount"];
         finalResponse["metaData"]["Bookmark"] = responseMetaObj[0]["ResponseMetadata"]["Bookmark"];
 
-        //resp.push(metaData);
-
-        newObject.forEach(e => {
-            let response = {}
-            logger.debug(e["Record"]);
-            let endDate = 0;
+        //loop over the projects
+        for(var i=0; i<newObject.length; i++) {
+            
+            var response = {}
             response["totalReceived"] = 0;
             response["ourContribution"] = 0;
-            for (let f = 0; f < e["Record"].phases.length; f++) {
-                response["totalReceived"] += (e["Record"].phases[f]["qty"] - e["Record"].phases[f]["outstandingQty"])
 
-                // if (e["Record"].phases[f]["phaseState"] !== "Created" && e["Record"].phases[f]["phaseState"] !== "Complete") {
-                if (e["Record"].phases[f]["phaseState"] !== "Created") {
-                    response["currentPhase"] = f + 1;
-                    response["currentPhaseStatus"] = e["Record"].phases[f]["phaseState"];
-                    response["currentPhaseTarget"] = e["Record"].phases[f]["qty"];
-                    response["currentPhaseOutstandingAmount"] = e["Record"].phases[f]["outstandingQty"];
-                    response["percentageFundReceived"] = ((e["Record"].phases[f]["qty"] - e["Record"].phases[f]["outstandingQty"]) / e["Record"].phases[f]["qty"]) * 100
+            var record = newObject[i]["Record"];
+            logger.debug(record);
+
+            var currentPhase = 0;
+            for (var f = 0; f < record.phases.length; f++) {
+                var phaseQty = record.phases[f]["qty"];
+                var phaseOutstandingQty = record.phases[f]["outstandingQty"]
+                
+                response["totalReceived"] += (phaseQty - phaseOutstandingQty)
+
+                // if (record.phases[f]["phaseState"] !== "Created" && record.phases[f]["phaseState"] !== "Complete") {
+                if (record.phases[f]["phaseState"] !== "Created") {
+                    currentPhase = f
                 }
-
-                if (e["Record"].phases[f]["contributions"][orgDLTName] !== undefined) {
-                    response["ourContribution"] += e["Record"].phases[f]["contributions"][orgDLTName]["contributionQty"]
-                }
-
-                if (f === e["Record"].phases.length - 1) {
-                    endDate = e["Record"].phases[f]["endDate"]
+                
+                if (record.phases[f]["contributions"][orgDLTName] !== undefined) {
+                    response["ourContribution"] += record.phases[f]["contributions"][orgDLTName]["contributionQty"];
                 }
             }
-            response["projectId"] = e["Key"]
-            response["contributors"] = Object.keys(e["Record"]["contributors"]).map(splitOrgName)
-            response["ngo"] = splitOrgName(e["Record"]["ngo"])
-            response["totalProjectCost"] = e["Record"]["totalProjectCost"]
-            response["projectName"] = e["Record"]["projectName"]
-            response["projectType"] = e["Record"]["projectType"]
-            response["totalPhases"] = e["Record"].phases.length
+
+            response['currentPhase'] = currentPhase + 1;
+            response['currentPhaseStatus'] = record.phases[currentPhase]['phaseState'];
+            response['currentPhaseTarget'] = record.phases[currentPhase]['qty'];
+            response['currentPhaseOutstandingAmount'] = record.phases[currentPhase]['OutstandingQty'];
+
+            response['projectId'] = newObject[i]['Key']
+            response['contributors'] = Object.keys(record['contributors']).map(splitOrgName)
+            response['ngo'] = splitOrgName(record['ngo'])
+            response['totalProjectCost'] = record['totalProjectCost']
+            response["percentageFundReceived"] = (response["totalReceived"]/record['totalProjectCost']) * 100;
+            response['projectName'] = record['projectName']
+            response['projectType'] = record['projectType']
+            response['totalPhases'] = record.phases.length
+
+            var endDate = record.phases[record.phases.length - 1]['endDate']
             var timeDifference = endDate - Date.now()
             if (timeDifference < 0) {
                 timeDifference = 0
             }
-            response["daysLeft"] = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
+            response['daysLeft'] = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
             allRecords.push(response);
-        });
+        }
 
 	    logger.debug(allRecords);
-        finalResponse["allRecords"] = allRecords
+        finalResponse['allRecords'] = allRecords
         res.send(finalResponse)
     }
 });
