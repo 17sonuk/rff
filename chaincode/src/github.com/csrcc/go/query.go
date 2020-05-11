@@ -50,31 +50,6 @@ func (s *SmartContract) queryByKey(APIstub shim.ChaincodeStubInterface, args []s
 	return shim.Success(requestAsBytes)
 }
 
-//list of all the transaction on perticular project
-func (s *SmartContract) getProjectTransactions(APIstub shim.ChaincodeStubInterface, args []string) pb.Response {
-	logger.Info("*************** getProjectTransactions Started ***************")
-
-	queryString := ""
-
-	//getusercontext to populate the required data
-	creator, err := APIstub.GetCreator()
-	if err != nil {
-		return shim.Error("Error getting transaction creator: " + err.Error())
-	}
-	mspId, commanName, _ := getTxCreatorInfo(creator)
-
-	logger.Info("current logged in user:", commanName, "with mspId:", mspId)
-	queryString = gqs([]string{"docType", "Transaction", "objRef", args[0]})
-
-	queryResults, err := getQueryResultForQueryString(APIstub, queryString)
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-
-	logger.Info("*************** getProjectTransactions Successfull ***************")
-	return shim.Success(queryResults)
-}
-
 type Record struct{
 	Qty float64 `json:qty`
 	Balance float64 `json:balance`
