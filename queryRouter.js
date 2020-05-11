@@ -223,7 +223,7 @@ router.get('/getAllProjects', async function (req, res) {
 
 	    logger.debug(allRecords);
         finalResponse["allRecords"] = allRecords
-        return res.send(finalResponse)
+        res.send(finalResponse)
     }
 });
 
@@ -410,7 +410,7 @@ router.get('/getCorporateProjectTransaction', async function (req, res) {
     var channelName = req.header('channelName');
     var chaincodeName = req.header('chaincodeName');
     var peer = req.header('peer');
-    var corporate = req.query.corporate
+    var corporate = req.query.corporate + '.corporate.csr.com'
     var projectId = req.query.projectId
 
     logger.debug('channelName : ' + channelName);
@@ -1603,8 +1603,14 @@ router.get('/getAllTokenRequests', async function (req, res) {
     var peer = "peer0." + req.orgname.toLowerCase() + ".csr.com";
     var userDLTName = req.username + "." + req.orgname.toLowerCase() + ".csr.com";
     
+    var pageSize = req.query.pageSize;
+    var bookmark = req.query.bookmark;
+    var status = req.query.status;
+
     logger.debug('channelName : ' + channelName);
     logger.debug('chaincodeName : ' + chaincodeName);
+    logger.debug('pageSize : ' + pageSize + ' bookmark : ' + bookmark);
+    logger.debug('status : ' + status);
 
     if (!chaincodeName) {
         res.json(getErrorMessage('\'chaincodeName\''));
@@ -1614,10 +1620,19 @@ router.get('/getAllTokenRequests', async function (req, res) {
         res.json(getErrorMessage('\'channelName\''));
         return;
     }
+    if (!pageSize) {
+        res.json(getErrorMessage('\'pageSize\''));
+        return;
+    }
+    if (!status) {
+        res.json(getErrorMessage('\'status\''));
+        return;
+    }
 
     let queryString = {
         "selector": {
-            "docType": "TokenRequest"
+            "docType": "TokenRequest",
+            "status": status
         },
         "sort": [{ "date": "asc" }]
     }
@@ -1629,13 +1644,13 @@ router.get('/getAllTokenRequests', async function (req, res) {
         queryString['selector']['from'] = userDLTName
     }
     else {
-        res.send({ success: false, message: 'Unauthorised token tx request access...'})
+        res.send({ success: false, message: 'Unauthorised token request access...'})
     }
     
-    var args = [JSON.stringify(queryString)]
+    var args = [JSON.stringify(queryString), pageSize, bookmark]
     logger.debug('args : ' + args[0]);
 
-    let message = await query.queryChaincode(peer, channelName, chaincodeName, args, "generalQueryFunction", req.username, req.orgname);
+    let message = await query.queryChaincode(peer, channelName, chaincodeName, args, "generalQueryFunctionPagination", req.username, req.orgname);
     var newObject = new Object()
     if (message.toString().includes("Error:")) {
         newObject.success = false
@@ -1643,16 +1658,32 @@ router.get('/getAllTokenRequests', async function (req, res) {
         return res.send(newObject)
     }
     else {
-        newObject = new Object()
-        newObject = JSON.parse(message.toString())
+        var responseMetaObj = new Object()
+
+        var msgList = message.toString().split("#");
+        logger.debug(msgList[0]);
+        logger.debug(msgList[1]);
+
+        responseMetaObj = JSON.parse(msgList[1]);
+        newObject = JSON.parse(msgList[0]);
+
+        var finalResponse = {}
+        var allRecords = []
+
+        //populate the MetaData
+        finalResponse["metaData"] = {}
+        finalResponse["metaData"]["recordsCount"] = responseMetaObj[0]["ResponseMetadata"]["RecordsCount"];
+        finalResponse["metaData"]["bookmark"] = responseMetaObj[0]["ResponseMetadata"]["Bookmark"];
 
         for(var i=0; i<newObject.length; i++) {
             newObject[i]['Record']['from'] = splitOrgName(newObject[i]['Record']['from'])
             newObject[i]['Record']['role'] = splitOrgName(newObject[i]['Record']['role'])
+            allRecords.push(newObject[i]['Record'])
         }
 
-        newObject.success = true;
-        res.send(newObject);
+        finalResponse['records'] = allRecords
+        finalResponse['success'] = true
+        res.send(finalResponse);
     }
 });
 
@@ -1664,8 +1695,14 @@ router.get('/getAllRedeemRequests', async function (req, res) {
     var peer = "peer0." + req.orgname.toLowerCase() + ".csr.com";
     var userDLTName = req.username + "." + req.orgname.toLowerCase() + ".csr.com";
     
+    var pageSize = req.query.pageSize;
+    var bookmark = req.query.bookmark;
+    var status = req.query.status;
+
     logger.debug('channelName : ' + channelName);
     logger.debug('chaincodeName : ' + chaincodeName);
+    logger.debug('pageSize : ' + pageSize + ' bookmark : ' + bookmark);
+    logger.debug('status : ' + status);
 
     if (!chaincodeName) {
         res.json(getErrorMessage('\'chaincodeName\''));
@@ -1675,10 +1712,19 @@ router.get('/getAllRedeemRequests', async function (req, res) {
         res.json(getErrorMessage('\'channelName\''));
         return;
     }
+    if (!pageSize) {
+        res.json(getErrorMessage('\'pageSize\''));
+        return;
+    }
+    if (!status) {
+        res.json(getErrorMessage('\'status\''));
+        return;
+    }
 
     let queryString = {
         "selector": {
-            "docType": "Redeem"
+            "docType": "Redeem",
+            "status": status
         },
         "sort": [{ "date": "asc" }]
     }
@@ -1690,13 +1736,13 @@ router.get('/getAllRedeemRequests', async function (req, res) {
         queryString['selector']['from'] = userDLTName
     }
     else {
-        res.send({ success: false, message: 'Unauthorised token tx request access...'})
+        res.send({ success: false, message: 'Unauthorised redeem request access...'})
     }
     
-    var args = [JSON.stringify(queryString)]
+    var args = [JSON.stringify(queryString), pageSize, bookmark]
     logger.debug('args : ' + args[0]);
 
-    let message = await query.queryChaincode(peer, channelName, chaincodeName, args, "generalQueryFunction", req.username, req.orgname);
+    let message = await query.queryChaincode(peer, channelName, chaincodeName, args, "generalQueryFunctionPagination", req.username, req.orgname);
     var newObject = new Object()
     if (message.toString().includes("Error:")) {
         newObject.success = false
@@ -1704,14 +1750,31 @@ router.get('/getAllRedeemRequests', async function (req, res) {
         return res.send(newObject)
     }
     else {
-        newObject = JSON.parse(message.toString())
+        var responseMetaObj = new Object()
+
+        var msgList = message.toString().split("#");
+        logger.debug(msgList[0]);
+        logger.debug(msgList[1]);
+
+        responseMetaObj = JSON.parse(msgList[1]);
+        newObject = JSON.parse(msgList[0]);
+
+        var finalResponse = {}
+        var allRecords = []
+
+        //populate the MetaData
+        finalResponse["metaData"] = {}
+        finalResponse["metaData"]["recordsCount"] = responseMetaObj[0]["ResponseMetadata"]["RecordsCount"];
+        finalResponse["metaData"]["bookmark"] = responseMetaObj[0]["ResponseMetadata"]["Bookmark"];
 
         for(var i=0; i<newObject.length; i++) {
             newObject[i]['Record']['from'] = splitOrgName(newObject[i]['Record']['from'])
+            allRecords.push(newObject[i]['Record'])
         }
 
-        newObject.success = true;
-        res.send(newObject);
+        finalResponse['records'] = allRecords
+        finalResponse['success'] = true
+        res.send(finalResponse);
     }
 });
 
