@@ -17,6 +17,7 @@ const uuid = require('uuid');
 const projectRouter = require('./mongoDb/projectRouter');
 const projectService = require('./mongoDb/projectService');
 const queryRouter = require('./queryRouter');
+const queryRouter2 = require('./queryRouter2');
 const XLSX = require('xlsx');
 
 
@@ -79,6 +80,7 @@ app.use(function (req, res, next) {
 	});
 });
 
+app.use('/query1', queryRouter2);
 app.use('/query', queryRouter);
 app.use('/mongo', projectRouter);
 
@@ -842,6 +844,40 @@ app.post('/updateProject', async function (req, res) {
 	res.send(message);
 });
 
+//****************************** Project Update Visible To *******************************
+app.post('/updateVisibleTo', async function (req, res) {
+	logger.debug('==================== INVOKE UPDATE VISIBLE TO ON CHAINCODE ==================');
+	var peers = ["peer0.corporate.csr.com", "peer0.creditsauthority.csr.com", "peer0.ngo.csr.com"];
+	var chaincodeName = req.header('chaincodeName');
+	var channelName = req.header('channelName');
+	logger.debug('channelName  : ' + channelName);
+	logger.debug('chaincodeName : ' + chaincodeName);
+
+	//extract parameters from request body.
+	var projectId = req.body.projectId;
+	var corporateName = req.body.corporateName;
+
+	if (!chaincodeName) {
+		res.json(getErrorMessage('\'chaincodeName\''));
+		return;
+	} else if (!channelName) {
+		res.json(getErrorMessage('\'channelName\''));
+		return;
+	} else if (!projectId) {
+		res.json(getErrorMessage('\'projectId\''));
+		return;
+	} else if (!corporateName) {
+		res.json(getErrorMessage('\'corporateName\''));
+		return;
+	}
+
+	var args = [projectId, corporateName, Date.now().toString(), uuid().toString()]
+	logger.debug('args  : ' + args);
+
+	let message = await invoke.invokeChaincode(peers, channelName, chaincodeName, "updateVisibleTo", args, req.username, req.orgname);
+	res.send(message);
+});
+
 //****************************** validate a phase of a project
 app.post('/validatePhase', async function (req, res) {
 	logger.debug('==================== INVOKE VALIDATE PHASE TOKEN ON CHAINCODE ==================');
@@ -1093,3 +1129,5 @@ app.get('/channels', async function (req, res) {
 	let message = await query.getChannels(peer, req.username, req.orgname);
 	res.send(message);
 });
+
+module.exports.getErrorMessage = getErrorMessage;

@@ -50,6 +50,152 @@ func (s *SmartContract) queryByKey(APIstub shim.ChaincodeStubInterface, args []s
 	return shim.Success(requestAsBytes)
 }
 
+//query for all token request
+func (s *SmartContract) queryForAllTokenRequests(APIstub shim.ChaincodeStubInterface) pb.Response {
+	logger.Info("*************** queryForAllTokenRequests Started ***************")
+
+	queryString := ""
+
+	//getusercontext to populate the required data
+	creator, err := APIstub.GetCreator()
+	if err != nil {
+		return shim.Error("Error getting transaction creator: " + err.Error())
+	}
+	mspId, commonName, _ := getTxCreatorInfo(creator)
+
+	if mspId == "CorporateMSP" {
+		queryString = gqs([]string{"docType", "TokenRequest", "from", commonName})
+	} else if mspId == "CreditsAuthorityMSP" {
+		queryString = gqs([]string{"docType", "TokenRequest"})
+	} else if mspId == "NgoMsp" {
+		return shim.Error("request token is not valid for Ngo")
+	} else {
+		logger.Info("Invalid request")
+	}
+	logger.Info("current logged in user:", commonName, "with mspId:", mspId)
+	logger.Info("QueryString", queryString)
+
+	queryResults, err := getQueryResultForQueryString(APIstub, queryString)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	logger.Info("*************** queryForAllTokenRequests Successful ***************")
+	return shim.Success(queryResults)
+}
+
+///to get balence of any org
+func (s *SmartContract) getBalance(APIstub shim.ChaincodeStubInterface) pb.Response {
+	logger.Info("*************** getBalance Started ***************")
+
+	//getusercontext to populate the required data
+	creator, err := APIstub.GetCreator()
+	if err != nil {
+		return shim.Error("Error getting transaction creator: " + err.Error())
+	}
+	mspId, commonName, _ := getTxCreatorInfo(creator)
+
+	logger.Info("current logged in user :", commonName, " with mspId :", mspId)
+
+	allBalances := make(map[string]float64)
+	amount := 0.0
+
+	tokenBalanceAsBytes, _ := APIstub.GetState(commonName)
+	snapshotBalanceAsBytes, _ := APIstub.GetState(commonName + "_snapshot")
+
+	//fetch all escrow funds
+	queryString := fmt.Sprintf("{\"selector\":{\"docType\":\"EscrowDetails\", \"corporate\": \"%s\"}}", commonName)
+	queryResults, err := getQueryResultForQueryString(APIstub, queryString)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	logger.Info("query result:", string(queryResults))
+
+	var result []map[string]interface{}
+	err = json.Unmarshal([]byte(queryResults), &result)
+
+	for _, value := range result {
+		for _, fundObj := range value["Record"].(map[string]interface{})["funds"].([]interface{}) {
+			amount += fundObj.(map[string]interface{})["qty"].(float64)
+		}
+	}
+
+	if amount > 0.0 {
+		allBalances["escrowBalance"] = amount
+	}
+	if tokenBalanceAsBytes != nil {
+		amount, _ = strconv.ParseFloat(string(tokenBalanceAsBytes), 64)
+		allBalances["balance"] = amount
+	}
+	if snapshotBalanceAsBytes != nil {
+		amount, _ = strconv.ParseFloat(string(snapshotBalanceAsBytes), 64)
+		allBalances["snapshotBalance"] = amount
+	}
+
+	balJSON, _ := json.Marshal(allBalances)
+	jsonStr := string(balJSON)
+	logger.Info("*************** getBalance Successfull ***************")
+	return shim.Success([]byte(jsonStr))
+}
+
+//get all the redeem requests
+func (s *SmartContract) getRedeemRequest(APIstub shim.ChaincodeStubInterface) pb.Response {
+	logger.Info("*************** getRedeemRequest Started ***************")
+
+	queryString := ""
+
+	//getusercontext to populate the required data
+	creator, err := APIstub.GetCreator()
+	if err != nil {
+		return shim.Error("Error getting transaction creator: " + err.Error())
+	}
+	mspId, commanName, _ := getTxCreatorInfo(creator)
+	if mspId == "CorporateMSP" {
+		logger.Info("corporate cannot access RedeemRequest")
+		return shim.Error("corporate cannot access RedeemRequest")
+	} else if mspId == "CreditsAuthorityMSP" {
+		queryString = gqs([]string{"docType", "Redeem"})
+	} else if mspId == "NgoMSP" {
+		queryString = gqs([]string{"docType", "Redeem", "from", commanName})
+	} else {
+		return shim.Error("Invalid user")
+	}
+	logger.Info("current logged in user:", commanName, "with mspId:", mspId)
+
+	queryResults, err := getQueryResultForQueryString(APIstub, queryString)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	logger.Info("*************** getRedeemRequest Successfull ***************")
+	return shim.Success(queryResults)
+}
+
+//list of all the transaction on perticular project
+func (s *SmartContract) getProjectTransactions(APIstub shim.ChaincodeStubInterface, args []string) pb.Response {
+	logger.Info("*************** getProjectTransactions Started ***************")
+
+	queryString := ""
+
+	//getusercontext to populate the required data
+	creator, err := APIstub.GetCreator()
+	if err != nil {
+		return shim.Error("Error getting transaction creator: " + err.Error())
+	}
+	mspId, commanName, _ := getTxCreatorInfo(creator)
+
+	logger.Info("current logged in user:", commanName, "with mspId:", mspId)
+	queryString = gqs([]string{"docType", "Transaction", "objRef", args[0]})
+
+	queryResults, err := getQueryResultForQueryString(APIstub, queryString)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	logger.Info("*************** getProjectTransactions Successfull ***************")
+	return shim.Success(queryResults)
+}
+
 type Record struct{
 	Qty float64 `json:qty`
 	Balance float64 `json:balance`
@@ -87,8 +233,9 @@ func (s *SmartContract) getCorporateDetails(APIstub shim.ChaincodeStubInterface)
 			sum+=testObj[i].Qty
 		}
 
+		args := []string{org}
 		//get balance of corresponding corporates
-		result1 := s.getBalanceCorporate(APIstub,org)
+		result1 := s.getBalanceCorporate(APIstub,args)
 		logger.Info(string(result1.Payload))
 		json.Unmarshal(result1.Payload,&recordObj)
 		balance := recordObj.Balance
@@ -132,11 +279,13 @@ func (s *SmartContract) getCorporateDetails(APIstub shim.ChaincodeStubInterface)
 }
 
 //get balance of only corporate
-func (s *SmartContract) getBalanceCorporate(APIstub shim.ChaincodeStubInterface,orgName string) pb.Response {
+func (s *SmartContract) getBalanceCorporate(APIstub shim.ChaincodeStubInterface,args []string) pb.Response {
 	logger.Info("*************** getBalanceCorporate Started ***************")
+	logger.Info("args received:", args)
 
 	allBalances := make(map[string]float64)
 	amount := 0.0
+	orgName := args[0]
 
 	tokenBalanceAsBytes, _ := APIstub.GetState(orgName)
 	snapshotBalanceAsBytes, _ := APIstub.GetState(orgName + "_snapshot")
@@ -269,171 +418,4 @@ func (s *SmartContract) getAllCorporates(APIstub shim.ChaincodeStubInterface) pb
 
 	logger.Info("*************** getAllCorporates Successfull ***************")
 	return shim.Success(corporatesBytes)
-}
-
-//query
-func (s *SmartContract) queryForSnapshot(APIstub shim.ChaincodeStubInterface, args []string) pb.Response {
-	corporates := getCorporates(APIstub)
-
-	var buffer bytes.Buffer
-	buffer.WriteString("[")
-	bArrayMemberAlreadyWritten := false
-
-	for _, corporate := range corporates {
-		qtyBytes, err := APIstub.GetState(corporate + "_snapshot")
-		if err != nil {
-			return shim.Error("Failed to get snapshot: " + err.Error())
-		}
-		tokenBalance := string(qtyBytes)
-
-		if bArrayMemberAlreadyWritten == true {
-			buffer.WriteString(",")
-		}
-		buffer.WriteString("{\"corporateName\":\"")
-		buffer.WriteString(corporate)
-		buffer.WriteString("\", \"balance\":")
-		buffer.WriteString(tokenBalance)
-		buffer.WriteString("}")
-		bArrayMemberAlreadyWritten = true
-	}
-	buffer.WriteString("]")
-
-	return shim.Success(buffer.Bytes())
-}
-
-//query
-func (s *SmartContract) queryForTransactionRange(APIstub shim.ChaincodeStubInterface, args []string) pb.Response {
-	if len(args) != 2 {
-		return shim.Error("Incorrect number of arguments. Expecting 2")
-	} else if len(args[0]) <= 0 {
-		return shim.Error("1st argument must be a non-empty string")
-	} else if len(args[1]) <= 0 {
-		return shim.Error("2nd argument must be a non-empty string")
-	}
-
-	fromDate, err := strconv.Atoi(args[0])
-	if err != nil {
-		return shim.Error("Error converting date " + err.Error())
-	}
-	toDate, nil := strconv.Atoi(args[1])
-	if err != nil {
-		return shim.Error("Error converting date " + err.Error())
-	}
-
-	queryString := fmt.Sprintf("{\"selector\":{\"docType\":\"Transaction\", \"date\":{ \"$and\":[{ \"$gt\":%d }, {\"$lt\":%d}]}}}", fromDate, toDate)
-
-	queryResults, err := getQueryResultForQueryString(APIstub, queryString)
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-	return shim.Success(queryResults)
-}
-
-//query
-func getQueryResultForQueryString(stub shim.ChaincodeStubInterface, queryString string) ([]byte, error) {
-
-	fmt.Printf("- getQueryResultForQueryString queryString:\n%s\n", queryString)
-
-	resultsIterator, err := stub.GetQueryResult(queryString)
-	if err != nil {
-		return nil, err
-	}
-	defer resultsIterator.Close()
-
-	buffer, err := constructQueryResponseFromIterator(resultsIterator)
-	if err != nil {
-		return nil, err
-	}
-
-	fmt.Printf("- getQueryResultForQueryString queryResult:\n%s\n", buffer.String())
-
-	return buffer.Bytes(), nil
-}
-
-//query
-func constructQueryResponseFromIterator(resultsIterator shim.StateQueryIteratorInterface) (*bytes.Buffer, error) {
-	// buffer is a JSON array containing QueryResults
-	var buffer bytes.Buffer
-	buffer.WriteString("[")
-
-	bArrayMemberAlreadyWritten := false
-	for resultsIterator.HasNext() {
-		queryResponse, err := resultsIterator.Next()
-		if err != nil {
-			return nil, err
-		}
-		// Add a comma before array members, suppress it for the first array member
-		if bArrayMemberAlreadyWritten == true {
-			buffer.WriteString(",")
-		}
-		buffer.WriteString("{\"Key\":")
-		buffer.WriteString("\"")
-		buffer.WriteString(queryResponse.Key)
-		buffer.WriteString("\"")
-
-		buffer.WriteString(", \"Record\":")
-		// Record is a JSON object, so we write as-is
-		buffer.WriteString(string(queryResponse.Value))
-		buffer.WriteString("}")
-		bArrayMemberAlreadyWritten = true
-	}
-	buffer.WriteString("]")
-
-	return &buffer, nil
-}
-
-//query
-func tempgetQueryResultForQueryString(stub shim.ChaincodeStubInterface, queryString string) ([]byte, error) {
-
-	fmt.Printf("- getQueryResultForQueryString queryString:\n%s\n", queryString)
-
-	resultsIterator, err := stub.GetQueryResult(queryString)
-	if err != nil {
-		return nil, err
-	}
-	defer resultsIterator.Close()
-
-	buffer, err := tempconstructQueryResponseFromIterator(resultsIterator)
-	if err != nil {
-		return nil, err
-	}
-
-	fmt.Printf("- getQueryResultForQueryString queryResult:\n%s\n", buffer.String())
-
-	return buffer.Bytes(), nil
-}
-
-//query
-func tempconstructQueryResponseFromIterator(resultsIterator shim.StateQueryIteratorInterface) (*bytes.Buffer, error) {
-	// buffer is a JSON array containing QueryResults
-	var buffer bytes.Buffer
-	buffer.WriteString("[")
-
-	bArrayMemberAlreadyWritten := false
-	for resultsIterator.HasNext() {
-		queryResponse, err := resultsIterator.Next()
-		logger.Info("queryResponse")
-		logger.Info(queryResponse)
-		if err != nil {
-			return nil, err
-		}
-		// Add a comma before array members, suppress it for the first array member
-		if bArrayMemberAlreadyWritten == true {
-			buffer.WriteString(",")
-		}
-		// buffer.WriteString("{\"Key\":")
-		// buffer.WriteString("\"")
-		// buffer.WriteString(queryResponse.Key)
-		// buffer.WriteString("\"")
-
-		//buffer.WriteString("{\"Record\":")
-		// Record is a JSON object, so we write as-is
-
-		buffer.WriteString(string(queryResponse.Value))
-		//buffer.WriteString("}")
-		bArrayMemberAlreadyWritten = true
-	}
-	buffer.WriteString("]")
-
-	return &buffer, nil
 }

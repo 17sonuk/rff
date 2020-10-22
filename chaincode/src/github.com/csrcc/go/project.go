@@ -20,6 +20,7 @@ type Project struct {
 	ProjectState     string            `json:"projectState"` //Created, PartlyFunded, FullyFunded, Completed
 	NGO              string            `json:"ngo"`
 	Contributors     map[string]string `json:"contributors"`
+	VisibleTo		 []string		   `json:"visibleTo"`
 }
 
 type Phase struct {
@@ -430,68 +431,6 @@ func (s *SmartContract) addDocumentHash(APIstub shim.ChaincodeStubInterface, arg
 }
 
 /*
-//add a phase
-func (s *SmartContract) AddPhaseToProject(APIstub shim.ChaincodeStubInterface, args []string) pb.Response {
-
-	if len(args) != 4 {
-		return shim.Error("Incorrect number of arguments. Expecting 5")
-	}
-	//qty,from,to,projectId,ngo
-	pid := strings.ToLower(args[0])
-	qty, _ := strconv.Atoi(args[1])
-	date, _ := strconv.Atoi(args[2])
-	txId := args[3]
-	//Get the existing project and add a new phase to it
-	projInBytes, err := APIstub.GetState(pid)
-	if err != nil {
-		return shim.Error("Json Marshall error" + err.Error())
-	}
-
-	project := Project{}
-	json.Unmarshal(projInBytes, &project)
-
-	newPhase := Phase{Qty: qty, PhaseState: "OpenForFunding", Contributions: []Contribution{}}
-	project.Phases = append(project.Phases, newPhase)
-	//save project
-	newProjAsBytes, _ := json.Marshal(project)
-	APIstub.PutState(pid, newProjAsBytes)
-
-	createTransaction(APIstub, project.NGO, "", 0, date, "AddProjectPhase", txId)
-
-	return shim.Success(nil)
-}
-func (s *SmartContract) AddContributorToProjectPhase(APIstub shim.ChaincodeStubInterface, args []string) pb.Response {
-
-	if len(args) != 8 {
-		return shim.Error("Incorrect number of arguments. Expecting 5")
-	}
-	pid := strings.ToLower(args[0])
-	date, _ := strconv.Atoi(args[1])
-	phaseId, _ := strconv.Atoi(args[2])
-	qty, _ := strconv.Atoi(args[3])
-	reviewMsg := args[4]
-	rating, _ := strconv.Atoi(args[5])
-	fromAddress := args[6]
-	txId := args[7]
-
-	projInBytes, err := APIstub.GetState(pid)
-	if err != nil {
-		return shim.Error("unble to find project with Pid:" + pid + err.Error())
-	}
-
-	project := Project{}
-	json.Unmarshal(projInBytes, &project)
-
-	newContribution := Contribution{Contributor: fromAddress, ContributionQty: qty, ReviewMsg: reviewMsg, Rating: rating}
-	project.Phases[phaseId].Contributions = append(project.Phases[phaseId].Contributions, newContribution)
-
-	newProjAsBytes, _ := json.Marshal(project)
-	APIstub.PutState(pid, newProjAsBytes)
-
-	createTransaction(APIstub, project.NGO, "", 0, date, "AddContributor", txId)
-
-	return shim.Success(nil)
-}
 func (s *SmartContract) UpdateProjectDetails(APIstub shim.ChaincodeStubInterface, args []string) pb.Response {
 
 	if len(args) != 7 {
@@ -693,5 +632,89 @@ func (s *SmartContract) updateProject(APIstub shim.ChaincodeStubInterface, args 
 	APIstub.SetEvent("Notification", notificationtAsBytes)
 
 	logger.Info("*************** updateProject Successful ***************")
+	return shim.Success(nil)
+}
+
+//added extra feature
+func (s *SmartContract) updateVisibleTo(APIstub shim.ChaincodeStubInterface, args []string) pb.Response {
+	logger.Info("*************** updateVisibleTo Started ***************")
+	logger.Info("args received:", args)
+
+	//getusercontext to populate the required data
+	creator, err := APIstub.GetCreator()
+	if err != nil {
+		return shim.Error("Error getting transaction creator: " + err.Error())
+	}
+	mspId, commonName, _ := getTxCreatorInfo(creator)
+	if mspId != "NgoMSP" {
+		logger.Info("only ngo can initiate updateVisibleTo")
+		return shim.Error("only ngo can initiate updateVisibleTo")
+	}
+	logger.Info("current logged in user:", commonName, "with mspId:", mspId)
+
+	if len(args) != 4 {
+		return shim.Error("Incorrect number of arguments. Expecting 4")
+	} else if len(args[0]) <= 0 {
+		return shim.Error("projectId must be a non-empty string")
+	} else if len(args[1]) <= 0 {
+		return shim.Error("corporateName must be a non-empty string")
+	} else if len(args[2]) <= 0 {
+		return shim.Error("date must be a non-empty string")
+	} else if len(args[3]) <= 0 {
+		return shim.Error("txId must be a non-empty string")
+	}
+
+	projectId := strings.ToLower(args[0])
+	corporateName := strings.ToLower(args[1])
+	date, err := strconv.Atoi(args[2])
+	if err != nil {
+		return shim.Error("date should be numeric.")
+	}
+	txId := args[3]
+
+	//check if the project exists
+	projectAsBytes, err := APIstub.GetState(projectId)
+	if err != nil {
+		return shim.Error("Error getting project")
+	}
+	if projectAsBytes == nil {
+		logger.Info("project with id:", projectId, "not present")
+		return shim.Error("project is not present")
+	}
+	projectState := Project{}
+	json.Unmarshal(projectAsBytes, &projectState)
+
+	//check if caller is the owner of project
+	if strings.Contains(commonName, projectState.NGO) == false {
+		logger.Info("ngo doesn't owns the project")
+		return shim.Error("ngo doesn't owns the project")
+	}
+
+	//check if visibleTo has a value already
+	if projectState.VisibleTo != nil {
+		logger.Info("visible to is already set")
+		return shim.Error("visible to is already set")
+	}
+
+	//check if someone has contributed already
+	if len(projectState.Contributors) != 0 {
+		logger.Info("contributors is already set")
+		return shim.Error("contributors is already set")
+	}
+
+	var corporateNames []string
+	corporateNames = append(corporateNames, corporateName)
+	projectState.VisibleTo = corporateNames
+
+	projectAsBytes, _ = json.Marshal(projectState)
+	APIstub.PutState(projectId, projectAsBytes)
+
+	//create a transaction
+	err = createTransaction(APIstub, commonName, "All", 0.0, date, "AddVisibleTo", projectId, txId, -1)
+	if err != nil {
+		return shim.Error("Failed to add a Tx: " + err.Error())
+	}
+
+	logger.Info("*************** updateVisibleTo Successful ***************")
 	return shim.Success(nil)
 }

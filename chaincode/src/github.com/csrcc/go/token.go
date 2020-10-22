@@ -1,5 +1,9 @@
 package main
 
+/* Imports
+ * 4 utility libraries for formatting, handling bytes, reading and writing JSON, and string manipulation
+ * 2 specific Hyperledger Fabric specific libraries for Smart Contracts
+ */
 import (
 	"bytes"
 	"encoding/json"
@@ -10,6 +14,12 @@ import (
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
 )
+
+var logger = shim.NewLogger("token")
+
+// Define the Smart Contract structure
+type SmartContract struct {
+}
 
 type TokenRequest struct {
 	ObjectType   string  `json:"docType"`
@@ -22,6 +32,96 @@ type TokenRequest struct {
 	Comments     string  `json:"comments"`
 	ProofDocName string  `json:"proofDocName"`
 	ProofDocHash string  `json:"proofDocHash"`
+}
+
+func main() {
+	// Create a new Smart Contract
+	err := shim.Start(new(SmartContract))
+	if err != nil {
+		fmt.Printf("Error starting Contract Chaincode: %s", err)
+	}
+}
+
+//Init function
+func (s *SmartContract) Init(APIstub shim.ChaincodeStubInterface) pb.Response {
+	APIstub.PutState("snapshot_exists", []byte("0"))
+	return shim.Success(nil)
+}
+
+/*
+ * The Invoke method is called as a result of an application request to run the Smart Contract "token"
+ * The calling application program has also specified the particular smart contract function to be called, with arguments
+ */
+func (s *SmartContract) Invoke(APIstub shim.ChaincodeStubInterface) pb.Response {
+
+	// Retrieve the requested Smart Contract function and arguments
+	function, args := APIstub.GetFunctionAndParameters()
+
+	// Route to the appropriate handler function to interact with the ledger appropriately
+	if function == "requestTokens" {
+		return s.requestTokens(APIstub, args)
+	} else if function == "rejectTokens" {
+		return s.rejectTokens(APIstub, args)
+	} else if function == "queryByKey" {
+		return s.queryByKey(APIstub, args)
+	} else if function == "assignTokens" {
+		return s.assignTokens(APIstub, args)
+	} else if function == "transferTokens" {
+		return s.transferTokens(APIstub, args)
+	} else if function == "snapshotCurrentCorporateBalances" {
+		return s.snapshotCurrentCorporateBalances(APIstub, args)
+	} else if function == "transferUnspentTokensToGovt" {
+		return s.transferUnspentTokensToGovt(APIstub, args)
+	} else if function == "getBalance" {
+		return s.getBalance(APIstub)
+	} else if function == "queryForAllTokenRequests" {
+		return s.queryForAllTokenRequests(APIstub)
+	} else if function == "queryForSnapshot" {
+		return s.queryForSnapshot(APIstub, args)
+	} else if function == "queryForTransactionRange" {
+		return s.queryForTransactionRange(APIstub, args)
+	} else if function == "createProject" {
+		return s.createProject(APIstub, args)
+	} else if function == "queryAllProjects" {
+		return s.queryAllProjects(APIstub, args)
+	} else if function == "redeemRequest" {
+		return s.redeemRequest(APIstub, args)
+	} else if function == "approveRedeemRequest" {
+		return s.approveRedeemRequest(APIstub, args)
+	} else if function == "reserveFundsForProject" {
+		return s.reserveFundsForProject(APIstub, args)
+	} else if function == "releaseFundsForProject" {
+		return s.releaseFundsForProject(APIstub, args)
+	} else if function == "getRedeemRequest" {
+		return s.getRedeemRequest(APIstub)
+	} else if function == "getTransaction" {
+		return s.getTransaction(APIstub)
+	} else if function == "getProjectTransactions" {
+		return s.getProjectTransactions(APIstub, args)
+	} else if function == "updateProject" {
+		return s.updateProject(APIstub, args)
+	} else if function == "validatePhase" {
+		return s.validatePhase(APIstub, args)
+	} else if function == "addDocumentHash" {
+		return s.addDocumentHash(APIstub, args)
+	} else if function == "generalQueryFunction" {
+		return s.generalQueryFunction(APIstub, args)
+	} else if function == "generalQueryFunctionPagination" {
+		return s.generalQueryFunctionPagination(APIstub, args)
+	} else if function == "getCorporateDetails" {
+		return s.getCorporateDetails(APIstub)
+	} else if function == "getAllCorporates" {
+		return s.getAllCorporates(APIstub)
+	} else if function == "addCorporatePan" {
+		return s.addCorporatePan(APIstub, args)
+	} else if function == "getBalanceCorporate" {
+		return s.getBalanceCorporate(APIstub, args)
+	} else if function == "saveItData" {
+		return s.saveItData(APIstub, args)
+	} else if function == "updateVisibleTo" {
+		return s.updateVisibleTo(APIstub, args)
+	}
+	return shim.Error("Invalid Smart Contract function name.")
 }
 
 //request tokens
@@ -324,7 +424,7 @@ func (s *SmartContract) transferTokens(APIstub shim.ChaincodeStubInterface, args
 	//donated amount
 	qty, err := strconv.ParseFloat(args[0], 64)
 	if err != nil {
-		return shim.Error("convertion failed: " + err.Error())
+		return shim.Error("qty is not a number! " + err.Error())
 	}
 	qtyToTransfer := qty
 
@@ -332,16 +432,16 @@ func (s *SmartContract) transferTokens(APIstub shim.ChaincodeStubInterface, args
 	fromAddress := commonName
 	phaseNumber, err := strconv.Atoi(args[2])
 	if err != nil {
-		return shim.Error("phase number is incorrect!")
+		return shim.Error("phase number is not a number! " + err.Error())
 	}
 	reviewMsg := args[3]
 	rating, err := strconv.Atoi(args[4])
 	if err != nil {
-		return shim.Error("rating is incorrect!")
+		return shim.Error("rating is not an integer! " + err.Error())
 	}
 	date, err := strconv.Atoi(args[5])
 	if err != nil {
-		return shim.Error("incorrect date: " + err.Error())
+		return shim.Error("date is not an integer! " + err.Error())
 	}
 	txId1 := args[6]
 	txId2 := args[7]
@@ -735,4 +835,165 @@ func (s *SmartContract) transferUnspentTokensToGovt(APIstub shim.ChaincodeStubIn
 
 	logger.Info("*************** transferUnspentTokensToGovt Successful ***************")
 	return shim.Success(nil)
+}
+
+func (s *SmartContract) queryForSnapshot(APIstub shim.ChaincodeStubInterface, args []string) pb.Response {
+	corporates := getCorporates(APIstub)
+
+	var buffer bytes.Buffer
+	buffer.WriteString("[")
+	bArrayMemberAlreadyWritten := false
+
+	for _, corporate := range corporates {
+		qtyBytes, err := APIstub.GetState(corporate + "_snapshot")
+		if err != nil {
+			return shim.Error("Failed to get snapshot: " + err.Error())
+		}
+		tokenBalance := string(qtyBytes)
+
+		if bArrayMemberAlreadyWritten == true {
+			buffer.WriteString(",")
+		}
+		buffer.WriteString("{\"corporateName\":\"")
+		buffer.WriteString(corporate)
+		buffer.WriteString("\", \"balance\":")
+		buffer.WriteString(tokenBalance)
+		buffer.WriteString("}")
+		bArrayMemberAlreadyWritten = true
+	}
+	buffer.WriteString("]")
+
+	return shim.Success(buffer.Bytes())
+}
+
+func (s *SmartContract) queryForTransactionRange(APIstub shim.ChaincodeStubInterface, args []string) pb.Response {
+	if len(args) != 2 {
+		return shim.Error("Incorrect number of arguments. Expecting 2")
+	} else if len(args[0]) <= 0 {
+		return shim.Error("1st argument must be a non-empty string")
+	} else if len(args[1]) <= 0 {
+		return shim.Error("2nd argument must be a non-empty string")
+	}
+
+	fromDate, err := strconv.Atoi(args[0])
+	if err != nil {
+		return shim.Error("Error converting date " + err.Error())
+	}
+	toDate, nil := strconv.Atoi(args[1])
+	if err != nil {
+		return shim.Error("Error converting date " + err.Error())
+	}
+
+	queryString := fmt.Sprintf("{\"selector\":{\"docType\":\"Transaction\", \"date\":{ \"$and\":[{ \"$gt\":%d }, {\"$lt\":%d}]}}}", fromDate, toDate)
+
+	queryResults, err := getQueryResultForQueryString(APIstub, queryString)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	return shim.Success(queryResults)
+}
+
+func getQueryResultForQueryString(stub shim.ChaincodeStubInterface, queryString string) ([]byte, error) {
+
+	fmt.Printf("- getQueryResultForQueryString queryString:\n%s\n", queryString)
+
+	resultsIterator, err := stub.GetQueryResult(queryString)
+	if err != nil {
+		return nil, err
+	}
+	defer resultsIterator.Close()
+
+	buffer, err := constructQueryResponseFromIterator(resultsIterator)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Printf("- getQueryResultForQueryString queryResult:\n%s\n", buffer.String())
+
+	return buffer.Bytes(), nil
+}
+
+func constructQueryResponseFromIterator(resultsIterator shim.StateQueryIteratorInterface) (*bytes.Buffer, error) {
+	// buffer is a JSON array containing QueryResults
+	var buffer bytes.Buffer
+	buffer.WriteString("[")
+
+	bArrayMemberAlreadyWritten := false
+	for resultsIterator.HasNext() {
+		queryResponse, err := resultsIterator.Next()
+		if err != nil {
+			return nil, err
+		}
+		// Add a comma before array members, suppress it for the first array member
+		if bArrayMemberAlreadyWritten == true {
+			buffer.WriteString(",")
+		}
+		buffer.WriteString("{\"Key\":")
+		buffer.WriteString("\"")
+		buffer.WriteString(queryResponse.Key)
+		buffer.WriteString("\"")
+
+		buffer.WriteString(", \"Record\":")
+		// Record is a JSON object, so we write as-is
+		buffer.WriteString(string(queryResponse.Value))
+		buffer.WriteString("}")
+		bArrayMemberAlreadyWritten = true
+	}
+	buffer.WriteString("]")
+
+	return &buffer, nil
+}
+
+func tempgetQueryResultForQueryString(stub shim.ChaincodeStubInterface, queryString string) ([]byte, error) {
+
+	fmt.Printf("- getQueryResultForQueryString queryString:\n%s\n", queryString)
+
+	resultsIterator, err := stub.GetQueryResult(queryString)
+	if err != nil {
+		return nil, err
+	}
+	defer resultsIterator.Close()
+
+	buffer, err := tempconstructQueryResponseFromIterator(resultsIterator)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Printf("- getQueryResultForQueryString queryResult:\n%s\n", buffer.String())
+
+	return buffer.Bytes(), nil
+}
+
+func tempconstructQueryResponseFromIterator(resultsIterator shim.StateQueryIteratorInterface) (*bytes.Buffer, error) {
+	// buffer is a JSON array containing QueryResults
+	var buffer bytes.Buffer
+	buffer.WriteString("[")
+
+	bArrayMemberAlreadyWritten := false
+	for resultsIterator.HasNext() {
+		queryResponse, err := resultsIterator.Next()
+		logger.Info("queryResponse")
+		logger.Info(queryResponse)
+		if err != nil {
+			return nil, err
+		}
+		// Add a comma before array members, suppress it for the first array member
+		if bArrayMemberAlreadyWritten == true {
+			buffer.WriteString(",")
+		}
+		// buffer.WriteString("{\"Key\":")
+		// buffer.WriteString("\"")
+		// buffer.WriteString(queryResponse.Key)
+		// buffer.WriteString("\"")
+
+		//buffer.WriteString("{\"Record\":")
+		// Record is a JSON object, so we write as-is
+
+		buffer.WriteString(string(queryResponse.Value))
+		//buffer.WriteString("}")
+		bArrayMemberAlreadyWritten = true
+	}
+	buffer.WriteString("]")
+
+	return &buffer, nil
 }

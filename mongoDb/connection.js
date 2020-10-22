@@ -1,7 +1,8 @@
 const { Schema } = require("mongoose");
 const Mongoose = require("mongoose")
 Mongoose.Promise = global.Promise;
-const url = "mongodb://localhost:27017/CSR";
+// const url = "mongodb://testUser:test%40123@localhost:27018/csr";
+const url = "mongodb://localhost:27017/CSR";	
 
 let options = {
     useUnifiedTopology: true,
@@ -13,17 +14,28 @@ var projectModel;
 var txDescriptionModel;
 var orgModel;
 
-setInterval(connectFunction, 30000)
+// Mongoose.connect('mongodb://testUser:test%40123@localhost:27018/csr', {useNewUrlParser: true, useUnifiedTopology: true});
+// var db = Mongoose.connection;
+// db.on('error', console.error.bind(console, 'connection error:'));
+// db.once('open', function() {
+//     // we're connected!
+//     console.log('Connection established...');
+//     //notificationModel = Mongoose.model('Notification', notificationSchema)
+//     //projectModel = Mongoose.model('Project', projectSchema)
+//     //txDescriptionModel = Mongoose.model('TxDescription', txDescriptionSchema)
+//     //orgModel = Mongoose.model('OrganisationProfile', orgSchema)
+// });
 
-function connectFunction() {
-    Mongoose.connect(url, options).then((database) => {
-        notificationModel = Mongoose.model('Notification', notificationSchema)
-        projectModel = Mongoose.model('Project', projectSchema)
-        txDescriptionModel = Mongoose.model('TxDescription', txDescriptionSchema)
-        orgModel = Mongoose.model('OrganisationProfile', orgSchema)
-    }).catch(() => {
-        
-    })
+setInterval(connectFunction,30000)	
+function connectFunction() {	
+    Mongoose.connect(url, options).then((database) => {	
+        notificationModel = Mongoose.model('Notification', notificationSchema)	
+        projectModel = Mongoose.model('Project', projectSchema)	
+        txDescriptionModel = Mongoose.model('TxDescription', txDescriptionSchema)	
+        orgModel = Mongoose.model('OrganisationProfile', orgSchema)	
+    }).catch(() => {	
+    	
+    })	
 }
 
 let phaseSchema = Schema({
@@ -140,5 +152,10 @@ collection.txDescriptionCollection = () => {
     // })
     return txDescriptionModel;
 }
+
+notificationModel = Mongoose.model('Notification', notificationSchema)
+        projectModel = Mongoose.model('Project', projectSchema)
+        txDescriptionModel = Mongoose.model('TxDescription', txDescriptionSchema)
+        orgModel = Mongoose.model('OrganisationProfile', orgSchema)
 
 module.exports = collection;

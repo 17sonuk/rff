@@ -5,6 +5,7 @@ var query = require('./app/query.js');
 const XLSX = require('xlsx');
 const path = require('path');
 const fs = require('fs');
+
 const router = express.Router();
 
 function getErrorMessage(field) {
@@ -23,7 +24,7 @@ router.get('/getFundsRaisedNgo', async function (req, res) {
     logger.debug('==================== QUERY BY CHAINCODE: getFundsRaisedNgo ==================');
     var channelName = req.header('channelName');
     var chaincodeName = req.header('chaincodeName');
-    let peer = req.query.peer;
+    let peer = "peer0." + req.orgname.toLowerCase() + ".csr.com";;
     
     logger.debug('channelName : ' + channelName);
     logger.debug('chaincodeName : ' + chaincodeName);
@@ -53,20 +54,30 @@ router.get('/getFundsRaisedNgo', async function (req, res) {
     if (message.toString().includes("Error:")) {
         newObject.success = false
         newObject.message = message.toString().split("Error:")[1].trim()
-        return res.send(newObject)
+        res.send(newObject)
     }
     else {
         newObject = new Object()
         newObject = JSON.parse(message.toString())
         let contributors = [];
         let amount = 0;
+	
+	for(var i=0; i<newObject.length; i++) {
+            contributors.push(...Object.keys(newObject[i].Record.contributors))
+
+            var phases = newObject[i].Record.phases
+            for(var j=0; j<phases.length; j++) {
+                amount += phases[j].qty - phases[j].outstandingQty
+            }
+        }
+	/*
         newObject.forEach(e => {
             contributors.push(...Object.keys(e.Record.contributors))
             e.Record.phases.forEach(q => {
                 amount += q.qty - q.outstandingQty
             })
         })
-
+	*/
         contributors = [...new Set(contributors)].length
         res.send({ fundsRaised: amount, contributorsCount: contributors })
     }
@@ -129,6 +140,23 @@ router.get('/getAllProjects', async function (req, res) {
         if (ngoName.length != 0) {
             queryString["selector"]["ngo"] = ngoName + ".ngo.csr.com"
         }
+
+        if (self !== "true") {
+            queryString["selector"]["$or"] = [
+                {
+                   "visibleTo": {
+                      "$exists": false
+                   }
+                },
+                {
+                   "visibleTo": {
+                      "$in": [
+                        req.username
+                      ]
+                   }
+                }
+            ]
+        }
     } else if (req.orgname === "Corporate") {
         queryString["selector"]["contributors"] = {}
         queryString["selector"]["contributors"][orgDLTName.replace(/\./g, "\\\\.")] = "exists";
@@ -147,8 +175,9 @@ router.get('/getAllProjects', async function (req, res) {
         queryString["selector"]["projectState"]["$ne"] = ""
     }
 
+    logger.debug('queryString: ' + JSON.stringify(queryString));
+
     var args = [JSON.stringify(queryString), pageSize, bookmark];
-    logger.debug('queryString: ' + args[0]);
 
     let message = await query.queryChaincode(peer, channelName, chaincodeName, args, "generalQueryFunctionPagination", req.username, req.orgname);
 
@@ -157,7 +186,7 @@ router.get('/getAllProjects', async function (req, res) {
     if (message.toString().includes("Error:")) {
         newObject.success = false
         newObject.message = message.toString().split("Error:")[1].trim()
-        return res.send(newObject)
+        res.send(newObject)
     }
     else {
         var responseMetaObj = new Object()
@@ -178,7 +207,7 @@ router.get('/getAllProjects', async function (req, res) {
         finalResponse["metaData"]["RecordsCount"] = responseMetaObj[0]["ResponseMetadata"]["RecordsCount"];
         finalResponse["metaData"]["Bookmark"] = responseMetaObj[0]["ResponseMetadata"]["Bookmark"];
 
-        //loop over the projects
+	//loop over the projects
         for(var i=0; i<newObject.length; i++) {
             
             var response = {}
@@ -208,16 +237,16 @@ router.get('/getAllProjects', async function (req, res) {
             response['currentPhase'] = currentPhase + 1;
             response['currentPhaseStatus'] = record.phases[currentPhase]['phaseState'];
             response['currentPhaseTarget'] = record.phases[currentPhase]['qty'];
-            response['currentPhaseOutstandingAmount'] = record.phases[currentPhase]['OutstandingQty'];
+            response['currentPhaseOutstandingAmount'] = record.phases[currentPhase]['outstandingQty'];
 
             response['projectId'] = newObject[i]['Key']
             response['contributors'] = Object.keys(record['contributors']).map(splitOrgName)
             response['ngo'] = splitOrgName(record['ngo'])
             response['totalProjectCost'] = record['totalProjectCost']
-            response["percentageFundReceived"] = (response["totalReceived"]/record['totalProjectCost']) * 100;
             response['projectName'] = record['projectName']
             response['projectType'] = record['projectType']
             response['totalPhases'] = record.phases.length
+	    response["percentageFundReceived"] = (response["totalReceived"]/record['totalProjectCost']) * 100;
 
             var endDate = record.phases[record.phases.length - 1]['endDate']
             var timeDifference = endDate - Date.now()
@@ -228,8 +257,8 @@ router.get('/getAllProjects', async function (req, res) {
             allRecords.push(response);
         }
 
-	    logger.debug(allRecords);
-        finalResponse['allRecords'] = allRecords
+	logger.debug(allRecords);
+        finalResponse["allRecords"] = allRecords
         res.send(finalResponse)
     }
 });
@@ -275,14 +304,14 @@ router.get('/getRecord/:recordKey', async function (req, res) {
     if (message.toString().includes("Error:")) {
         newObject.success = false
         newObject.message = message.toString().split("Error:")[1].trim()
-        return res.send(newObject)
+        res.send(newObject)
     }
     else {
         newObject = JSON.parse(message.toString())
         newObject = newObject[0]
 
         if (newObject['Record']['docType'] === 'Project') {
-	        newObject['Record']['ngo'] = splitOrgName(newObject['Record']['ngo'])
+	    newObject['Record']['ngo'] = splitOrgName(newObject['Record']['ngo'])
             newObject['Record']['totalReceived'] = 0;
             var fundReceived = 0
 
@@ -296,11 +325,11 @@ router.get('/getRecord/:recordKey', async function (req, res) {
                     newObject["Record"]["currentPhase"] = f + 1;
                 }
 
-		        Object.keys(newObject["Record"].phases[f]['contributions']).forEach(function(key) {
-                    var newkey = splitOrgName(key);
+		Object.keys(newObject["Record"].phases[f]['contributions']).forEach(function(key) {
+                    var newkey = key.split(".")[0];
                     newObject["Record"].phases[f]['contributions'][newkey] = newObject["Record"].phases[f]['contributions'][key];
                     delete newObject["Record"].phases[f]['contributions'][key];
-		            newObject["Record"].phases[f]['contributions'][newkey]['donatorAddress'] = splitOrgName(newObject["Record"].phases[f]['contributions'][newkey]['donatorAddress'])
+		    newObject["Record"].phases[f]['contributions'][newkey]['donatorAddress'] = splitOrgName(newObject["Record"].phases[f]['contributions'][newkey]['donatorAddress'])
                 });
             }
 
@@ -313,7 +342,7 @@ router.get('/getRecord/:recordKey', async function (req, res) {
         }
 
         logger.debug(newObject);
-        return res.send(newObject)
+        res.send(newObject)
     }
 });
 
@@ -604,7 +633,7 @@ router.get('/getAllParkedTxForCorporate', async function (req, res) {
     if (message.toString().includes("Error:")) {
         newObject.success = false
         newObject.message = message.toString().split("Error:")[1].trim()
-        return res.send(newObject)
+        res.send(newObject)
     }
     else {
         //console.log(message.toString())
@@ -618,21 +647,21 @@ router.get('/getAllParkedTxForCorporate', async function (req, res) {
                 "fields": ["projectName"]
             }
 	    
-            if(parked === "true") {
-                projectQueryString["selector"]["_id"] = objRef.split('_')[1]
-            }
+	    if(parked === "true" || newObject[i]["Record"]["txType"] === 'ReleaseFundsFromEscrow') {
+	    	projectQueryString["selector"]["_id"] = objRef.split('_')[1]
+	    }
 
             args = [JSON.stringify(projectQueryString)]
             let projectResponse = await query.queryChaincode(peer, channelName, chaincodeName, args, "generalQueryFunction", req.username, req.orgname);
             projectResponse = projectResponse[0]
             newProjectObj = JSON.parse(projectResponse.toString());
-                
-            newObject[i]["Record"]["projectName"] = newProjectObj[0]["Record"]["projectName"]
-            newObject[i]["Record"]["from"] = splitOrgName(newObject[i]["Record"]["from"])
-            newObject[i]["Record"]["to"] = splitOrgName(newObject[i]["Record"]["to"])
+            
+	    newObject[i]["Record"]["projectName"] = newProjectObj[0]["Record"]["projectName"]
+	    newObject[i]["Record"]["from"] = splitOrgName(newObject[i]["Record"]["from"])
+	    newObject[i]["Record"]["to"] = splitOrgName(newObject[i]["Record"]["to"])
         }
         newObject.success = true
-        return res.send(newObject)
+        res.send(newObject)
     }
 });
 
@@ -753,7 +782,7 @@ router.get('/getParkedQtyForCorporate', async function (req, res) {
     if (message.toString().includes("Error:")) {
         newObject.success = false
         newObject.message = message.toString().split("Error:")[1].trim()
-        return res.send(newObject)
+        res.send(newObject)
     }
     else {
         newObject = new Object()
@@ -770,7 +799,7 @@ router.get('/getParkedQtyForCorporate', async function (req, res) {
 
         newObject.success = true
         response.success = true
-        return res.send(response)
+        res.send(response)
     }
 });
 
@@ -975,6 +1004,7 @@ router.get('/getNgoProjectAndLockedAmountDetails', async function (req, res) {
                 phase.outstandingQty = projectList[i].Record.phases[j].outstandingQty
                 phase.phaseState = projectList[i].Record.phases[j].phaseState
                 obj.phase = phase
+
                 break
             }
         }
@@ -984,7 +1014,6 @@ router.get('/getNgoProjectAndLockedAmountDetails', async function (req, res) {
     res.send({ lockedAmount: response })
 });
 
-//get the transactions of the calling ngo for a specific project
 router.get('/getNgoProjectTx', async function (req, res) {
     logger.debug('==================== QUERY BY CHAINCODE: getNgoProjectTx ==================')
     var channelName = req.header('channelName')
@@ -1027,23 +1056,22 @@ router.get('/getNgoProjectTx', async function (req, res) {
     if (message.toString().includes("Error:")) {
         newObject.success = false
         newObject.message = message.toString().split("Error:")[1].trim()
-        return res.send(newObject)
+        res.send(newObject)
     }
     else {
         newObject = new Object()
         newObject = JSON.parse(message.toString())
         newObject.success = true
 
-	    for(var i=0; i<newObject.length; i++) {
+	for(var i=0; i<newObject.length; i++) {
             newObject[i]["Record"]["from"] = splitOrgName(newObject[i]["Record"]["from"])
             newObject[i]["Record"]["to"] = splitOrgName(newObject[i]["Record"]["to"])
         }
 
-        return res.send(newObject)
+        res.send(newObject)
     }
 });
 
-//get all transactions of a project
 router.get('/projectIdTransaction', async function (req, res) {
     logger.debug('==================== QUERY BY CHAINCODE: projectIdTransaction ==================');
     var channelName = req.header('channelName');
@@ -1143,7 +1171,6 @@ router.get('/getItData', async function (req, res) {
     res.send({ newObject })
 });
 
-// generate a report of corporates for the IT Dept
 router.get('/itReport', async function (req, res) {
     logger.debug('==================== QUERY BY CHAINCODE: itReport ==================');
     var channelName = req.header('channelName');
@@ -1347,8 +1374,7 @@ router.get('/itReport', async function (req, res) {
         
         if(liabality >= 0) {
             resultObject.pendingLiability = liabality
-        }
-        else {
+        }else {
             resultObject.pendingLiability=0
         }
         
@@ -1504,7 +1530,6 @@ router.get('/getNgoReport', async function (req, res) {
     res.send(response);
 });
 
-
 //get the details of contributions to an ngo in the current financial year
 router.get('/getNgoContributionDetails', async function (req, res) {
     logger.debug('==================== QUERY BY CHAINCODE: getNgoContributionDetails ==================');
@@ -1555,14 +1580,9 @@ router.get('/getNgoContributionDetails', async function (req, res) {
             "docType": "Transaction",
             "to": ngoName + ".ngo.csr.com",
             "txType": {
-                "$in": [
-                    "TransferToken", 
-                    "TransferToken_snapshot", 
-                    "FundsToEscrowAccount", 
-                    "FundsToEscrowAccount_snapshot"
-                ]
+                "$in": ["TransferToken", "TransferToken_snapshot", "FundsToEscrowAccount", "FundsToEscrowAccount_snapshot"]
             },
-	    "date": {
+	        "date": {
                 "$gt": startDate.valueOf(),
                 "$lt": endDate.valueOf()
             }
@@ -1577,14 +1597,12 @@ router.get('/getNgoContributionDetails', async function (req, res) {
     console.log(message[0].toString())
 
     for(let i=0; i<newObject.length; i++) {
-	    let from = newObject[i]["Record"]["from"]
-        let txType = newObject[i]["Record"]["txType"]
-
+	let from = newObject[i]["Record"]["from"]
         if(response["result"][from] === undefined) {
             response["result"][from] = {"totalTransferred": 0, "totalLocked": 0}
         }
         
-        if(txType === "TransferToken" || txType === "TransferToken_snapshot") {
+        if(newObject[i]["Record"]["txType"] === "TransferToken" || newObject[i]["Record"]["txType"] === "TransferToken_snapshot") {
             response["result"][from]["totalTransferred"] += newObject[i]["Record"]["qty"]
         }
         else {
@@ -1593,9 +1611,9 @@ router.get('/getNgoContributionDetails', async function (req, res) {
     }
 
     Object.keys(response["result"]).forEach(function(key) {
-        var newkey = splitOrgName(key);
-        response["result"][newkey] = response["result"][key];
-        delete response["result"][key];
+  	var newkey = splitOrgName(key);
+  	response["result"][newkey] = response["result"][key];
+ 	delete response["result"][key];
     });
     
     response["success"] = true;
@@ -1613,10 +1631,11 @@ router.get('/getAllTokenRequests', async function (req, res) {
     var pageSize = req.query.pageSize;
     var bookmark = req.query.bookmark;
     var status = req.query.status;
-
+ 
     logger.debug('channelName : ' + channelName);
     logger.debug('chaincodeName : ' + chaincodeName);
-    logger.debug('pageSize : ' + pageSize + ' bookmark : ' + bookmark);
+    logger.debug('pageSize : ' + pageSize);
+    logger.debug('bookmark : ' + bookmark);
     logger.debug('status : ' + status);
 
     if (!chaincodeName) {
@@ -1639,11 +1658,11 @@ router.get('/getAllTokenRequests', async function (req, res) {
     let queryString = {
         "selector": {
             "docType": "TokenRequest",
-            "status": status
+	        "status": status
         },
-        "sort": [{ "date": "asc" }]
+	    "sort": [{ "date": "asc" }]
     }
-    
+
     if(req.orgname === 'CreditsAuthority') {
         console.log('CA has requested...')
     }
@@ -1651,7 +1670,7 @@ router.get('/getAllTokenRequests', async function (req, res) {
         queryString['selector']['from'] = userDLTName
     }
     else {
-        res.send({ success: false, message: 'Unauthorised token request access...'})
+        res.send({ success: false, message: 'Unauthorised token tx request access...'})
     }
     
     var args = [JSON.stringify(queryString), pageSize, bookmark]
@@ -1662,10 +1681,10 @@ router.get('/getAllTokenRequests', async function (req, res) {
     if (message.toString().includes("Error:")) {
         newObject.success = false
         newObject.message = message.toString().split("Error:")[1].trim()
-        return res.send(newObject)
+        res.send(newObject)
     }
     else {
-        var responseMetaObj = new Object()
+	    var responseMetaObj = new Object()
 
         var msgList = message.toString().split("#");
         logger.debug(msgList[0]);
@@ -1673,6 +1692,7 @@ router.get('/getAllTokenRequests', async function (req, res) {
 
         responseMetaObj = JSON.parse(msgList[1]);
         newObject = JSON.parse(msgList[0]);
+        //newObject.success = true
 
         var finalResponse = {}
         var allRecords = []
@@ -1685,10 +1705,12 @@ router.get('/getAllTokenRequests', async function (req, res) {
         for(var i=0; i<newObject.length; i++) {
             newObject[i]['Record']['from'] = splitOrgName(newObject[i]['Record']['from'])
             newObject[i]['Record']['role'] = splitOrgName(newObject[i]['Record']['role'])
-            allRecords.push(newObject[i]['Record'])
+	        allRecords.push(newObject[i]['Record'])
         }
 
-        finalResponse['records'] = allRecords
+        //newObject.success = true;
+        //res.send(newObject);
+	    finalResponse['records'] = allRecords
         finalResponse['success'] = true
         res.send(finalResponse);
     }
@@ -1701,11 +1723,11 @@ router.get('/getAllRedeemRequests', async function (req, res) {
     var chaincodeName = req.header('chaincodeName');
     var peer = "peer0." + req.orgname.toLowerCase() + ".csr.com";
     var userDLTName = req.username + "." + req.orgname.toLowerCase() + ".csr.com";
-    
+   
     var pageSize = req.query.pageSize;
     var bookmark = req.query.bookmark;
     var status = req.query.status;
-
+ 
     logger.debug('channelName : ' + channelName);
     logger.debug('chaincodeName : ' + chaincodeName);
     logger.debug('pageSize : ' + pageSize + ' bookmark : ' + bookmark);
@@ -1731,9 +1753,9 @@ router.get('/getAllRedeemRequests', async function (req, res) {
     let queryString = {
         "selector": {
             "docType": "Redeem",
-            "status": status
+	        "status": status
         },
-        "sort": [{ "date": "asc" }]
+	    "sort": [{ "date": "asc" }]
     }
     
     if(req.orgname === 'CreditsAuthority') {
@@ -1754,10 +1776,10 @@ router.get('/getAllRedeemRequests', async function (req, res) {
     if (message.toString().includes("Error:")) {
         newObject.success = false
         newObject.message = message.toString().split("Error:")[1].trim()
-        return res.send(newObject)
+        res.send(newObject)
     }
     else {
-        var responseMetaObj = new Object()
+	    var responseMetaObj = new Object()
 
         var msgList = message.toString().split("#");
         logger.debug(msgList[0]);
@@ -1776,12 +1798,24 @@ router.get('/getAllRedeemRequests', async function (req, res) {
 
         for(var i=0; i<newObject.length; i++) {
             newObject[i]['Record']['from'] = splitOrgName(newObject[i]['Record']['from'])
-            allRecords.push(newObject[i]['Record'])
+            newObject[i]['Record']['key'] = newObject[i]['Key']
+	        allRecords.push(newObject[i]['Record'])
         }
 
         finalResponse['records'] = allRecords
         finalResponse['success'] = true
-        res.send(finalResponse);
+        res.send(finalResponse);	
+	/*
+        newObject = new Object()
+        newObject = JSON.parse(message.toString())
+
+        for(var i=0; i<newObject.length; i++) {
+            newObject[i]['Record']['from'] = splitOrgName(newObject[i]['Record']['from'])
+        }
+
+        newObject.success = true;
+        res.send(newObject);
+	*/
     }
 });
 
@@ -1828,16 +1862,17 @@ router.get('/getBalance', async function (req, res) {
     //query normal and snapshot balance
     let message = await query.queryChaincode(peer, channelName, chaincodeName, args, "generalQueryFunction", req.username, req.orgname);
     var newObject = new Object()
+    console.log('response message: ' + message.toString())
     if (message.toString().includes("Error:")) {
         newObject.success = false
         newObject.message = message.toString().split("Error:")[1].trim()
-        return res.send(newObject)
+        res.send(newObject)
     }
     else {
         newObject = JSON.parse(message.toString())
 
         for(var i=0; i<newObject.length; i++) {
-            if(newObject[i]['Key'] === userDLTName) {
+	        if(newObject[i]['Key'] === userDLTName) {
                 response['balance'] = Number(newObject[i]['Record'])
             }
             else if(newObject[i]['Key'] === userDLTName + '_snapshot') {
@@ -1866,7 +1901,7 @@ router.get('/getBalance', async function (req, res) {
         if (message.toString().includes("Error:")) {
             newObject.success = false
             newObject.message = message.toString().split("Error:")[1].trim()
-            return res.send(newObject)
+            res.send(newObject)
         }
         else {
             newObject = JSON.parse(message.toString())
@@ -1882,6 +1917,27 @@ router.get('/getBalance', async function (req, res) {
     }
 
     res.send(response)
+});
+
+//get a list of all corporate names
+router.get('/getCorporateNames', async function (req, res) {
+    logger.debug('==================== QUERY: getCorporateNames ==================');
+    
+    //joining path of directory 
+    var directoryPath = path.join(__dirname, './fabric-client-kv-corporate');
+
+    var filenames = fs.readdirSync(directoryPath);
+    console.log("\nCurrent directory filenames:");
+    var listOfCorporates = filenames.filter(function (value, index, arr) {
+        return value != 'admin' && value != 'ca';
+    });
+
+    var response = {
+        "success": true,
+        "result": listOfCorporates
+    }
+
+    res.send(response);
 });
 
 module.exports = router;

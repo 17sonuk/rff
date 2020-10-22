@@ -112,7 +112,7 @@ router.post('/approveUser', (req, res, next) => {
 router.post('/login', (req, res, next) => {
     console.log("router-approveUser", req.body);
     let name = req.body.name
-    if (name.length<4 && (name.startsWith('ca') || name.startsWith('it'))) res.json({ success: true, message: 'login successful', name: req.body.name, role: "csr" })
+    if (name.length<4 && (name.startsWith('ca2') || name.startsWith('it'))) res.json({ success: true, message: 'login successful', name: req.body.name, role: "csr" })
     projectService.login(req.body.name)
         .then((data) => {
             res.json(data)

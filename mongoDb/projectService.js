@@ -98,7 +98,7 @@ projectService.registerUser = (obj) => {
     obj['date'] = new Date().getTime();
     return projectModel.registerUser(obj).then(data => {
         if (data) {
-            return data;
+            return { success: true, message: 'user successfully registered...' };
         } else {
             let err = new Error("Bad Connection")
             err.status = 500
@@ -180,13 +180,13 @@ projectService.getAmountFromBalanceSheet = (name) => {
             let year_p2 = '';
             let year_p3 = '';
             if (m < 3) {
-                year_p1 = String(y - 1) + '-' + String(y);
-                year_p2 = String(y - 2) + '-' + String(y-1);
-                year_p3 = String(y - 3) + '-' + String(y-2);
+                year_p1 = String(y - 2) + '-' + String(y - 1);
+                year_p2 = String(y - 3) + '-' + String(y - 2);
+                year_p3 = String(y - 4) + '-' + String(y - 3);
             } else {
-                year_p1 = String(y) + '-' + String(y + 1);
-                year_p2 = String(y-1) + '-' + String(y);
-                year_p3 = String(y-2) + '-' + String(y - 1);
+                year_p1 = String(y - 1) + '-' + String(y);
+                year_p2 = String(y - 2) + '-' + String(y - 1);
+                year_p3 = String(y - 3) + '-' + String(y - 2);
             }
             let total = 0;
             let j = 0;

@@ -133,7 +133,7 @@ organizations:
     # this way. The SDK should allow applications to set the org admin identity via APIs, and only use
     # this route as an alternative when it exists.
     adminPrivateKey:
-      path: artifacts/channel/crypto-config/peerOrganizations/corporate.csr.com/users/Admin@corporate.csr.com/msp/keystore/0035f179cf6ff6566f7b891bd99a22f8d93e2a9056e397486ebdb428547ff2dd_sk
+      path: artifacts/channel/crypto-config/peerOrganizations/corporate.csr.com/users/Admin@corporate.csr.com/msp/keystore/766802be1acd394b5460f7e59bc650e6d915fdf9dd537506f698db752e889a30_sk
     signedCert:
       path: artifacts/channel/crypto-config/peerOrganizations/corporate.csr.com/users/Admin@corporate.csr.com/msp/signcerts/Admin@corporate.csr.com-cert.pem
 
@@ -145,7 +145,7 @@ organizations:
     certificateAuthorities:
       - creditsauthority_ca
     adminPrivateKey:
-      path: artifacts/channel/crypto-config/peerOrganizations/creditsauthority.csr.com/users/Admin@creditsauthority.csr.com/msp/keystore/af525e99869391de19caa620a958f4f0720d515461faad5c3d9fb30404267edc_sk
+      path: artifacts/channel/crypto-config/peerOrganizations/creditsauthority.csr.com/users/Admin@creditsauthority.csr.com/msp/keystore/4d8120aee8fb983f105c8a3f0bd1a6a77be0dbf736bbc9c897c82aa2dc0d5ad7_sk
     signedCert:
       path: artifacts/channel/crypto-config/peerOrganizations/creditsauthority.csr.com/users/Admin@creditsauthority.csr.com/msp/signcerts/Admin@creditsauthority.csr.com-cert.pem
 
@@ -157,7 +157,7 @@ organizations:
     certificateAuthorities:
       - ngo_ca
     adminPrivateKey:
-      path: artifacts/channel/crypto-config/peerOrganizations/ngo.csr.com/users/Admin@ngo.csr.com/msp/keystore/2a9f0d87eb83ededadec05078006b3edf50dfd2b11e70443b0957df79f2c18db_sk
+      path: artifacts/channel/crypto-config/peerOrganizations/ngo.csr.com/users/Admin@ngo.csr.com/msp/keystore/fa52c0b62480aa99d86850f4b2be67b21c424a39723d36bdfd9bbf4d04657fa0_sk
     signedCert:
       path: artifacts/channel/crypto-config/peerOrganizations/ngo.csr.com/users/Admin@ngo.csr.com/msp/signcerts/Admin@ngo.csr.com-cert.pem
 
