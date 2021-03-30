@@ -1,161 +1,162 @@
-const { Schema } = require("mongoose");
-const Mongoose = require("mongoose")
-Mongoose.Promise = global.Promise;
-// const url = "mongodb://testUser:test%40123@localhost:27018/csr";
-const url = "mongodb://localhost:27017/CSR";	
+// const bcrypt = require("bcrypt");
+// const { Schema } = require("mongoose");
+// const Mongoose = require("mongoose")
+// require('dotenv').config();
 
-let options = {
-    useUnifiedTopology: true,
-    useNewUrlParser: true
-    // socketTimeoutMS: 10000
-}
-var notificationModel;
-var projectModel;
-var txDescriptionModel;
-var orgModel;
+// const dbHost = process.env.DB_HOST;
+// const dbPort = process.env.DB_PORT;
+// const dbName = process.env.DB_NAME;
 
-// Mongoose.connect('mongodb://testUser:test%40123@localhost:27018/csr', {useNewUrlParser: true, useUnifiedTopology: true});
-// var db = Mongoose.connection;
-// db.on('error', console.error.bind(console, 'connection error:'));
-// db.once('open', function() {
-//     // we're connected!
-//     console.log('Connection established...');
-//     //notificationModel = Mongoose.model('Notification', notificationSchema)
-//     //projectModel = Mongoose.model('Project', projectSchema)
-//     //txDescriptionModel = Mongoose.model('TxDescription', txDescriptionSchema)
-//     //orgModel = Mongoose.model('OrganisationProfile', orgSchema)
+// Mongoose.Promise = global.Promise;
+// // const url = "mongodb://testUser:test%40123@localhost:27018/csr";
+// // const url = "mongodb://localhost:27017/CSR";
+// const url = "mongodb://" + dbHost + ":" + dbPort + "/" + dbName;
+// // console.log('db url:' + url);
+// console.log('<<<<<<<<<<<<<< connection >>>>>>>>>>>>>>>>>')
+
+// let options = {
+//     useUnifiedTopology: true,
+//     useNewUrlParser: true
+//     // socketTimeoutMS: 10000
+// }
+// var notificationModel;
+// var projectModel;
+// var txDescriptionModel;
+// var orgModel;
+
+// // Mongoose.connect('mongodb://testUser:test%40123@localhost:27018/csr', {useNewUrlParser: true, useUnifiedTopology: true});
+// // var db = Mongoose.connection;
+// // db.on('error', console.error.bind(console, 'connection error:'));
+// // db.once('open', function() {
+// //     // we're connected!
+// //     console.log('Connection established...');
+// //     //notificationModel = Mongoose.model('Notification', notificationSchema)
+// //     //projectModel = Mongoose.model('Project', projectSchema)
+// //     //txDescriptionModel = Mongoose.model('TxDescription', txDescriptionSchema)
+// //     //orgModel = Mongoose.model('OrganisationProfile', orgSchema)
+// // });
+
+// //latest working connection
+// setInterval(connectFunction, 30000)
+// function connectFunction() {
+//     Mongoose.connect(url, options)
+//         .then((database) => {
+//             notificationModel = Mongoose.model('Notification', notificationSchema)
+//             projectModel = Mongoose.model('Project', projectSchema)
+//             txDescriptionModel = Mongoose.model('TxDescription', txDescriptionSchema)
+//             orgModel = Mongoose.model('OrganisationProfile', orgSchema)
+//         }).catch(() => {
+
+//         })
+// }
+
+// let phaseSchema = Schema({
+//     phaseName: String,
+//     description: String,
+// })
+
+// let projectSchema = Schema({
+//     projectId: String,
+//     projectName: String,
+//     projectType: String,
+//     contributorsList: [String],
+//     ngo: String,
+//     place: String,
+//     description: String,
+//     images: [String],
+//     phases: [phaseSchema]
+// }, { collection: "Project" })
+
+// let addressSchema = Schema({
+//     doorNo: String,
+//     flat: String,
+//     street: String,
+//     pinCode: String,
+//     zipCode: String,
+//     country: String,
+//     state: String,
+//     district: String,
+//     locality: String
+// })
+
+// let contactSchema = Schema({
+//     name: String,
+//     number: String
+// })
+
+// let fileSchema = Schema({
+//     currency: String,
+//     amount: String,
+//     fileHash: String,
+//     fileName: String,
+//     year: String
+// })
+
+// let orgSchema = Schema({
+//     name: { type: String, required: true },
+//     userName: { type: String, required: true },
+//     password: { type: String, required: true },
+//     role: { type: String, required: true },
+//     date: Number,
+//     status: String,
+//     description: String,
+//     pan: { type: String, required: false },
+//     email: [String],
+//     regId: String,
+//     address: addressSchema,
+//     contact: [contactSchema],
+//     file: [fileSchema]
+// }, { collection: "OrganisationProfile" })
+
+// //to hash the password before saving to mongodb.
+// orgSchema.pre('save', async function (next) {
+//     this.password = bcrypt.hashSync(this.password, 10);
+//     //console.log('hashed password: ' + this.password);
 // });
 
-setInterval(connectFunction,30000)	
-function connectFunction() {	
-    Mongoose.connect(url, options).then((database) => {	
-        notificationModel = Mongoose.model('Notification', notificationSchema)	
-        projectModel = Mongoose.model('Project', projectSchema)	
-        txDescriptionModel = Mongoose.model('TxDescription', txDescriptionSchema)	
-        orgModel = Mongoose.model('OrganisationProfile', orgSchema)	
-    }).catch(() => {	
-    	
-    })	
-}
+// let notificationSchema = Schema({
+//     username: String,
+//     txId: String,
+//     description: String,
+//     seen: Boolean
+// }, { collection: "Notification" })
 
-let phaseSchema = Schema({
-    phaseName: String,
-    description: String,
-})
+// let txDescriptionSchema = Schema({
+//     txId: String,
+//     description: String,
+// }, { collection: "TxDescription" })
 
-let projectSchema = Schema({
-    projectId: String,
-    projectName: String,
-    projectType: String,
-    contributorsList: [String],
-    ngo: String,
-    place: String,
-    description: String,
-    images: [String],
-    phases: [phaseSchema]
-}, { collection: "Project" })
+// //another way to connect to mongo
+// // Mongoose.connect(url, options)
+// //     .catch((error) => {
+// //         let err = new Error("Could not connect to Database")
+// //         err.status = 500;
+// //         throw err;
+// //     })
 
-let addressSchema = Schema({
-    doorNo: String,
-    flat: String,
-    street: String,
-    pinCode: String,
-    zipCode: String,
-    country: String,
-    state: String,
-    district: String,
-    locality: String
-})
 
-let contactSchema = Schema({
-    name: String,
-    number: String
-})
+// notificationModel = Mongoose.model('Notification', notificationSchema)
+// projectModel = Mongoose.model('Project', projectSchema)
+// txDescriptionModel = Mongoose.model('TxDescription', txDescriptionSchema)
+// orgModel = Mongoose.model('OrganisationProfile', orgSchema)
 
-let fileSchema = Schema({
-    currency: String,
-    amount: String,
-    fileHash: String,
-    fileName: String,
-    year: String
-})
 
-let orgSchema = Schema({
-    name: String,
-    role: String,
-    date: Number,
-    status: String,
-    description: String,
-    pan: String,
-    email: [String],
-    regId: String,
-    address: addressSchema,
-    contact: [contactSchema],
-    file: [fileSchema]
-}, { collection: "OrganisationProfile" })
+// let collection = {};
 
-let notificationSchema = Schema({
-    username: String,
-    txId: String,
-    description: String,
-    seen: Boolean
-}, { collection: "Notification" })
+// collection.projectCollection = () => {
+//     return projectModel
+// }
 
-let txDescriptionSchema = Schema({
-    txId: String,
-    description: String,
-}, { collection: "TxDescription" })
+// collection.orgCollection = () => {
+//     return orgModel;
+// }
 
-let collection = {};
+// collection.notificationCollection = () => {
+//     return notificationModel;
+// }
 
-collection.projectCollection = () => {
-    // return Mongoose.connect(url, options).then((database) => {
-    //     return database.model('Project', projectSchema)
-    // }).catch(() => {
-    //     let err = new Error("Could not connect to Database");
-    //     err.status = 500;
-    //     throw err;
-    // })
+// collection.txDescriptionCollection = () => {
+//     return txDescriptionModel;
+// }
 
-    return projectModel
-}
-
-collection.orgCollection = () => {
-    // return Mongoose.connect(url, options).then((database) => {
-    //     return database.model('OrganisationProfile', orgSchema)
-    // }).catch(() => {
-    //     let err = new Error("Could not connect to Database");
-    //     err.status = 500;
-    //     throw err;
-    // })
-    return orgModel;
-}
-
-collection.notificationCollection = () => {
-    // return Mongoose.connect(url, options).then((database) => {
-    //     return database.model('Notification', notificationSchema)
-    // }).catch(() => {
-    //     let err = new Error("Could not connect to Database");
-    //     err.status = 500;
-    //     throw err;
-    // })
-    return notificationModel;
-}
-
-collection.txDescriptionCollection = () => {
-    // return Mongoose.connect(url, options).then((database) => {
-    //     return database.model('TxDescription', txDescriptionSchema)
-    // }).catch(() => {
-    //     let err = new Error("Could not connect to Database");
-    //     err.status = 500;
-    //     throw err;
-    // })
-    return txDescriptionModel;
-}
-
-notificationModel = Mongoose.model('Notification', notificationSchema)
-        projectModel = Mongoose.model('Project', projectSchema)
-        txDescriptionModel = Mongoose.model('TxDescription', txDescriptionSchema)
-        orgModel = Mongoose.model('OrganisationProfile', orgSchema)
-
-module.exports = collection;
+// module.exports = collection;

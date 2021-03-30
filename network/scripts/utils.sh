@@ -3,13 +3,13 @@ PEER0_CORPORATE_CA=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/pee
 PEER0_CREDITSAUTHORTY_CA=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/creditsauthority.csr.com/peers/peer0.creditsauthority.csr.com/tls/ca.crt
 PEER0_NGO_CA=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/ngo.csr.com/peers/peer0.ngo.csr.com/tls/ca.crt
 
-setOrdererGlobals() {
+setOrdererGlobals(){
   CORE_PEER_LOCALMSPID="OrdererMSP"
   CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/csr.com/orderers/orderer.csr.com/msp/tlscacerts/tlsca.csr.com-cert.pem
   CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/csr.com/users/Admin@csr.com/msp
 }
 
-verifyResult() {
+verifyResult(){
   if [ $1 -ne 0 ]; then
     echo "!!!!!!!!!!!!!!! "$2" !!!!!!!!!!!!!!!!"
     echo "========= ERROR !!! FAILED to execute End-2-End Scenario ==========="
@@ -18,7 +18,7 @@ verifyResult() {
   fi
 }
 
-setGlobals() {
+setGlobals(){
   PEER=$1
   ORG=$2
   if [ "$ORG" == "Corporate" ]; then
@@ -58,7 +58,7 @@ setGlobals() {
   fi
 }
 
-joinChannelWithRetry() {
+joinChannelWithRetry(){
   PEER=$1
   ORG=$2
   setGlobals $PEER $ORG
@@ -79,7 +79,7 @@ joinChannelWithRetry() {
   verifyResult $res "After $MAX_RETRY attempts, peer${PEER}.org${ORG} has failed to join channel '$CHANNEL_NAME' "
 }
 
-updateAnchorPeers() {
+updateAnchorPeers(){
   PEER=$1
   ORG=$2
   setGlobals $PEER $ORG
@@ -102,7 +102,7 @@ updateAnchorPeers() {
   echo
 }
 
-installChaincode() {
+installChaincode(){
   PEER=$1
   ORG=$2
   CHAINCODE=$3
@@ -118,7 +118,7 @@ installChaincode() {
   echo
 }
 
-instantiateChaincode() {
+instantiateChaincode(){
   PEER=$1
   ORG=$2
   CHAINCODE=$3
@@ -136,7 +136,7 @@ instantiateChaincode() {
   echo
 }
 
-upgradeChaincode() {
+upgradeChaincode(){
   PEER=$1
   ORG=$2
   CHAINCODE=$3

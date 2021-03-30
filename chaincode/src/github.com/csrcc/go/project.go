@@ -21,6 +21,7 @@ type Project struct {
 	NGO              string            `json:"ngo"`
 	Contributors     map[string]string `json:"contributors"`
 	VisibleTo		 []string		   `json:"visibleTo"`
+	NoOfUpdates      uint8             `json:"noOfUpdates"`
 }
 
 type Phase struct {
@@ -685,26 +686,39 @@ func (s *SmartContract) updateVisibleTo(APIstub shim.ChaincodeStubInterface, arg
 	json.Unmarshal(projectAsBytes, &projectState)
 
 	//check if caller is the owner of project
-	if strings.Contains(commonName, projectState.NGO) == false {
-		logger.Info("ngo doesn't owns the project")
+	if commonName != projectState.NGO {
+		logger.Info(commonName, " doesn't owns the project")
 		return shim.Error("ngo doesn't owns the project")
 	}
 
+	if corporateName != "all" {
+		if projectState.NoOfUpdates != 0 {
+			logger.Info("can't update any more!")
+			return shim.Error("can't update any more!")
+		}
+		//check if someone has contributed already
+		if len(projectState.Contributors) != 0 {
+			logger.Info("contributors is already set")
+			return shim.Error("contributors is already set")
+		}
+		projectState.NoOfUpdates = 1
+		var corporateNames []string
+		corporateNames = append(corporateNames, corporateName)
+		projectState.VisibleTo = corporateNames
+	} else {
+		if projectState.NoOfUpdates != 1 {
+			logger.Info("can't update any more!")
+			return shim.Error("can't update any more!")
+		}
+		projectState.NoOfUpdates = 2
+		projectState.VisibleTo = nil
+	}
+
 	//check if visibleTo has a value already
-	if projectState.VisibleTo != nil {
-		logger.Info("visible to is already set")
-		return shim.Error("visible to is already set")
-	}
-
-	//check if someone has contributed already
-	if len(projectState.Contributors) != 0 {
-		logger.Info("contributors is already set")
-		return shim.Error("contributors is already set")
-	}
-
-	var corporateNames []string
-	corporateNames = append(corporateNames, corporateName)
-	projectState.VisibleTo = corporateNames
+	// if projectState.VisibleTo != nil {
+	// 	logger.Info("visible to is already set")
+	// 	return shim.Error("visible to is already set")
+	// }
 
 	projectAsBytes, _ = json.Marshal(projectState)
 	APIstub.PutState(projectId, projectAsBytes)

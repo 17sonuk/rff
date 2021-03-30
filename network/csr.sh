@@ -1,34 +1,37 @@
-#!/bin/sh
+
+#!/bin/bash
 export IMAGE_TAG=latest
 export COMPOSE_PROJECT_NAME=net
 export SYS_CHANNEL=byfn-sys-channel
 
 CHANNEL_NAME="csrchannel"
 
-function printhelp() {
+function printhelp(){
     echo "Allowed Commands"
     echo './csr.sh up'
     echo './csr.sh down'
+    echo './csr.sh start'
+    echo './csr.sh stop'
     echo './csr.sh createchannel'
     echo './csr.sh upgradeChaincode'
 }
 
-function networkdown() {
+function networkdown(){
     # CONTAINER_IDS=$(docker ps -aq)
     # docker rm -f $CONTAINER_IDS
-    # docker volume prune -f
-    # docker network prune -f
-    # docker system  prune -f
+    docker container prune -f
+    docker volume prune -f
+    docker network prune -f
+    docker system  prune -f
 
     docker-compose -f docker-compose-ca.yaml -f docker-compose-e2e.yaml -f docker-compose-couch.yaml down --volumes --remove-orphans
 } 
 
-function networkstop() {
-    
+function networkstop(){
     docker-compose -f docker-compose-ca.yaml -f docker-compose-e2e.yaml -f docker-compose-couch.yaml stop
 } 
 
-function networkstart() {
+function networkstart(){
     export CORPORATE_PRIVATE_KEY=$(cd crypto-config/peerOrganizations/corporate.csr.com/ca && ls *_sk)
     export CREDITS_AUTHORITY_PRIVATE_KEY=$(cd crypto-config/peerOrganizations/creditsauthority.csr.com/ca && ls *_sk)
     export NGO_PRIVATE_KEY=$(cd crypto-config/peerOrganizations/ngo.csr.com/ca && ls *_sk)
@@ -40,15 +43,15 @@ function networkstart() {
     docker-compose -f docker-compose-ca.yaml -f docker-compose-e2e.yaml -f docker-compose-couch.yaml start
 }
 
-function networkup() {
-    # rm -rf crypto-config/
-    # rm -f channel-artifacts/*
-    # ../bin/cryptogen generate --config=./crypto-config.yaml
-    # ../bin/configtxgen -profile FiveOrgsCsrOrdererGenesis -channelID byfn-sys-channel -outputBlock ./channel-artifacts/genesis.block
-    # ../bin/configtxgen -profile FiveOrgsCsrChannel  -outputCreateChannelTx ./channel-artifacts/channel.tx -channelID csrchannel
-    # ../bin/configtxgen -profile FiveOrgsCsrChannel -outputAnchorPeersUpdate ./channel-artifacts/CorporateMSPanchors.tx -channelID csrchannel -asOrg CorporateMSP
-    # ../bin/configtxgen -profile FiveOrgsCsrChannel -outputAnchorPeersUpdate ./channel-artifacts/CreditsAuthorityMSPanchors.tx -channelID csrchannel -asOrg CreditsAuthorityMSP
-    # ../bin/configtxgen -profile FiveOrgsCsrChannel -outputAnchorPeersUpdate ./channel-artifacts/NgoMSPanchors.tx -channelID csrchannel -asOrg NgoMSP
+function networkup(){
+    rm -rf crypto-config/
+    rm -f channel-artifacts/*
+    ../bin/cryptogen generate --config=./crypto-config.yaml
+    ../bin/configtxgen -profile FiveOrgsCsrOrdererGenesis -channelID byfn-sys-channel -outputBlock ./channel-artifacts/genesis.block
+    ../bin/configtxgen -profile FiveOrgsCsrChannel  -outputCreateChannelTx ./channel-artifacts/channel.tx -channelID csrchannel
+    ../bin/configtxgen -profile FiveOrgsCsrChannel -outputAnchorPeersUpdate ./channel-artifacts/CorporateMSPanchors.tx -channelID csrchannel -asOrg CorporateMSP
+    ../bin/configtxgen -profile FiveOrgsCsrChannel -outputAnchorPeersUpdate ./channel-artifacts/CreditsAuthorityMSPanchors.tx -channelID csrchannel -asOrg CreditsAuthorityMSP
+    ../bin/configtxgen -profile FiveOrgsCsrChannel -outputAnchorPeersUpdate ./channel-artifacts/NgoMSPanchors.tx -channelID csrchannel -asOrg NgoMSP
 
     export CORPORATE_PRIVATE_KEY=$(cd crypto-config/peerOrganizations/corporate.csr.com/ca && ls *_sk)
     export CREDITS_AUTHORITY_PRIVATE_KEY=$(cd crypto-config/peerOrganizations/creditsauthority.csr.com/ca && ls *_sk)
@@ -61,7 +64,7 @@ function networkup() {
     docker-compose -f docker-compose-ca.yaml -f docker-compose-e2e.yaml -f docker-compose-couch.yaml up -d
 }
 
-function createchannel() {
+function createchannel(){
     echo "calling cli"
     docker exec cli chmod 0777 -R scripts && docker exec cli scripts/script.sh $1 $2
 }

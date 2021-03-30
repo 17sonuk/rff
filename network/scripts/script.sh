@@ -32,19 +32,19 @@ joinchannel () {
 	done
 }
 
-# createchannel
-# joinchannel
+createchannel
+joinchannel
 
-# updateAnchorPeers 0 Corporate
-# updateAnchorPeers 0 CreditsAuthority
-# updateAnchorPeers 0 Ngo
+updateAnchorPeers 0 Corporate
+updateAnchorPeers 0 CreditsAuthority
+updateAnchorPeers 0 Ngo
 
-# echo chaincode name is $CHAINCODE
-# echo chaincode version is $VERSION 
+echo chaincode name is $CHAINCODE
+echo chaincode version is $VERSION 
 
-installChaincode 0 Corporate $CHAINCODE $VERSION
-installChaincode 0 CreditsAuthority $CHAINCODE $VERSION
-installChaincode 0 Ngo $CHAINCODE $VERSION
+# installChaincode 0 Corporate $CHAINCODE $VERSION
+# installChaincode 0 CreditsAuthority $CHAINCODE $VERSION
+# installChaincode 0 Ngo $CHAINCODE $VERSION
 
-# instantiateChaincode 0 Corporate $CHAINCODE $VERSION
-upgradeChaincode 0 Corporate $CHAINCODE $VERSION 
+instantiateChaincode 0 Corporate $CHAINCODE $VERSION
+# upgradeChaincode 0 Corporate $CHAINCODE $VERSION 
