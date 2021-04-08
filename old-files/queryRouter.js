@@ -144,9 +144,8 @@ router.get('/getAllProjects', async function (req, res) {
         if (self !== "true") {
             queryString["selector"]["$or"] = [
                 {
-                   "visibleTo": {
-                      "$exists": false
-                   }
+                   "visibleTo": null 
+                   //{ "$exists": false }
                 },
                 {
                    "visibleTo": {
@@ -380,7 +379,7 @@ router.get('/getTotalOngoingProjectCount', async function (req, res) {
 
     let message = await query.queryChaincode(peer, channelName, chaincodeName, args, "generalQueryFunction", req.username, req.orgname);
 
-    console.log("mithun : ", message.toString())
+    console.log("getTotalOngoingProjectCount mithun : ", message.toString())
 
     newObject = new Object()
     newObject = JSON.parse(message.toString())
@@ -422,7 +421,7 @@ router.get('/getCorporateProjectDetails', async function (req, res) {
 
     let message = await query.queryChaincode(peer, channelName, chaincodeName, args, "generalQueryFunction", req.username, req.orgname);
 
-    console.log("mithun : ", message.toString())
+    console.log("getCorporateProjectDetails mithun : ", message.toString())
 
     newObject = new Object()
     newObject = JSON.parse(message.toString())
@@ -502,7 +501,7 @@ router.get('/getCorporateProjectTransaction', async function (req, res) {
 
     let message = await query.queryChaincode(peer, channelName, chaincodeName, args, "generalQueryFunction", req.username, req.orgname);
 
-    console.log("mithun : ", message.toString())
+    console.log("getCorporateProjectTransaction mithun : ", message.toString())
 
     newObject = new Object()
     newObject = JSON.parse(message.toString())
@@ -709,7 +708,7 @@ router.get('/totalLockedAmountAndValidityOfCorporate', async function (req, res)
 
     let message = await query.queryChaincode(peer, channelName, chaincodeName, args, "generalQueryFunction", req.username, req.orgname);
 
-    console.log("mithun : ", message.toString())
+    console.log("totalLockedAmountAndValidityOfCorporate mithun : ", message.toString())
 
     fund = new Object()
     fund = JSON.parse(message.toString())
@@ -787,7 +786,8 @@ router.get('/getParkedQtyForCorporate', async function (req, res) {
     else {
         newObject = new Object()
         newObject = JSON.parse(message.toString())
-        logger.debug(newObject[0]["Record"]["funds"].toString())
+        logger.debug('new object response: ' + newObject.toString())
+        //logger.debug(newObject[0]["Record"]["funds"].toString())
 
         response["lockedQty"] = 0
 
@@ -835,7 +835,7 @@ router.get('/getCorporateProjectOngoingCount', async function (req, res) {
 
     let message = await query.queryChaincode(peer, channelName, chaincodeName, args, "generalQueryFunction", req.username, req.orgname);
 
-    console.log("mithun : ", message.toString())
+    console.log("getCorporateProjectOngoingCount mithun : ", message.toString())
 
     newObject = new Object()
     newObject = JSON.parse(message.toString())
@@ -888,7 +888,7 @@ router.get('/getTotalAmountLockedForProjectId', async function (req, res) {
     var args = [JSON.stringify(queryString)]
     let message = await query.queryChaincode(peer, channelName, chaincodeName, args, "generalQueryFunction", req.username, req.orgname);
 
-    console.log("mithun : ", message.toString())
+    console.log("getTotalAmountLockedForProjectId mithun : ", message.toString())
 
     newObject = new Object()
     newObject = JSON.parse(message.toString())
@@ -1117,7 +1117,7 @@ router.get('/projectIdTransaction', async function (req, res) {
     var args = [JSON.stringify(queryString)]
     let message = await query.queryChaincode(peer, channelName, chaincodeName, args, "generalQueryFunction", req.username, req.orgname);
 
-    console.log("mithun : ", message.toString())
+    console.log("projectIdTransaction mithun : ", message.toString())
 
     newObject = new Object()
     newObject = JSON.parse(message.toString())

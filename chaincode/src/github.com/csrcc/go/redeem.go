@@ -53,7 +53,7 @@ func (s *SmartContract) redeemRequest(APIstub shim.ChaincodeStubInterface, args 
 		return shim.Error("This uuid is already used")
 	}
 
-	//chech if the qyt requesting is less than or equal to his balancew
+	//chech if the qty requesting is less than or equal to his balance
 	getbalancebytes, _ := APIstub.GetState(from)
 	if getbalancebytes == nil {
 		return shim.Error("error getting the balance of the ngo")

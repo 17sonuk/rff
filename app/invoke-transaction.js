@@ -17,7 +17,7 @@
 const util = require('util');
 const helper = require('./helper.js');
 const logger = helper.getLogger('invoke-chaincode');
-const projectService = require('../mongoDb/projectService')
+const userService = require('../src/service/UserService');
 
 const invokeChaincode = async function (peerNames, channelName, chaincodeName, fcn, args, username, org_name) {
 	logger.debug(util.format('\n============ invoke transaction on channel %s ============\n', channelName));
@@ -121,7 +121,7 @@ const invokeChaincode = async function (peerNames, channelName, chaincodeName, f
 								for (let index = 0; index < notificationObj.users.length; index++) {
 									tmpNotification['username'] = notificationObj.users[index]
 									//save it to mongo
-									projectService.createNotification(tmpNotification)
+									userService.createNotification(tmpNotification)
 										.then((data) => {
 											console.log(data)
 										})
@@ -130,7 +130,7 @@ const invokeChaincode = async function (peerNames, channelName, chaincodeName, f
 
 								//TODO: save the tx description
 								var tmpTxDescription = { 'txId': notificationObj.txId, 'description': notificationObj.description }
-								projectService.createTxDescription(tmpTxDescription)
+								userService.createTxDescription(tmpTxDescription)
 									.then((data) => {
 										console.log(data)
 									})

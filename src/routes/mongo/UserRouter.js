@@ -46,23 +46,23 @@ router.post('/approve-user', (req, res, next) => {
 })
 
 //login user
-router.post('/login', (req, res, next) => {
-    console.log("router-login", req.body);
-    let userName = req.body.userName;
-    let password = req.body.password;
-    if (userName.length < 4 && (userName.startsWith('ca2') || userName.startsWith('it'))) {
-        if (password !== 'test') {
-            res.json({ success: false, message: 'wrong credentials!' });
-            return;
-        }
-        res.json({ success: true, message: 'login successful', userName: req.body.userName, role: "csr" })
-    }
-    userService.login(userName, password)
-        .then((data) => {
-            res.json(data)
-        })
-        .catch(err => next(err))
-})
+// router.post('/login', (req, res, next) => {
+//     console.log("router-login", req.body);
+//     let userName = req.body.userName;
+//     let password = req.body.password;
+//     if (userName.length < 4 && (userName.startsWith('ca2') || userName.startsWith('it'))) {
+//         if (password !== 'test') {
+//             res.json({ success: false, message: 'wrong credentials!' });
+//             return;
+//         }
+//         res.json({ success: true, message: 'login successful', userName: req.body.userName, role: "csr" })
+//     }
+//     userService.login(userName, password)
+//         .then((data) => {
+//             res.json(data)
+//         })
+//         .catch(err => next(err))
+// })
 
 //get profit amount of corporate for Current financial year
 router.get('/profit-corporate', (req, res, next) => {

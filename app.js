@@ -24,13 +24,16 @@ const projectMongoRouter = require('./src/routes/mongo/ProjectRouter');
 
 //blockchain routes
 const projectRouter = require('./src/routes/blockchain/ProjectRouter');
-// const pspRouter = require('./src/routes/blockchain/PSPRouter');
-// const queryRouter = require('./src/routes/blockchain/QueryRouter');
-// const redeemRouter = require('./src/routes/blockchain/RedeemRouter');
+const queryRouter = require('./src/routes/blockchain/QueryRouter');
+const redeemRouter = require('./src/routes/blockchain/RedeemRouter');
 // const reportRouter = require('./src/routes/blockchain/ReportRouter');
-// const tokenRouter = require('./src/routes/blockchain/TokenRouter');
-// const unspentCSRRouter = require('./src/routes/blockchain/UnspentCSRRouter');
-// const utilsRouter = require('./src/routes/blockchain/UtilsRouter');
+const tokenRouter = require('./src/routes/blockchain/TokenRouter');
+const transactionRouter = require('./src/routes/blockchain/TransactionRouter');
+const escrowRouter = require('./src/routes/blockchain/EscrowRouter');
+const utilsRouter = require('./src/routes/blockchain/UtilsRouter');
+
+//payment gateway routes
+const pspRouter = require('./src/routes/payment-gateway/PSPRouter');
 
 require('./config.js');
 var hfc = require('fabric-client');
@@ -91,13 +94,16 @@ app.use('/mongo/project', projectMongoRouter);
 
 //blockchain URLs
 app.use('/project', projectRouter);
-// app.use('/psp', pspRouter);
-// app.use('/query', queryRouter);
-// app.use('/redeem', redeemRouter);
+app.use('/query', queryRouter);
+app.use('/redeem', redeemRouter);
 // app.use('/report', reportRouter);
-// app.use('/token', tokenRouter);
-// app.use('/unspentCSR', tokenRouter);
-// app.use('/utils', utilsRouter);
+app.use('/token', tokenRouter);
+app.use('/tx', transactionRouter);
+app.use('/escrow', escrowRouter);
+app.use('/utils', utilsRouter);
+
+// payment gateway URLs
+app.use('/psp', pspRouter);
 
 var server = http.createServer(app).listen(port, function () { });
 logger.info('****************** SERVER STARTED ************************');
@@ -203,59 +209,6 @@ app.post('/channels/:channelName/chaincodes/:chaincodeName', async function (req
 	res.send(message);
 });
 
-//take a snapshot of all corporate balances on chaincode on target peers.
-app.post('/snapshot/create', async function (req, res) {
-	logger.debug('==================== INVOKE CREATE SNAPSHOT ON CHAINCODE ==================');
-	var peers = ["peer0.corporate.csr.com", "peer0.creditsauthority.csr.com", "peer0.ngo.csr.com"];
-	var chaincodeName = req.header('chaincodeName');
-	var channelName = req.header('channelName');
-	logger.debug('channelName  : ' + channelName);
-	logger.debug('chaincodeName : ' + chaincodeName);
-
-	if (!chaincodeName) {
-		res.json(getErrorMessage('\'chaincodeName\''));
-		return;
-	} else if (!channelName) {
-		res.json(getErrorMessage('\'channelName\''));
-		return;
-	}
-
-	var args = [Date.now().toString(), uuid().toString()];
-	logger.debug('args  : ' + args);
-
-	let message = await invoke.invokeChaincode(peers, channelName, chaincodeName, "snapshotCurrentCorporateBalances", args, req.username, req.orgname);
-	res.send(message);
-});
-
-//take a snapshot of all corporate balances on chaincode on target peers.
-app.post('/unspent/transfer', async function (req, res) {
-	logger.debug('==================== INVOKE TRANSFER UNSPENT FUNDS TO GOVT ON CHAINCODE ==================');
-	var peers = ["peer0.corporate.csr.com", "peer0.creditsauthority.csr.com", "peer0.ngo.csr.com"];
-	var chaincodeName = req.header('chaincodeName');
-	var channelName = req.header('channelName');
-	logger.debug('channelName  : ' + channelName);
-	logger.debug('chaincodeName : ' + chaincodeName);
-
-	var govtAddress = req.body.govtAddress.toString();
-
-	if (!chaincodeName) {
-		res.json(getErrorMessage('\'chaincodeName\''));
-		return;
-	} else if (!channelName) {
-		res.json(getErrorMessage('\'channelName\''));
-		return;
-	} else if (!govtAddress) {
-		res.json(getErrorMessage('\'govtAddress\''));
-		return;
-	}
-
-	var args = [govtAddress, Date.now().toString(), uuid().toString()];
-	logger.debug('args  : ' + args);
-
-	let message = await invoke.invokeChaincode(peers, channelName, chaincodeName, "transferUnspentTokensToGovt", args, req.username, req.orgname);
-	res.send(message);
-});
-
 // Query on chaincode on target peers
 app.get('/channels/:channelName/chaincodes/:chaincodeName', async function (req, res) {
 	logger.debug('==================== QUERY BY CHAINCODE ==================');
@@ -307,79 +260,4 @@ app.get('/channels/:channelName/chaincodes/:chaincodeName', async function (req,
 		newObject.success = true
 		return res.send(newObject)
 	}
-});
-
-// Save IT data transaction on chaincode on target peers.
-app.post('/addCorporatePan', async function (req, res) {
-	logger.debug('==================== INVOKE ADD CORPORATE PAN ON CHAINCODE ==================')
-	var peers = ["peer0.corporate.csr.com", "peer0.creditsauthority.csr.com", "peer0.ngo.csr.com"]
-	var chaincodeName = req.header('chaincodeName')
-	var channelName = req.header('channelName')
-	logger.debug('channelName  : ' + channelName)
-	logger.debug('chaincodeName : ' + chaincodeName)
-
-	var corporateName = req.body.corporateName
-	var panNumber = req.body.panNumber
-	var args = [panNumber, corporateName]
-	logger.debug('args: ' + args)
-
-	let message = await invoke.invokeChaincode(peers, channelName, chaincodeName, "addCorporatePan", args, req.username, req.orgname)
-	res.send(message)
-});
-
-// Save IT data transaction on chaincode on target peers.
-app.post('/saveItData', async function (req, res) {
-	logger.debug('==================== INVOKE SAVE IT DATA ON CHAINCODE ==================')
-	var peers = ["peer0.corporate.csr.com", "peer0.creditsauthority.csr.com", "peer0.ngo.csr.com"]
-	var chaincodeName = req.header('chaincodeName')
-	var channelName = req.header('channelName')
-	logger.debug('channelName  : ' + channelName)
-	logger.debug('chaincodeName : ' + chaincodeName)
-
-	var year = req.query.year
-
-	for (let i = 0; i < req.body.length; i++) {
-		req.body[i].objectType = "Liability"
-	}
-
-	var args = [year, JSON.stringify(req.body)]
-	logger.debug('args: ' + args)
-
-	let message = await invoke.invokeChaincode(peers, channelName, chaincodeName, "saveItData", args, req.username, req.orgname)
-	res.send(message)
-});
-
-async function saveITData(req, res, data) {
-	logger.debug('==================== INVOKE SAVE IT DATA ON CHAINCODE ==================')
-	var peers = ["peer0.corporate.csr.com", "peer0.creditsauthority.csr.com", "peer0.ngo.csr.com"]
-	var chaincodeName = req.header('chaincodeName')
-	var channelName = req.header('channelName')
-	logger.debug('channelName  : ' + channelName)
-	logger.debug('chaincodeName : ' + chaincodeName)
-
-	var year = req.body.year
-
-	for (let i = 0; i < data; i++) {
-		req.body[i].objectType = "Liability"
-	}
-
-	var args = [year, JSON.stringify(data)]
-	logger.debug('args: ' + args)
-
-	let message = await invoke.invokeChaincode(peers, channelName, chaincodeName, "saveItData", args, req.username, req.orgname)
-	res.send(message)
-}
-
-//excel upload
-app.post('/uploadexcel', (req, res) => {
-	logger.debug('==================== upload excel ==================');
-	let wb = XLSX.read(req.body.fileData, { type: 'binary' });
-	let sheet = wb.SheetNames[0];
-	let rows = XLSX.utils.sheet_to_json(wb.Sheets[sheet]);
-	// console.log(rows)
-	let temp = Object.keys(rows[0])
-	if (!(temp.includes('panNumber') && temp.includes('corporateName') && temp.includes('totalLiability'))) {
-		res.send({ success: false, message: 'Column names should be corporateName, panNumber and totalLiability.' })
-	}
-	else saveITData(req, res, rows)
 });

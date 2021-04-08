@@ -120,6 +120,32 @@ userService.getAmountFromBalanceSheet = (userName) => {
     })
 }
 
+//Create notification
+userService.createNotification = (project) => {
+    return userModel.createNotification(project).then(notificationData => {
+        if (notificationData) {
+            return { success: true, message: 'notification created in db' };
+        } else {
+            let err = new Error("Bad Connection")
+            err.status = 500
+            throw err
+        }
+    })
+}
+
+//Create tx description
+userService.createTxDescription = (project) => {
+    return userModel.createTxDescription(project).then(txDescriptionData => {
+        if (txDescriptionData) {
+            return { success: true, message: 'tx description created in db' };
+        } else {
+            let err = new Error("Bad Connection")
+            err.status = 500
+            throw err
+        }
+    })
+}
+
 //get notifications
 userService.getNotifications = (username, seen) => {
     return userModel.getNotifications(username, seen).then(async notification => {
