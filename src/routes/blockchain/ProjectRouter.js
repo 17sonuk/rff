@@ -546,7 +546,7 @@ router.get('/corporate-project-transactions', async function (req, res) {
         newObject[i]['Record']['to'] = splitOrgName(newObject[i]['Record']['to']);
     }
 
-    res.send({ newObject })
+    res.send({ "allRecords": newObject });
 });
 
 //gives all corporate names along with their contribution
@@ -643,7 +643,7 @@ router.get('/total-corporate-ongoing-projects', async function (req, res) {
     }
 
     let contributor = 'contributors.' + corporate + '\\.corporate\\.csr\\.com'
-    let queryString = '{"selector":{"docType":"Project","projectState": "Partially Funded","contributors.' + corporate + '\\\\.corporate\\\\.csr\\\\.com":{"$exists":true}},"fields":["_id"]}'
+    let queryString = '{"selector":{"docType":"Project","projectState": {"$ne": "Completed"} ,"contributors.' + corporate + '\\\\.corporate\\\\.csr\\\\.com":{"$exists":true}},"fields":["_id"]}'
 
     var args = [queryString]
 
@@ -854,11 +854,14 @@ router.get('/ngo-project-transactions', async function (req, res) {
         return;
     }
 
+    let regex = projectId + "$";
     let queryString = {
         "selector": {
             "docType": "Transaction",
             "to": orgDLTName,
-            "objRef": projectId
+            "objRef": {
+                "$regex": regex
+            }
         },
         "sort": [{ "date": "desc" }]
     }
@@ -882,11 +885,12 @@ router.get('/ngo-project-transactions', async function (req, res) {
             newObject[i]["Record"]["to"] = splitOrgName(newObject[i]["Record"]["to"])
         }
 
-        res.send(newObject)
+        let response = { "allRecords": newObject };
+        res.send(response);
     }
 });
 
-router.get('/projectIdTransaction', async function (req, res) {
+router.get('/transactions', async function (req, res) {
     logger.debug('==================== QUERY BY CHAINCODE: projectIdTransaction ==================');
     var channelName = req.header('channelName');
     var chaincodeName = req.header('chaincodeName');
@@ -941,7 +945,7 @@ router.get('/projectIdTransaction', async function (req, res) {
         newObject[i]["Record"]["to"] = splitOrgName(newObject[i]["Record"]["to"])
     }
 
-    res.send({ newObject })
+    res.send({ "allRecords": newObject });
 });
 
 //getOngoing project details for a perticular corporate : 

@@ -604,7 +604,7 @@ router.get('/ngo-report', async function (req, res) {
     }
 
     //joining path of directory 
-    var directoryPath = path.join(__dirname, './fabric-client-kv-ngo');
+    var directoryPath = path.join(__dirname, '..', '..', '..', 'fabric-client-kv-ngo');
 
     var filenames = fs.readdirSync(directoryPath);
     console.log("\nCurrent directory filenames:");
