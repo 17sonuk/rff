@@ -1,0 +1,227 @@
+Script started on 2021-04-16 06:24:32+00:00
+]0;ec2-user@ip-10-0-1-22:~/csr_2.2/fabric-samples/test-network/home/ec2-user/csr_2.2/fabric-samples/test-network>l^C
+]0;ec2-user@ip-10-0-1-22:~/csr_2.2/fabric-samples/test-network/home/ec2-user/csr_2.2/fabric-samples/test-network>cd scripts/
+]0;ec2-user@ip-10-0-1-22:~/csr_2.2/fabric-samples/test-network/scripts/home/ec2-user/csr_2.2/fabric-samples/test-network/scripts>l
+bash: l: command not found
+]0;ec2-user@ip-10-0-1-22:~/csr_2.2/fabric-samples/test-network/scripts/home/ec2-user/csr_2.2/fabric-samples/test-network/scripts>ls -lrt
+total 36
+-rwxrwxr-x. 1 ec2-user ec2-user  7734 Apr  8 12:29 [0m[01;32mutils.sh[0m
+-rwxrwxr-x. 1 ec2-user ec2-user  1939 Apr  8 12:29 [01;32msetAnchorPeer.sh[0m
+drwxrwxr-x. 2 ec2-user ec2-user    58 Apr  8 12:29 [01;34morg3-scripts[0m
+-rwxrwxr-x. 1 ec2-user ec2-user  3221 Apr  8 12:29 [01;32menvVar.sh[0m
+-rwxrwxr-x. 1 ec2-user ec2-user 11618 Apr  8 12:29 [01;32mdeployCC.sh[0m
+-rwxrwxr-x. 1 ec2-user ec2-user  2282 Apr  8 12:29 [01;32mconfigUpdate.sh[0m
+-rwxrwxr-x. 1 ec2-user ec2-user  2412 Apr 16 06:17 [01;32mcreateChannel.sh[0m
+]0;ec2-user@ip-10-0-1-22:~/csr_2.2/fabric-samples/test-network/scripts/home/ec2-user/csr_2.2/fabric-samples/test-network/scripts>cd ^C
+]0;ec2-user@ip-10-0-1-22:~/csr_2.2/fabric-samples/test-network/scripts/home/ec2-user/csr_2.2/fabric-samples/test-network/scripts>cd ..
+]0;ec2-user@ip-10-0-1-22:~/csr_2.2/fabric-samples/test-network/home/ec2-user/csr_2.2/fabric-samples/test-network>ls -lrt
+total 24
+-rw-rw-r--. 1 ec2-user ec2-user   777 Apr  8 12:29 README.md
+drwxrwxr-x. 4 ec2-user ec2-user   202 Apr  8 12:29 [0m[01;34maddOrg3[0m
+drwxrwxr-x. 2 ec2-user ec2-user   105 Apr  8 13:28 [01;34mdocker[0m
+-rwxrwxr-x. 1 ec2-user ec2-user 18764 Apr 15 11:25 [01;32mnetwork.sh[0m
+drwxrwxr-x. 6 ec2-user ec2-user   166 Apr 15 11:30 [01;34morganizations[0m
+drwxrwxr-x. 2 ec2-user ec2-user    43 Apr 15 11:30 [01;34msystem-genesis-block[0m
+drwxrwxr-x. 2 ec2-user ec2-user    53 Apr 16 06:16 [01;34mconfigtx[0m
+drwxrwxr-x. 3 ec2-user ec2-user   171 Apr 16 06:18 [01;34mscripts[0m
+-rw-rw-r--. 1 ec2-user ec2-user     0 Apr 16 06:24 typescript
+]0;ec2-user@ip-10-0-1-22:~/csr_2.2/fabric-samples/test-network/home/ec2-user/csr_2.2/fabric-samples/test-network>cd /organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-certt.pem^C
+]0;ec2-user@ip-10-0-1-22:~/csr_2.2/fabric-samples/test-network/home/ec2-user/csr_2.2/fabric-samples/test-network>cd organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert..pem
+bash: cd: organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem: No such file or directory
+]0;ec2-user@ip-10-0-1-22:~/csr_2.2/fabric-samples/test-network/home/ec2-user/csr_2.2/fabric-samples/test-network>ls -lrt organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com--cert.pem
+ls: cannot access 'organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem': No such file or directory
+]0;ec2-user@ip-10-0-1-22:~/csr_2.2/fabric-samples/test-network/home/ec2-user/csr_2.2/fabric-samples/test-network>cd organizations/ordererOrganizations/csr.com/orderers/orderer.csr.com/msp/tlscacerts/tlsca.csr.com-cert.pem 
+bash: cd: organizations/ordererOrganizations/csr.com/orderers/orderer.csr.com/msp/tlscacerts/tlsca.csr.com-cert.pem: Not a directory
+]0;ec2-user@ip-10-0-1-22:~/csr_2.2/fabric-samples/test-network/home/ec2-user/csr_2.2/fabric-samples/test-network>ls -lrt organizations/ordererOrganizations/csr.com/orderers/orderer.csr.com/msp/tlscacerts/tlsca.csr.com-cert.pem
+-rwxrwxr-x. 1 ec2-user ec2-user 745 Apr 15 11:30 [0m[01;32morganizations/ordererOrganizations/csr.com/orderers/orderer.csr.com/msp/tlscacerts/tlsca.csr.com-cert.pem[0m
+]0;ec2-user@ip-10-0-1-22:~/csr_2.2/fabric-samples/test-network/home/ec2-user/csr_2.2/fabric-samples/test-network>cd organizations/peerOrganizations/
+corporate.csr.com/        creditsauthority.csr.com/ ngo.csr.com/              
+/home/ec2-user/csr_2.2/fabric-samples/test-network>cd organizations/peerOrganizations/
+corporate.csr.com/        creditsauthority.csr.com/ ngo.csr.com/              
+/home/ec2-user/csr_2.2/fabric-samples/test-network>cd organizations/peerOrganizations/corporate.csr.com/
+ca/                           connection-corporate.yaml     msp/                          tlsca/                        
+connection-corporate.json     fabric-ca-client-config.yaml  peers/                        users/                        
+/home/ec2-user/csr_2.2/fabric-samples/test-network>cd organizations/peerOrganizations/corporate.csr.com/peers/peer[K[K[K[K
+]0;ec2-user@ip-10-0-1-22:~/csr_2.2/fabric-samples/test-network/organizations/peerOrganizations/corporate.csr.com/peers/home/ec2-user/csr_2.2/fabric-samples/test-network/organizations/peerOrganizations/corporate.csr.com/peers>ls -lrt
+total 0
+drwxrwxr-x. 4 ec2-user ec2-user 28 Apr 15 11:30 [0m[01;34mpeer0.corporate.csr.com[0m
+drwxrwxr-x. 4 ec2-user ec2-user 28 Apr 15 11:30 [01;34mpeer1.corporate.csr.com[0m
+]0;ec2-user@ip-10-0-1-22:~/csr_2.2/fabric-samples/test-network/organizations/peerOrganizations/corporate.csr.com/peers/home/ec2-user/csr_2.2/fabric-samples/test-network/organizations/peerOrganizations/corporate.csr.com/peers>cd 
+]0;ec2-user@ip-10-0-1-22:~/home/ec2-user>cd csr_2.2/fabric-samples/test-network/
+]0;ec2-user@ip-10-0-1-22:~/csr_2.2/fabric-samples/test-network/home/ec2-user/csr_2.2/fabric-samples/test-network>ls -lrt
+total 28
+-rw-rw-r--. 1 ec2-user ec2-user   777 Apr  8 12:29 README.md
+drwxrwxr-x. 4 ec2-user ec2-user   202 Apr  8 12:29 [0m[01;34maddOrg3[0m
+drwxrwxr-x. 2 ec2-user ec2-user   105 Apr  8 13:28 [01;34mdocker[0m
+-rwxrwxr-x. 1 ec2-user ec2-user 18764 Apr 15 11:25 [01;32mnetwork.sh[0m
+drwxrwxr-x. 6 ec2-user ec2-user   166 Apr 15 11:30 [01;34morganizations[0m
+drwxrwxr-x. 2 ec2-user ec2-user    43 Apr 15 11:30 [01;34msystem-genesis-block[0m
+drwxrwxr-x. 2 ec2-user ec2-user    53 Apr 16 06:16 [01;34mconfigtx[0m
+-rw-rw-r--. 1 ec2-user ec2-user  4096 Apr 16 06:26 typescript
+drwxrwxr-x. 3 ec2-user ec2-user   171 Apr 16 06:32 [01;34mscripts[0m
+]0;ec2-user@ip-10-0-1-22:~/csr_2.2/fabric-samples/test-network/home/ec2-user/csr_2.2/fabric-samples/test-network>cd configtx/
+]0;ec2-user@ip-10-0-1-22:~/csr_2.2/fabric-samples/test-network/configtx/home/ec2-user/csr_2.2/fabric-samples/test-network/configtx>ls -lrt
+total 16
+-rw-rw-r--. 1 ec2-user ec2-user 14495 Apr  8 13:04 configtx.yaml
+]0;ec2-user@ip-10-0-1-22:~/csr_2.2/fabric-samples/test-network/configtx/home/ec2-user/csr_2.2/fabric-samples/test-network/configtx>vi configtx.yaml 
+[?2004h[?1049h[22;0;0t[?1h=[?2004h[1;44r[?12h[?12l[27m[23m[29m[m[H[2J[?25l[44;1H[1m[37m[41mE325: ATTENTION[m
+Found a swap file by the name ".configtx.yaml.swp"
+[10Cowned by: ec2-user   dated: Fri Apr 16 06:17:05 2021
+[9Cfile name: ~ec2-user/csr_2.2/fabric-samples/test-network/configtx/configtx.yaml
+[10Cmodified: no
+[9Cuser name: ec2-user   host name: ip-10-0-1-22.ap-south-1.compute.interna
+[8Cprocess ID: 2136 (still running)
+While opening file "configtx.yaml"
+[13Cdated: Thu Apr  8 13:04:17 2021
+
+(1) Another program may be editing the same file.  If this is the case,
+    be careful not to end up with two different instances of the same
+    file when making changes.  Quit, or continue with caution.
+(2) An edit session for this file crashed.
+    If this is the case, use ":recover" or "vim -r configtx.yaml"
+    to recover the changes (see ":help recovery").
+    If you did this already, delete the swap file ".configtx.yaml.swp"
+    to avoid this message.
+
+[?2004l[?2004h[43;1H"configtx.yaml" 374L, 14495C
+[32mPress ENTER or type command to continue[?25h[m[1;1H[19L[?25l[1;1H# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+---
+################################################################################
+#
+#   Section: Organizations
+#
+#   - This section defines the different organizational identities which will
+#   be referenced later in the configuration.
+#
+################################################################################
+Organizations:[17;5H- &Orderer[19;9HName: Orderer[21;9H# ID to load the MSP definition as[22;9HID: OrdererMSP[24;9H# MSPDir is the filesystem path which contains the MSP configuration[25;9HMSPDir: ../organizations/ordererOrganizations/csr.com/msp[27;9H# Policies defines the set of policies at this level of the config tree[28;9H# For organization policies, their canonical path is usually[29;9H#   /Channel/<Application|Orderer>/<OrgName>/<PolicyName>[30;9HPolicies:[31;13HReaders:[32;17HType: Signature[33;17HRule: "OR('OrdererMSP.member')"[34;13HWriters:[35;17HType: Signature[36;17HRule: "OR('OrdererMSP.member')"[37;13HAdmins:[38;17HType: Signature[39;17HRule: "OR('OrdererMSP.admin')"[41;9HOrdererEndpoints:[42;13H- orderer.example.com:7050[44;1H[K[1;1H[?25h
+
+
+
+
+
+
+
+
+
+
+
+[?25l[27m[23m[29m[m[H[2J[1;13H- orderer.example.com:7050[3;5H- &Corporate[4;9H# DefaultOrg defines the organization which is used in the sampleconfig[5;9H# of the fabric.git development environment[6;9HName: CorporateMSP[8;9H# ID to load the MSP definition as[9;9HID: CorporateMSP[11;9HMSPDir: ../organizations/peerOrganizations/corporate.csr.com/msp[13;9H# Policies defines the set of policies at this level of the config tree[14;9H# For organization policies, their canonical path is usually[15;9H#   /Channel/<Application|Orderer>/<OrgName>/<PolicyName>[16;9HPolicies:[17;13HReaders:[18;17HType: Signature[19;17HRule: "OR('CorporateMSP.admin', 'CorporateMSP.peer', 'CorporateMSP.client')"[20;13HWriters:[21;17HType: Signature[22;17HRule: "OR('CorporateMSP.admin', 'CorporateMSP.client')"[23;13HAdmins:[24;17HType: Signature[25;17HRule: "OR('CorporateMSP.admin')"[26;13HEndorsement:[27;17HType: Signature[28;17HRule: "OR('CorporateMSP.peer')"[30;9HAnchorPeers:[31;13H# AnchorPeers defines the location of peers which can be used[32;13H# for cross org gossip communication.  Note, this value is only[33;13H# encoded in the genesis block in the Application section context[34;13H- Host: peer0.corporate.csr.com[35;15HPort: 7051[38;5H- &CreditsAuthority[39;9H# DefaultOrg defines the organization which is used in the sampleconfig[40;9H# of the fabric.git development environment[41;9HName: CreditsAuthorityMSP[43;9H# ID to load the MSP definition as[1;13H[?25h
+[3;13H[4;13H[5;13H[6;13H
+[8;13H[?25l[44;1H:[?2004h[?25hq![?25l[?2004l[44;1H[K[44;1H[?2004l[?1l>[?25h[?1049l[23;0;0t]0;ec2-user@ip-10-0-1-22:~/csr_2.2/fabric-samples/test-network/configtx/home/ec2-user/csr_2.2/fabric-samples/test-network/configtx>cd ..
+]0;ec2-user@ip-10-0-1-22:~/csr_2.2/fabric-samples/test-network/home/ec2-user/csr_2.2/fabric-samples/test-network>cd organizations/peerOrganizations/corporate.csr.com/users/Admin@corporate.csr.com/msp
+]0;ec2-user@ip-10-0-1-22:~/csr_2.2/fabric-samples/test-network/organizations/peerOrganizations/corporate.csr.com/users/Admin@corporate.csr.com/msp/home/ec2-user/csr_2.2/fabric-samples/test-network/organizations/peerOrganizations/corporate.csr.com/users/Admin@corporate.csr.com/msp>ls -lrt
+total 12
+drwxrwxr-x. 2 ec2-user ec2-user   6 Apr 15 11:30 [0m[01;34muser[0m
+drwxrwxr-x. 2 ec2-user ec2-user  81 Apr 15 11:30 [01;34mkeystore[0m
+drwxrwxr-x. 2 ec2-user ec2-user  22 Apr 15 11:30 [01;34msigncerts[0m
+-rwxrwxr-x. 1 ec2-user ec2-user 215 Apr 15 11:30 [01;32mIssuerRevocationPublicKey[0m
+-rwxrwxr-x. 1 ec2-user ec2-user 843 Apr 15 11:30 [01;32mIssuerPublicKey[0m
+drwxrwxr-x. 2 ec2-user ec2-user  45 Apr 15 11:30 [01;34mcacerts[0m
+-rwxrwxr-x. 1 ec2-user ec2-user 500 Apr 15 11:30 [01;32mconfig.yaml[0m
+]0;ec2-user@ip-10-0-1-22:~/csr_2.2/fabric-samples/test-network/organizations/peerOrganizations/corporate.csr.com/users/Admin@corporate.csr.com/msp/home/ec2-user/csr_2.2/fabric-samples/test-network/organizations/peerOrganizations/corporate.csr.com/users/Admin@corporate.csr.com/msp>cd -
+/home/ec2-user/csr_2.2/fabric-samples/test-network
+]0;ec2-user@ip-10-0-1-22:~/csr_2.2/fabric-samples/test-network/home/ec2-user/csr_2.2/fabric-samples/test-network>ls -lrt
+total 36
+-rw-rw-r--. 1 ec2-user ec2-user   777 Apr  8 12:29 README.md
+drwxrwxr-x. 4 ec2-user ec2-user   202 Apr  8 12:29 [0m[01;34maddOrg3[0m
+drwxrwxr-x. 2 ec2-user ec2-user   105 Apr  8 13:28 [01;34mdocker[0m
+-rwxrwxr-x. 1 ec2-user ec2-user 18764 Apr 15 11:25 [01;32mnetwork.sh[0m
+drwxrwxr-x. 6 ec2-user ec2-user   166 Apr 15 11:30 [01;34morganizations[0m
+drwxrwxr-x. 2 ec2-user ec2-user    43 Apr 15 11:30 [01;34msystem-genesis-block[0m
+drwxrwxr-x. 3 ec2-user ec2-user   171 Apr 16 06:32 [01;34mscripts[0m
+drwxrwxr-x. 2 ec2-user ec2-user    53 Apr 16 06:34 [01;34mconfigtx[0m
+-rw-rw-r--. 1 ec2-user ec2-user 12288 Apr 16 06:34 typescript
+]0;ec2-user@ip-10-0-1-22:~/csr_2.2/fabric-samples/test-network/home/ec2-user/csr_2.2/fabric-samples/test-network>cd configtx/
+]0;ec2-user@ip-10-0-1-22:~/csr_2.2/fabric-samples/test-network/configtx/home/ec2-user/csr_2.2/fabric-samples/test-network/configtx>vi configtx.yaml 
+[?2004h[?1049h[22;0;0t[?1h=[?2004h[1;44r[?12h[?12l[27m[23m[29m[m[H[2J[?25l[44;1H[1m[37m[41mE325: ATTENTION[m
+Found a swap file by the name ".configtx.yaml.swp"
+[10Cowned by: ec2-user   dated: Fri Apr 16 06:17:05 2021
+[9Cfile name: ~ec2-user/csr_2.2/fabric-samples/test-network/configtx/configtx.yaml
+[10Cmodified: no
+[9Cuser name: ec2-user   host name: ip-10-0-1-22.ap-south-1.compute.interna
+[8Cprocess ID: 2136 (still running)
+While opening file "configtx.yaml"
+[13Cdated: Thu Apr  8 13:04:17 2021
+
+(1) Another program may be editing the same file.  If this is the case,
+    be careful not to end up with two different instances of the same
+    file when making changes.  Quit, or continue with caution.
+(2) An edit session for this file crashed.
+    If this is the case, use ":recover" or "vim -r configtx.yaml"
+    to recover the changes (see ":help recovery").
+    If you did this already, delete the swap file ".configtx.yaml.swp"
+    to avoid this message.
+
+[?2004l[?2004h[43;1H"configtx.yaml" 374L, 14495C
+[32mPress ENTER or type command to continue[?25h[m[1;1H[19L[?25l[1;1H# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+---
+################################################################################
+#
+#   Section: Organizations
+#
+#   - This section defines the different organizational identities which will
+#   be referenced later in the configuration.
+#
+################################################################################
+Organizations:[17;5H- &Orderer[19;9HName: Orderer[21;9H# ID to load the MSP definition as[22;9HID: OrdererMSP[24;9H# MSPDir is the filesystem path which contains the MSP configuration[25;9HMSPDir: ../organizations/ordererOrganizations/csr.com/msp[27;9H# Policies defines the set of policies at this level of the config tree[28;9H# For organization policies, their canonical path is usually[29;9H#   /Channel/<Application|Orderer>/<OrgName>/<PolicyName>[30;9HPolicies:[31;13HReaders:[32;17HType: Signature[33;17HRule: "OR('OrdererMSP.member')"[34;13HWriters:[35;17HType: Signature[36;17HRule: "OR('OrdererMSP.member')"[37;13HAdmins:[38;17HType: Signature[39;17HRule: "OR('OrdererMSP.admin')"[41;9HOrdererEndpoints:[42;13H- orderer.example.com:7050[44;1H[K[1;1H[?25h[?25l[27m[23m[29m[m[H[2J[1;13H- orderer.example.com:7050[3;5H- &Corporate[4;9H# DefaultOrg defines the organization which is used in the sampleconfig[5;9H# of the fabric.git development environment[6;9HName: CorporateMSP[8;9H# ID to load the MSP definition as[9;9HID: CorporateMSP[11;9HMSPDir: ../organizations/peerOrganizations/corporate.csr.com/msp[13;9H# Policies defines the set of policies at this level of the config tree[14;9H# For organization policies, their canonical path is usually[15;9H#   /Channel/<Application|Orderer>/<OrgName>/<PolicyName>[16;9HPolicies:[17;13HReaders:[18;17HType: Signature[19;17HRule: "OR('CorporateMSP.admin', 'CorporateMSP.peer', 'CorporateMSP.client')"[20;13HWriters:[21;17HType: Signature[22;17HRule: "OR('CorporateMSP.admin', 'CorporateMSP.client')"[23;13HAdmins:[24;17HType: Signature[25;17HRule: "OR('CorporateMSP.admin')"[26;13HEndorsement:[27;17HType: Signature[28;17HRule: "OR('CorporateMSP.peer')"[30;9HAnchorPeers:[31;13H# AnchorPeers defines the location of peers which can be used[32;13H# for cross org gossip communication.  Note, this value is only[33;13H# encoded in the genesis block in the Application section context[34;13H- Host: peer0.corporate.csr.com[35;15HPort: 7051[38;5H- &CreditsAuthority[39;9H# DefaultOrg defines the organization which is used in the sampleconfig[40;9H# of the fabric.git development environment[41;9HName: CreditsAuthorityMSP[43;9H# ID to load the MSP definition as[1;13H[?25h[?25l[27m[23m[29m[m[H[2J[2;9H# ID to load the MSP definition as[3;9HID: CreditsAuthorityMSP[5;9HMSPDir: ../organizations/peerOrganizations/creditsauthority.csr.com/msp[7;9H# Policies defines the set of policies at this level of the config tree[8;9H# For organization policies, their canonical path is usually[9;9H#   /Channel/<Application|Orderer>/<OrgName>/<PolicyName>[10;9HPolicies:[11;13HReaders:[12;17HType: Signature[13;17HRule: "OR('CreditsAuthorityMSP.admin', 'CreditsAuthorityMSP.peer', 'CreditsAuthorityMSP.client')"[14;13HWriters:[15;17HType: Signature[16;17HRule: "OR('CreditsAuthorityMSP.admin', 'CreditsAuthorityMSP.client')"[17;13HAdmins:[18;17HType: Signature[19;17HRule: "OR('CreditsAuthorityMSP.admin')"[20;13HEndorsement:[21;17HType: Signature[22;17HRule: "OR('CreditsAuthorityMSP.peer')"[24;9HAnchorPeers:[25;13H# AnchorPeers defines the location of peers which can be used[26;13H# for cross org gossip communication.  Note, this value is only[27;13H# encoded in the genesis block in the Application section context[28;13H- Host: peer0.creditsauthority.csr.com[29;15HPort: 9051[31;5H- &Ngo[32;9H# DefaultOrg defines the organization which is used in the sampleconfig[33;9H# of the fabric.git development environment[34;9HName: NgoMSP[36;9H# ID to load the MSP definition as[37;9HID: NgoMSP[39;9HMSPDir: ../organizations/peerOrganizations/ngo.csr.com/msp[41;9H# Policies defines the set of policies at this level of the config tree[42;9H# For organization policies, their canonical path is usually[43;9H#   /Channel/<Application|Orderer>/<OrgName>/<PolicyName>[1;1H[?25h[?25l[44;1H:[?2004h[?25hq![?25l[?2004l[44;1H[K[44;1H[?2004l[?1l>[?25h[?1049l[23;0;0t]0;ec2-user@ip-10-0-1-22:~/csr_2.2/fabric-samples/test-network/configtx/home/ec2-user/csr_2.2/fabric-samples/test-network/configtx>cd ..
+]0;ec2-user@ip-10-0-1-22:~/csr_2.2/fabric-samples/test-network/home/ec2-user/csr_2.2/fabric-samples/test-network>cd organizations/peerOrganizations/creditsauthority.csr.com/users/Admin@creditsauthority.csr.com/msp
+]0;ec2-user@ip-10-0-1-22:~/csr_2.2/fabric-samples/test-network/organizations/peerOrganizations/creditsauthority.csr.com/users/Admin@creditsauthority.csr.com/msp/home/ec2-user/csr_2.2/fabric-samples/test-network/organizations/peerOrganizations/creditsauthority.csr.com/users/Admin@creditsauthority.csr.com/msp>ls -lrt
+total 12
+drwxrwxr-x. 2 ec2-user ec2-user   6 Apr 15 11:30 [0m[01;34muser[0m
+drwxrwxr-x. 2 ec2-user ec2-user  81 Apr 15 11:30 [01;34mkeystore[0m
+drwxrwxr-x. 2 ec2-user ec2-user  22 Apr 15 11:30 [01;34msigncerts[0m
+-rwxrwxr-x. 1 ec2-user ec2-user 215 Apr 15 11:30 [01;32mIssuerRevocationPublicKey[0m
+-rwxrwxr-x. 1 ec2-user ec2-user 843 Apr 15 11:30 [01;32mIssuerPublicKey[0m
+drwxrwxr-x. 2 ec2-user ec2-user  52 Apr 15 11:30 [01;34mcacerts[0m
+-rwxrwxr-x. 1 ec2-user ec2-user 528 Apr 15 11:30 [01;32mconfig.yaml[0m
+]0;ec2-user@ip-10-0-1-22:~/csr_2.2/fabric-samples/test-network/organizations/peerOrganizations/creditsauthority.csr.com/users/Admin@creditsauthority.csr.com/msp/home/ec2-user/csr_2.2/fabric-samples/test-network/organizations/peerOrganizations/creditsauthority.csr.com/users/Admin@creditsauthority.csr.com/msp>cd -
+/home/ec2-user/csr_2.2/fabric-samples/test-network
+]0;ec2-user@ip-10-0-1-22:~/csr_2.2/fabric-samples/test-network/home/ec2-user/csr_2.2/fabric-samples/test-network>cd configtx/
+]0;ec2-user@ip-10-0-1-22:~/csr_2.2/fabric-samples/test-network/configtx/home/ec2-user/csr_2.2/fabric-samples/test-network/configtx>ls -lrt
+total 16
+-rw-rw-r--. 1 ec2-user ec2-user 14495 Apr  8 13:04 configtx.yaml
+]0;ec2-user@ip-10-0-1-22:~/csr_2.2/fabric-samples/test-network/configtx/home/ec2-user/csr_2.2/fabric-samples/test-network/configtx>vi configtx.yaml 
+[?2004h[?1049h[22;0;0t[?1h=[?2004h[1;44r[?12h[?12l[27m[23m[29m[m[H[2J[?25l[44;1H[1m[37m[41mE325: ATTENTION[m
+Found a swap file by the name ".configtx.yaml.swp"
+[10Cowned by: ec2-user   dated: Fri Apr 16 06:17:05 2021
+[9Cfile name: ~ec2-user/csr_2.2/fabric-samples/test-network/configtx/configtx.yaml
+[10Cmodified: no
+[9Cuser name: ec2-user   host name: ip-10-0-1-22.ap-south-1.compute.interna
+[8Cprocess ID: 2136 (still running)
+While opening file "configtx.yaml"
+[13Cdated: Thu Apr  8 13:04:17 2021
+
+(1) Another program may be editing the same file.  If this is the case,
+    be careful not to end up with two different instances of the same
+    file when making changes.  Quit, or continue with caution.
+(2) An edit session for this file crashed.
+    If this is the case, use ":recover" or "vim -r configtx.yaml"
+    to recover the changes (see ":help recovery").
+    If you did this already, delete the swap file ".configtx.yaml.swp"
+    to avoid this message.
+
+[?2004l[?2004h[43;1H"configtx.yaml" 374L, 14495C
+[32mPress ENTER or type command to continue[?25h[m[1;1H[19L[?25l[1;1H# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+---
+################################################################################
+#
+#   Section: Organizations
+#
+#   - This section defines the different organizational identities which will
+#   be referenced later in the configuration.
+#
+################################################################################
+Organizations:[17;5H- &Orderer[19;9HName: Orderer[21;9H# ID to load the MSP definition as[22;9HID: OrdererMSP[24;9H# MSPDir is the filesystem path which contains the MSP configuration[25;9HMSPDir: ../organizations/ordererOrganizations/csr.com/msp[27;9H# Policies defines the set of policies at this level of the config tree[28;9H# For organization policies, their canonical path is usually[29;9H#   /Channel/<Application|Orderer>/<OrgName>/<PolicyName>[30;9HPolicies:[31;13HReaders:[32;17HType: Signature[33;17HRule: "OR('OrdererMSP.member')"[34;13HWriters:[35;17HType: Signature[36;17HRule: "OR('OrdererMSP.member')"[37;13HAdmins:[38;17HType: Signature[39;17HRule: "OR('OrdererMSP.admin')"[41;9HOrdererEndpoints:[42;13H- orderer.example.com:7050[44;1H[K[1;1H[?25h[?25l[27m[23m[29m[m[H[2J[1;13H- orderer.example.com:7050[3;5H- &Corporate[4;9H# DefaultOrg defines the organization which is used in the sampleconfig[5;9H# of the fabric.git development environment[6;9HName: CorporateMSP[8;9H# ID to load the MSP definition as[9;9HID: CorporateMSP[11;9HMSPDir: ../organizations/peerOrganizations/corporate.csr.com/msp[13;9H# Policies defines the set of policies at this level of the config tree[14;9H# For organization policies, their canonical path is usually[15;9H#   /Channel/<Application|Orderer>/<OrgName>/<PolicyName>[16;9HPolicies:[17;13HReaders:[18;17HType: Signature[19;17HRule: "OR('CorporateMSP.admin', 'CorporateMSP.peer', 'CorporateMSP.client')"[20;13HWriters:[21;17HType: Signature[22;17HRule: "OR('CorporateMSP.admin', 'CorporateMSP.client')"[23;13HAdmins:[24;17HType: Signature[25;17HRule: "OR('CorporateMSP.admin')"[26;13HEndorsement:[27;17HType: Signature[28;17HRule: "OR('Corporate
