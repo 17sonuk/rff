@@ -10,9 +10,11 @@ const { Wallets } = require('fabric-network');
 const FabricCAServices = require('fabric-ca-client');
 const fs = require('fs');
 const path = require('path');
+const enrollAdmin = require('./enrollAdmin');
 const logger = require('../loggers/logger');
 
 async function main(userName, orgName) {
+
     // load the network configuration
     const ccpPath = path.resolve(__dirname, '..', '..', 'test-network', 'organizations', 'peerOrganizations', `${orgName}.csr.com`, `connection-${orgName}.json`);
     const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf8'));
@@ -30,7 +32,7 @@ async function main(userName, orgName) {
     const userIdentity = await wallet.get(userName);
     if (userIdentity) {
         logger.debug(`An identity for the user ${userName} already exists in the wallet`);
-        throw new Error(`An identity for the user ${userName} already exists in the wallet`)
+        throw new Error(`An identity for the user ${userName} already exists in the wallet`);
     }
 
     // Check to see if we've already enrolled the admin user.
@@ -38,7 +40,17 @@ async function main(userName, orgName) {
     if (!adminIdentity) {
         logger.debug('An identity for the admin user "admin" does not exist in the wallet');
         logger.debug('Run the enrollAdmin.js application before retrying');
-        throw new Error('An identity for the admin user "admin" does not exist in the wallet');
+        // try {
+        //     await enrollAdmin(orgName);
+        // }
+        // catch (e) {
+        //     console.log(e, "-------------")
+        //     if (e.message === 'An identity for the admin user "admin" already exists in the wallet') {
+        //         // logger.debug(e.message)
+        //     } else {
+        //         throw new Error('An identity for the admin user "admin" does not exist in the wallet');
+        //     }
+        // }
     }
 
     // build a user object for authenticating with the CA
@@ -73,5 +85,7 @@ async function main(userName, orgName) {
     const walletResponse = await wallet.put(userName, x509Identity);
     logger.debug(`Successfully registered and enrolled admin user ${userName} and imported it into the wallet`);
 }
+
+// main("corp203", "corporate");
 
 module.exports = main;

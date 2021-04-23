@@ -31,7 +31,7 @@ async function main(orgName) {
     const identity = await wallet.get('admin');
     if (identity) {
         logger.debug('An identity for the admin user "admin" already exists in the wallet');
-        throw new Error('An identity for the admin user "admin" already exists in the wallet')
+        throw new Error('An identity for the admin user "admin" already exists in the wallet');
     }
 
     let mspId;
@@ -54,5 +54,7 @@ async function main(orgName) {
     const walletResponse = await wallet.put('admin', x509Identity);
     logger.debug('Successfully enrolled admin user "admin" and imported it into the wallet');
 }
+
+// main("ngo");
 
 module.exports = main;

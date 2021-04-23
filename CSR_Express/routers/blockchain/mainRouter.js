@@ -6,14 +6,14 @@ var jwt = require('jsonwebtoken');
 const mainRouter = express.Router();
 
 // Routers
-const demoRouter = require('./demoRouter');
+// const demoRouter = require('./demoRouter');
 const projectMongoRouter = require('./mongo/projectRouter');
 const userMongoRouter = require('./mongo/userRouter');
 const escrowRouter = require('./blockchain/escrowRouter');
 const projectRouter = require('./blockchain/projectRouter');
 const queryRouter = require('./blockchain/queryRouter');
 const redeemRouter = require('./blockchain/redeemRouter');
-const tokenRouter = require('./blockchain/tokenRouter');
+const tokenRouter = require('./blockchain//tokenRouter');
 const transactionRouter = require('./blockchain/transactionRouter');
 const utilsRouter = require('./blockchain/utilsRouter');
 const pspRouter = require('./payment-gateway/pspRouter');
@@ -24,48 +24,41 @@ const userService = require('../service/userService');
 
 // Custom functions
 const logger = require('../loggers/logger');
-const { fieldErrorMessage, generateError, getMessage } = require('../utils/functions');
+const { fieldErrorMessage, getMessage } = require('../utils/functions');
 
 // Authentication
-// mainRouter.use((req, res, next) => {
-//     let skip = ['/mongo/user/login', '/mongo/user/onboard', '/users']
-//     if (skip.includes(req.originalUrl)) {
-//         next();
-//     } else {
-//         const authHeader = req.headers.authorization;
-//         if (authHeader) {
-//             const token = authHeader.split(' ')[1];
-//             jwt.verify(token, TOKEN_SECRET, (err, decoded) => {
-//                 if (err) {
-//                     let error = new Error('Failed to authenticate token. Make sure to include the ' +
-//                         'token returned from /users call in the authorization header ' +
-//                         ' as a Bearer token');
-//                     error.status = 403;
-//                     next(error);
-//                 } else {
-//                     req.userName = decoded.userName;
-//                     req.orgName = decoded.orgName;
-//                     logger.debug(`Decoded from JWT token: useName - ${decoded.userName}, orgName - ${decoded.orgName}`);
-//                     next();
-//                 }
-//             })
-//         } else {
-//             let error = new Error('missing token');
-//             error.status = 401;
-//             next(error);
-//         }
-//     }
-// });
-
 mainRouter.use((req, res, next) => {
-    req.userName = req.header('userName');
-    req.orgName = req.header('orgName');
-    logger.debug(`username ${req.userName} orgName ${req.orgName}`)
-    next();
-})
+    let skip = ['/mongo/user/login', '/mongo/user/onboard', '/users']
+    if (skip.includes(req.originalUrl)) {
+        next();
+    } else {
+        const authHeader = req.headers.authorization;
+        if (authHeader) {
+            const token = authHeader.split(' ')[1];
+            jwt.verify(token, Config.TOKEN_SECRET, (err, decoded) => {
+                if (err) {
+                    let error = new Error('Failed to authenticate token. Make sure to include the ' +
+                        'token returned from /users call in the authorization header ' +
+                        ' as a Bearer token');
+                    error.status = 403;
+                    next(error);
+                } else {
+                    req.userName = decoded.userName;
+                    req.orgName = decoded.orgName;
+                    logger.debug(`Decoded from JWT token: useName - ${decoded.userName}, orgName - ${decoded.orgName}`);
+                    next();
+                }
+            })
+        } else {
+            let error = new Error('missing token');
+            error.status = 401;
+            next(error);
+        }
+    }
+});
 
 // Login and Generate JWT Token
-mainRouter.post('/users', async (req, res, next) => {
+mainRouter.get('/users', (req, res, next) => {
     let { userName, password } = req.body;
 
     logger.debug('End point : /users');
@@ -85,7 +78,7 @@ mainRouter.post('/users', async (req, res, next) => {
     if (userName.length < 4 && (userName.startsWith('ca2') || userName.startsWith('it'))) {
         if (password === 'test') {
             mongoResponse = { ...getMessage(false, 'Login successfull!'), role: "CreditsAuthority" };
-            orgName = 'creditsauthority';
+            orgName = 'CreditsAuthority';
         } else {
             logger.debug(`Authentication failed for the userName ${userName}`);
             res.json(getMessage(false, 'Wrong credentials!'));
@@ -109,6 +102,7 @@ mainRouter.post('/users', async (req, res, next) => {
 
     try {
         await registerUser(userName, orgName);
+        success:
         res.json({
             name: mongoResponse.name,
             role: mongoResponse.role,
@@ -116,13 +110,8 @@ mainRouter.post('/users', async (req, res, next) => {
         })
     }
     catch (e) {
-        logger.error("status code-------", e);
         if (e.message === `An identity for the user ${userName} already exists in the wallet`) {
-            res.json({
-                name: mongoResponse.name,
-                role: mongoResponse.role,
-                token: token
-            })
+            continue success;
         } else {
             generateError(e, 'Unauthorized user', 401, next);
         }
@@ -130,23 +119,23 @@ mainRouter.post('/users', async (req, res, next) => {
 });
 
 // For testing purpose
-mainRouter.use('/demo', demoRouter);
+// mainRouter.use('/demo', demoRouter);
 
 // Mongo Routers
-mainRouter.use('/mongo/project', projectMongoRouter);
-mainRouter.use('/mongo/user', userMongoRouter);
+app.use('/mongo/project', projectMongoRouter);
+app.use('/mongo/user', userMongoRouter);
 
 // Blockchain Routers
-mainRouter.use('/escrow', escrowRouter);
-mainRouter.use('/project', projectRouter);
-mainRouter.use('/query', queryRouter);
-mainRouter.use('/redeem', redeemRouter);
-mainRouter.use('/token', tokenRouter);
-mainRouter.use('/tx', transactionRouter);
-mainRouter.use('/utils', utilsRouter);
+app.use('/escrow', escrowRouter);
+app.use('/project', projectRouter);
+app.use('/query', queryRouter);
+app.use('/redeem', redeemRouter);
+app.use('/token', tokenRouter);
+app.use('/tx', transactionRouter);
+app.use('/utils', utilsRouter);
 
 // Payment Gateway Routers
-mainRouter.use('/psp', pspRouter);
+app.use('/psp', pspRouter);
 
 mainRouter.use("*", (req, res, next) => {
     let error = new Error('Invalid request');

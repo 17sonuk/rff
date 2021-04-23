@@ -18,6 +18,12 @@ type CommonResponse struct {
 	Record string `json:"Record"`
 }
 
+type CommonResponsePaginated struct {
+	Results      []CommonResponse `json:"Results"`
+	RecordsCount string           `json:"RecordsCount"`
+	Bookmark     string           `json:"Bookmark"`
+}
+
 func (s *SmartContract) CommonQuery(ctx contractapi.TransactionContextInterface, queryString string) ([]CommonResponse, error) {
 
 	InfoLogger.Printf("- common query queryString: ", queryString)
@@ -42,6 +48,62 @@ func (s *SmartContract) CommonQuery(ctx contractapi.TransactionContextInterface,
 	}
 
 	return results, nil
+}
+
+func (s *SmartContract) CommonQueryPagination(ctx contractapi.TransactionContextInterface, arg string) (*CommonResponsePaginated, error) {
+
+	InfoLogger.Printf("*****************CommonQueryPagination********************")
+
+	var args []string
+
+	err := json.Unmarshal([]byte(arg), &args)
+	if err != nil {
+		return nil, fmt.Errorf(err.Error())
+	}
+
+	if len(args) < 3 {
+		return nil, fmt.Errorf("Incorrect number of arguments. Expecting 3")
+	}
+
+	queryString := args[0]
+	InfoLogger.Printf("QUERY STRING:", queryString)
+
+	//return type of ParseInt is int64
+	pageSize, err := strconv.ParseInt(args[1], 10, 32)
+	if err != nil {
+		return nil, fmt.Errorf(err.Error())
+	}
+	bookmark := args[2]
+
+	resultsIterator, responseMetadata, err := ctx.GetStub().GetQueryResultWithPagination(queryString, int32(pageSize), bookmark)
+	if err != nil {
+		return nil, err
+	}
+	defer resultsIterator.Close()
+
+	InfoLogger.Printf("RESPONSE METADATA")
+
+	commonResponsePaginated := new(CommonResponsePaginated)
+	commonResponsePaginated.RecordsCount = fmt.Sprintf("%v", responseMetadata.FetchedRecordsCount)
+	commonResponsePaginated.Bookmark = responseMetadata.Bookmark
+
+	results := []CommonResponse{}
+
+	for resultsIterator.HasNext() {
+		queryResponse, err := resultsIterator.Next()
+
+		if err != nil {
+			return nil, err
+		}
+
+		queryResult := CommonResponse{Key: queryResponse.Key, Record: string(queryResponse.Value)}
+		results = append(results, queryResult)
+	}
+
+	commonResponsePaginated.Results = results
+
+	InfoLogger.Printf("*****************CommonQueryPagination successful********************")
+	return commonResponsePaginated, nil
 }
 
 func (s *SmartContract) QueryForSnapshot(ctx contractapi.TransactionContextInterface, arg string) ([]byte, error) {
@@ -228,14 +290,14 @@ func TempConstructQueryResponseFromIterator(resultsIterator shim.StateQueryItera
 func (s *SmartContract) GeneralQueryFunction(ctx contractapi.TransactionContextInterface, arg string) ([]byte, error) {
 	InfoLogger.Printf("*************** generalQueryFunction Started ***************")
 
-	var args []string
+	// var args []string
 
-	err := json.Unmarshal([]byte(arg), &args)
-	if err != nil {
-		return nil, fmt.Errorf(err.Error())
-	}
+	// err := json.Unmarshal([]byte(arg), &args)
+	// if err != nil {
+	// 	return nil, fmt.Errorf(err.Error())
+	// }
 
-	queryString := args[0]
+	queryString := arg
 
 	queryResults, err := GetQueryResultForQueryString(ctx, queryString)
 	if err != nil {
@@ -583,11 +645,18 @@ func (s *SmartContract) GetBalanceCorporate(ctx contractapi.TransactionContextIn
 	return []byte(jsonStr), nil
 }
 
-func (s *SmartContract) GetAllCorporates(ctx contractapi.TransactionContextInterface) ([]byte, error) {
+func (s *SmartContract) GetAllCorporates(ctx contractapi.TransactionContextInterface) ([]string, error) {
 	InfoLogger.Printf("*************** getAllCorporates Started ***************")
 
 	corporatesBytes, _ := ctx.GetStub().GetState("corporates")
 
+	var result []string
+
+	err := json.Unmarshal(corporatesBytes, &result)
+	if err != nil {
+		return nil, fmt.Errorf(err.Error())
+	}
+
 	InfoLogger.Printf("*************** getAllCorporates Successfull ***************")
-	return corporatesBytes, nil
+	return result, nil
 }

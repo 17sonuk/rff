@@ -1,6 +1,10 @@
 const { createLogger, format, transports } = require('winston');
 const { combine, colorize, printf, timestamp } = format;
 
+// const type = (message) => {
+//     return typeof message === 'object' ? JSON.stringify(message, null, 2) : message
+// }
+
 const myFormat = format.combine(
     timestamp({ format: "YYYY-MM-DD HH:mm:ss:ms" }),
     printf(

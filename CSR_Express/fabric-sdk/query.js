@@ -40,13 +40,13 @@ async function main(userName, orgName, functionName, chaincodeName, channelName,
     const contract = network.getContract(chaincodeName);
 
     // Evaluate the specified transaction.
-    let result = await contract.evaluateTransaction(functionName, args);
-    result = JSON.parse(result.toString());
-    result = result.map(elem => {
-        elem['Record'] = JSON.parse(elem['Record'])
-        return elem;
-    })
-    logger.debug(`Transaction has been evaluated, result is: \n${JSON.stringify(result, null, 2)}`);
+    let result;
+    if (args.length > 0) {
+        result = await contract.evaluateTransaction(functionName, args);
+    } else {
+        result = await contract.evaluateTransaction(functionName);
+    }
+    logger.debug(`Transaction has been evaluated`);
 
     // Disconnect from the gateway.
     await gateway.disconnect();
