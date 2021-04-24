@@ -5,6 +5,9 @@ const { NODE_ENV, PORT } = process.env;
 const cors = require('cors');
 const express = require('express');
 
+const connectionToMongo = require('./model/connection2')
+connectionToMongo();
+
 const { getMessage } = require('./utils/functions');
 const mainRouter = require('./routers/mainRouter');
 const logger = require('./loggers/logger');

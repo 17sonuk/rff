@@ -54,7 +54,7 @@ router.post('/unspent/transfer', async (req, res, next) => {
     }
 });
 
-// Save IT data transaction on chaincode on target peers.
+// Save IT data transaction on chaincode on target peers. (Needs attention)
 router.post('/add-corporate-pan', async (req, res, next) => {
     logger.debug('==================== INVOKE ADD CORPORATE PAN ON CHAINCODE ==================')
 

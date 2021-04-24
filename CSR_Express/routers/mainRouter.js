@@ -27,35 +27,35 @@ const logger = require('../loggers/logger');
 const { fieldErrorMessage, generateError, getMessage } = require('../utils/functions');
 
 // Authentication
-// mainRouter.use((req, res, next) => {
-//     let skip = ['/mongo/user/login', '/mongo/user/onboard', '/users']
-//     if (skip.includes(req.originalUrl)) {
-//         next();
-//     } else {
-//         const authHeader = req.headers.authorization;
-//         if (authHeader) {
-//             const token = authHeader.split(' ')[1];
-//             jwt.verify(token, TOKEN_SECRET, (err, decoded) => {
-//                 if (err) {
-//                     let error = new Error('Failed to authenticate token. Make sure to include the ' +
-//                         'token returned from /users call in the authorization header ' +
-//                         ' as a Bearer token');
-//                     error.status = 403;
-//                     next(error);
-//                 } else {
-//                     req.userName = decoded.userName;
-//                     req.orgName = decoded.orgName;
-//                     logger.debug(`Decoded from JWT token: useName - ${decoded.userName}, orgName - ${decoded.orgName}`);
-//                     next();
-//                 }
-//             })
-//         } else {
-//             let error = new Error('missing token');
-//             error.status = 401;
-//             next(error);
-//         }
-//     }
-// });
+mainRouter.use((req, res, next) => {
+    let skip = ['/mongo/user/login', '/mongo/user/onboard', '/users']
+    if (skip.includes(req.originalUrl)) {
+        next();
+    } else {
+        const authHeader = req.headers.authorization;
+        if (authHeader) {
+            const token = authHeader.split(' ')[1];
+            jwt.verify(token, TOKEN_SECRET, (err, decoded) => {
+                if (err) {
+                    let error = new Error('Failed to authenticate token. Make sure to include the ' +
+                        'token returned from /users call in the authorization header ' +
+                        ' as a Bearer token');
+                    error.status = 403;
+                    next(error);
+                } else {
+                    req.userName = decoded.userName;
+                    req.orgName = decoded.orgName;
+                    logger.debug(`Decoded from JWT token: useName - ${decoded.userName}, orgName - ${decoded.orgName}`);
+                    next();
+                }
+            })
+        } else {
+            let error = new Error('missing token');
+            error.status = 401;
+            next(error);
+        }
+    }
+});
 
 mainRouter.use((req, res, next) => {
     req.userName = req.header('userName');
@@ -72,10 +72,10 @@ mainRouter.post('/users', async (req, res, next) => {
     logger.debug(`User name : ${userName}`);
 
     if (!userName) {
-        res.json(fieldErrorMessage('\'userName\''));
+        return res.json(fieldErrorMessage('\'userName\''));
     }
     if (!password) {
-        res.json(fieldErrorMessage('\'password\''));
+        return res.json(fieldErrorMessage('\'password\''));
     }
 
     //calling mongo login for password authentication
@@ -88,15 +88,15 @@ mainRouter.post('/users', async (req, res, next) => {
             orgName = 'creditsauthority';
         } else {
             logger.debug(`Authentication failed for the userName ${userName}`);
-            res.json(getMessage(false, 'Wrong credentials!'));
+            return res.json(getMessage(false, 'Wrong credentials!'));
         }
     } else {
         mongoResponse = await userService.login(userName, password);
         if (mongoResponse.success === false) {
             logger.debug(`Authentication failed for the userName ${userName}`);
-            res.json(getMessage(false, mongoResponse.message));
+            return res.json(getMessage(false, mongoResponse.message));
         } else {
-            orgName = mongoResponse.role;
+            orgName = mongoResponse.role.toLowerCase();
         }
     }
 
@@ -116,8 +116,8 @@ mainRouter.post('/users', async (req, res, next) => {
         })
     }
     catch (e) {
-        logger.error("status code-------", e);
-        if (e.message === `An identity for the user ${userName} already exists in the wallet`) {
+        logger.error(e)
+        if (e.errors[0]['code'] === 0) {
             res.json({
                 name: mongoResponse.name,
                 role: mongoResponse.role,
@@ -138,8 +138,8 @@ mainRouter.use('/mongo/user', userMongoRouter);
 
 // Blockchain Routers
 mainRouter.use('/escrow', escrowRouter);
-mainRouter.use('/project', projectRouter);
 mainRouter.use('/query', queryRouter);
+mainRouter.use('/project', projectRouter);
 mainRouter.use('/redeem', redeemRouter);
 mainRouter.use('/token', tokenRouter);
 mainRouter.use('/tx', transactionRouter);

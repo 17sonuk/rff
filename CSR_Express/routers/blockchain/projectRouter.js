@@ -144,7 +144,7 @@ router.post('/validate-phase', async (req, res, next) => {
     }
 });
 
-//****************************** add a document hash against a criterion, done but errors
+//****************************** add a document hash against a criterion
 router.post('/add-document-hash', async (req, res, next) => {
     logger.debug('==================== INVOKE ADD DOCUMENT HASH TOKEN ON CHAINCODE ==================');
 
@@ -507,7 +507,7 @@ router.get('/corporate-project-transactions', async (req, res, next) => {
     }
 });
 
-//gives all corporate names along with their contribution (IN PROGRESS)
+//gives all corporate names along with their contribution (NOT USED)
 router.get('/locked-details', async (req, res, next) => {
     logger.debug('==================== QUERY BY CHAINCODE: getProjectLockedDetails ==================');
     const projectId = req.query.projectId;

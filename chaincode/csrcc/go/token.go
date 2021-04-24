@@ -634,153 +634,160 @@ func (s *SmartContract) SnapshotCurrentCorporateBalances(ctx contractapi.Transac
 }
 
 //At the end of 1 year+30 days, the Flag has to be set to false and the balances are to be made 0 for corporates. Fire event TransfertoGovt Qty, From,For the year
-// func (s *SmartContract) TransferUnspentTokensToGovt(ctx contractapi.TransactionContextInterface, args []string) (bool, error) {
-// 	InfoLogger.Printf("*************** transferUnspentTokensToGovt Started ***************")
-// 	InfoLogger.Printf("args received:", args)
+func (s *SmartContract) TransferUnspentTokensToGovt(ctx contractapi.TransactionContextInterface, arg string) (bool, error) {
+	InfoLogger.Printf("*************** transferUnspentTokensToGovt Started ***************")
+	InfoLogger.Printf("args received:", arg)
 
-// 	//getusercontext to populate the required data
-// 	creator, err := ctx.GetStub().GetCreator()
-// 	if err != nil {
-// 		return false, fmt.Errorf("Error getting transaction creator: " + err.Error())
-// 	}
-// 	mspId, commonName, _ := getTxCreatorInfo(creator)
-// 	if mspId != "CreditsAuthorityMSP" {
-// 		InfoLogger.Printf("only creditsauthority can initiate transferUnspentTokensToGovt")
-// 		return false, fmt.Errorf("only creditsauthority can initiate transferUnspentTokensToGovt")
-// 	}
-// 	InfoLogger.Printf("current logged in user:", commonName, "with mspId:", mspId)
+	//getusercontext to populate the required data
+	creator, err := ctx.GetStub().GetCreator()
+	if err != nil {
+		return false, fmt.Errorf("Error getting transaction creator: " + err.Error())
+	}
+	mspId, commonName, _ := getTxCreatorInfo(creator)
+	if mspId != "CreditsAuthorityMSP" {
+		InfoLogger.Printf("only creditsauthority can initiate transferUnspentTokensToGovt")
+		return false, fmt.Errorf("only creditsauthority can initiate transferUnspentTokensToGovt")
+	}
+	InfoLogger.Printf("current logged in user:", commonName, "with mspId:", mspId)
 
-// 	if len(args) != 3 {
-// 		return false, fmt.Errorf("Incorrect number of arguments. Expecting 3")
-// 	} else if len(args[0]) <= 0 {
-// 		return false, fmt.Errorf("govt address must be a non-empty string")
-// 	} else if len(args[1]) <= 0 {
-// 		return false, fmt.Errorf("date must be a non-empty string")
-// 	} else if len(args[2]) <= 0 {
-// 		return false, fmt.Errorf("tx id must be a non-empty string")
-// 	}
+	var args []string
 
-// 	//govt address
-// 	govtAddress := args[0] + ".creditsauthority.csr.com"
-// 	csrAddress := commonName
-// 	date, err := strconv.Atoi(args[1])
-// 	if err != nil {
-// 		return false, fmt.Errorf(err.Error())
-// 	}
-// 	txId := args[2]
+	err = json.Unmarshal([]byte(arg), &args)
+	if err != nil {
+		return false, fmt.Errorf(err.Error())
+	}
 
-// 	//check if snapshots exists
-// 	snapshotExistsBytes, _ := ctx.GetStub().GetState("snapshot_exists")
-// 	if snapshotExistsBytes == nil {
-// 		return false, fmt.Errorf("Failed to get snapshot Exists: " + err.Error())
-// 	}
+	if len(args) != 3 {
+		return false, fmt.Errorf("Incorrect number of arguments. Expecting 3")
+	} else if len(args[0]) <= 0 {
+		return false, fmt.Errorf("govt address must be a non-empty string")
+	} else if len(args[1]) <= 0 {
+		return false, fmt.Errorf("date must be a non-empty string")
+	} else if len(args[2]) <= 0 {
+		return false, fmt.Errorf("tx id must be a non-empty string")
+	}
 
-// 	corporates := getCorporates(ctx)
-// 	qtyBytes := []byte{}
-// 	tokenBalance := 0.0
-// 	escrowBalance := 0.0
-// 	sum := 0.0
-// 	objRef := ""
+	//govt address
+	govtAddress := args[0] + ".creditsauthority.csr.com"
+	csrAddress := commonName
+	date, err := strconv.Atoi(args[1])
+	if err != nil {
+		return false, fmt.Errorf(err.Error())
+	}
+	txId := args[2]
 
-// 	notificationUsers := make([]string, len(corporates))
+	//check if snapshots exists
+	snapshotExistsBytes, _ := ctx.GetStub().GetState("snapshot_exists")
+	if snapshotExistsBytes == nil {
+		return false, fmt.Errorf("Failed to get snapshot Exists: " + err.Error())
+	}
 
-// 	//sum and clear the snapshot balances and transfer tokens to Govt address
-// 	for _, corporate := range corporates {
-// 		qtyBytes, _ = ctx.GetStub().GetState(corporate + "_snapshot")
-// 		tokenBalance = 0.0
-// 		escrowBalance = 0.0
-// 		if qtyBytes != nil {
-// 			tokenBalance, _ = strconv.ParseFloat(string(qtyBytes), 64)
-// 			if tokenBalance > 0.0 {
-// 				notificationUsers = append(notificationUsers, corporate)
-// 				InfoLogger.Printf("token balance:", tokenBalance)
-// 				//set snapshot balance to 0
-// 				ctx.GetStub().PutState(corporate+"_snapshot", []byte(string("0")))
-// 				objRef += corporate + ":normal:" + fmt.Sprintf("%0.2f", tokenBalance) + ","
-// 			}
-// 		}
+	corporates := getCorporates(ctx)
+	qtyBytes := []byte{}
+	tokenBalance := 0.0
+	escrowBalance := 0.0
+	sum := 0.0
+	objRef := ""
 
-// 		//remove expired escrow balances of the coporate
-// 		//get all locked obj of a corporate
-// 		queryString := fmt.Sprintf("{\"selector\":{\"docType\":\"EscrowDetails\", \"corporate\": \"%s\"}, \"fields\": [\"_id\"]}", corporate)
-// 		queryResults, err := getQueryResultForQueryString(ctx.GetStub(), queryString)
-// 		if err != nil {
-// 			return false, fmt.Errorf(err.Error())
-// 		}
-// 		InfoLogger.Printf("query result:", string(queryResults))
+	notificationUsers := make([]string, len(corporates))
 
-// 		var listOfIds []map[string]string
-// 		err = json.Unmarshal([]byte(queryResults), &listOfIds)
-// 		InfoLogger.Printf(listOfIds)
+	//sum and clear the snapshot balances and transfer tokens to Govt address
+	for _, corporate := range corporates {
+		qtyBytes, _ = ctx.GetStub().GetState(corporate + "_snapshot")
+		tokenBalance = 0.0
+		escrowBalance = 0.0
+		if qtyBytes != nil {
+			tokenBalance, _ = strconv.ParseFloat(string(qtyBytes), 64)
+			if tokenBalance > 0.0 {
+				notificationUsers = append(notificationUsers, corporate)
+				InfoLogger.Printf("token balance:", tokenBalance)
+				//set snapshot balance to 0
+				ctx.GetStub().PutState(corporate+"_snapshot", []byte(string("0")))
+				objRef += corporate + ":normal:" + fmt.Sprintf("%0.2f", tokenBalance) + ","
+			}
+		}
 
-// 		// loop through each project where credits are locked.
-// 		for _, value := range listOfIds {
-// 			escrowObj := UnspentCSRAccount{}
-// 			escrowAsBytes, _ := ctx.GetStub().GetState(value["Key"])
-// 			err = json.Unmarshal(escrowAsBytes, &escrowObj)
+		//remove expired escrow balances of the coporate
+		//get all locked obj of a corporate
+		queryString := fmt.Sprintf("{\"selector\":{\"docType\":\"EscrowDetails\", \"corporate\": \"%s\"}, \"fields\": [\"_id\"]}", corporate)
+		queryResults, err := GetQueryResultForQueryString(ctx, queryString)
+		if err != nil {
+			return false, fmt.Errorf(err.Error())
+		}
+		InfoLogger.Printf("query result:", string(queryResults))
 
-// 			tmpFunds := make([]FutureFunds, 0, len(escrowObj.Funds))
+		var listOfIds []map[string]string
+		err = json.Unmarshal([]byte(queryResults), &listOfIds)
+		//InfoLogger.Printf(listOfIds)
 
-// 			//for each fund, remove the fund if fund=leastValidity and current date is beyond least validity
-// 			for _, v := range escrowObj.Funds {
-// 				if escrowObj.LeastValidity < date && v.Validity == escrowObj.LeastValidity {
-// 					escrowBalance += v.Qty
-// 				} else {
-// 					tmpFunds = append(tmpFunds, v)
-// 				}
-// 			}
-// 			InfoLogger.Printf("TmpFunds: ", tmpFunds)
-// 			escrowObj.Funds = tmpFunds
-// 			//if funds still exist, make leastValidity = validity of the 1st fund.
-// 			if len(tmpFunds) != 0 {
-// 				escrowObj.LeastValidity = tmpFunds[0].Validity
-// 			}
+		// loop through each project where credits are locked.
+		for _, value := range listOfIds {
+			escrowObj := UnspentCSRAccount{}
+			escrowAsBytes, _ := ctx.GetStub().GetState(value["Key"])
+			err = json.Unmarshal(escrowAsBytes, &escrowObj)
 
-// 			//marshal the updated escrow and save it.
-// 			marshalEscrow, err := json.Marshal(escrowObj)
-// 			if err != nil {
-// 				return false, fmt.Errorf(err.Error())
-// 			}
-// 			ctx.GetStub().PutState(value["Key"], marshalEscrow)
-// 		}
-// 		if escrowBalance > 0.0 {
-// 			objRef += corporate + ":escrow:" + fmt.Sprintf("%0.2f", escrowBalance) + ","
-// 		}
+			tmpFunds := make([]FutureFunds, 0, len(escrowObj.Funds))
 
-// 		sum += tokenBalance + escrowBalance
-// 	}
-// 	objRef = strings.Trim(objRef, ",")
-// 	InfoLogger.Printf("obj Ref:", objRef)
-// 	if sum == 0.0 {
-// 		return false, fmt.Errorf("No unspent tokens exist!")
-// 	}
+			//for each fund, remove the fund if fund=leastValidity and current date is beyond least validity
+			for _, v := range escrowObj.Funds {
+				if escrowObj.LeastValidity < date && v.Validity == escrowObj.LeastValidity {
+					escrowBalance += v.Qty
+				} else {
+					tmpFunds = append(tmpFunds, v)
+				}
+			}
+			InfoLogger.Printf("TmpFunds: ", tmpFunds)
+			escrowObj.Funds = tmpFunds
+			//if funds still exist, make leastValidity = validity of the 1st fund.
+			if len(tmpFunds) != 0 {
+				escrowObj.LeastValidity = tmpFunds[0].Validity
+			}
 
-// 	//Add tokens to Govt/do an update
-// 	govtBalance := 0.0
-// 	govtBalanceInBytes, _ := ctx.GetStub().GetState(govtAddress)
-// 	if govtBalanceInBytes != nil {
-// 		govtBalance, _ = strconv.ParseFloat(string(govtBalanceInBytes), 64)
-// 	}
+			//marshal the updated escrow and save it.
+			marshalEscrow, err := json.Marshal(escrowObj)
+			if err != nil {
+				return false, fmt.Errorf(err.Error())
+			}
+			ctx.GetStub().PutState(value["Key"], marshalEscrow)
+		}
+		if escrowBalance > 0.0 {
+			objRef += corporate + ":escrow:" + fmt.Sprintf("%0.2f", escrowBalance) + ","
+		}
 
-// 	ctx.GetStub().PutState(govtAddress, []byte(fmt.Sprintf("%0.2f", govtBalance+sum)))
-// 	ctx.GetStub().PutState("snapshot_exists", []byte("0"))
+		sum += tokenBalance + escrowBalance
+	}
+	objRef = strings.Trim(objRef, ",")
+	InfoLogger.Printf("obj Ref:", objRef)
+	if sum == 0.0 {
+		return false, fmt.Errorf("No unspent tokens exist!")
+	}
 
-// 	err = createTransaction(ctx, csrAddress, govtAddress, sum, date, "ClosingYearFundTransfer", objRef, txId, -1)
-// 	if err != nil {
-// 		return false, fmt.Errorf("Failed to add a Tx: " + err.Error())
-// 	}
+	//Add tokens to Govt/do an update
+	govtBalance := 0.0
+	govtBalanceInBytes, _ := ctx.GetStub().GetState(govtAddress)
+	if govtBalanceInBytes != nil {
+		govtBalance, _ = strconv.ParseFloat(string(govtBalanceInBytes), 64)
+	}
 
-// 	eventPayload := "Your unspent credits are transferred to Government."
-// 	notification := &Notification{TxId: txId, Description: eventPayload, Users: notificationUsers}
-// 	notificationtAsBytes, err := json.Marshal(notification)
-// 	eventErr := ctx.GetStub().SetEvent("Notification", notificationtAsBytes)
-// 	if eventErr != nil {
-// 		return false, fmt.Errorf(fmt.Sprintf("Failed to emit event"))
-// 	}
+	ctx.GetStub().PutState(govtAddress, []byte(fmt.Sprintf("%0.2f", govtBalance+sum)))
+	ctx.GetStub().PutState("snapshot_exists", []byte("0"))
 
-// 	InfoLogger.Printf("*************** transferUnspentTokensToGovt Successful ***************")
-// 	return true, nil
-// }
+	err = createTransaction(ctx, csrAddress, govtAddress, sum, date, "ClosingYearFundTransfer", objRef, txId, -1)
+	if err != nil {
+		return false, fmt.Errorf("Failed to add a Tx: " + err.Error())
+	}
+
+	eventPayload := "Your unspent credits are transferred to Government."
+	notification := &Notification{TxId: txId, Description: eventPayload, Users: notificationUsers}
+	notificationtAsBytes, err := json.Marshal(notification)
+	eventErr := ctx.GetStub().SetEvent("Notification", notificationtAsBytes)
+	if eventErr != nil {
+		return false, fmt.Errorf(fmt.Sprintf("Failed to emit event"))
+	}
+
+	InfoLogger.Printf("*************** transferUnspentTokensToGovt Successful ***************")
+	return true, nil
+}
 
 //query for all token request
 func (s *SmartContract) QueryForAllTokenRequests(ctx contractapi.TransactionContextInterface) ([]byte, error) {

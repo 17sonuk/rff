@@ -9,7 +9,7 @@ logger.debug('<<<<<<<<<<<<<< user router >>>>>>>>>>>>>>>>>')
 
 //Onboarding of user
 router.post('/onboard', (req, res, next) => {
-    logger.debug(`router-onboarding: ${req.body}`);
+    logger.debug(`router-onboarding: ${JSON.stringify(req.body, null, 2)}`);
 
     userService.registerUser(req.body)
         .then((data) => {
@@ -31,7 +31,7 @@ router.get('/profile', (req, res, next) => {
 
 //get unapproved user details
 router.get('/unapproved-users', (req, res, next) => {
-    logger.debug(`router-getUnapprovedUsers: ${req.body}`);
+    logger.debug(`router-getUnapprovedUsers`);
 
     userService.getUnapprovedUserDetails()
         .then((data) => {
@@ -42,7 +42,7 @@ router.get('/unapproved-users', (req, res, next) => {
 
 //approve user
 router.post('/approve-user', (req, res, next) => {
-    logger.debug(`router-approveUser: ${req.body}`);
+    logger.debug(`router-approveUser: ${JSON.stringify(req.body, null, 2)}`);
 
     userService.approveUser(req.body.userName, req.body.pan)
         .then((data) => {
@@ -51,28 +51,9 @@ router.post('/approve-user', (req, res, next) => {
         .catch(err => next(err))
 })
 
-//login user
-// router.post('/login', (req, res, next) => {
-//     console.log("router-login", req.body);
-//     let userName = req.body.userName;
-//     let password = req.body.password;
-//     if (userName.length < 4 && (userName.startsWith('ca2') || userName.startsWith('it'))) {
-//         if (password !== 'test') {
-//             res.json({ success: false, message: 'wrong credentials!' });
-//             return;
-//         }
-//         res.json({ success: true, message: 'login successful', userName: req.body.userName, role: "csr" })
-//     }
-//     userService.login(userName, password)
-//         .then((data) => {
-//             res.json(data)
-//         })
-//         .catch(err => next(err))
-// })
-
 //get profit amount of corporate for Current financial year
 router.get('/profit-corporate', (req, res, next) => {
-    logger.debug(`router-getProfitCorporate: ${req.body}`);
+    logger.debug(`router-getProfitCorporate: ${JSON.stringify(req.body, null, 2)}`);
 
     userService.getAmountFromBalanceSheet(req.query.userName)
         .then((data) => {
@@ -85,7 +66,7 @@ router.get('/profit-corporate', (req, res, next) => {
 router.get('/notification/:seen', (req, res, next) => {
     logger.debug("router-getNotification");
 
-    let name = req.username + "." + req.orgname + ".csr.com";
+    let name = req.userName + "." + req.orgName + ".csr.com";
     userService.getNotifications(name, req.params.seen)
         .then((data) => {
             res.json(data)
@@ -96,7 +77,7 @@ router.get('/notification/:seen', (req, res, next) => {
 router.put('/notification', (req, res, next) => {
     logger.debug("router-updateNotification");
 
-    let name = req.username + "." + req.orgname + ".csr.com";
+    let name = req.userName + "." + req.orgName + ".csr.com";
     userService.updateNotification(name, req.body.txId)
         .then((data) => {
             res.json(data)

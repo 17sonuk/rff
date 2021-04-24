@@ -3,6 +3,9 @@ const { CHAINCODE_NAME, CHANNEL_NAME } = process.env;
 
 const express = require('express');
 const router = express.Router();
+const fs = require('fs');
+const path = require('path');
+const XLSX = require('xlsx');
 
 const logger = require('../../loggers/logger');
 const { fieldErrorMessage, generateError, getMessage, splitOrgName } = require('../../utils/functions');
@@ -228,7 +231,7 @@ router.get('/amount-parked', async function (req, res, next) {
     }
 });
 
-//fetch the Id data uploaded by the IT Dept. - not used
+//fetch the Id data uploaded by the IT Dept. - (NOT USED)
 router.get('/it-data', async function (req, res, next) {
 
     const year = req.query.year;
@@ -495,23 +498,22 @@ router.get('/ngo-report', async function (req, res, next) {
     }
 
     //joining path of directory 
-    let directoryPath = path.join(__dirname, '..', 'wallet-ngo');
+    let directoryPath = path.join(__dirname, '..', '..', 'wallet-ngo');
 
     let filenames = fs.readdirSync(directoryPath);
     logger.debug("\nCurrent directory filenames:");
     let listOfNgos = filenames.filter(function (value, index, arr) {
-        return value != 'admin';
-    });
+        return value != 'admin.id';
+    }).map(_ => _ = _.split('.')[0]);
 
-    let next = Number(year) + 1
+    let temp = Number(year) + 1
     let thisYear = "April 1, " + year + " 00:00:00"
-    let nextYear = "April 1, " + next.toString() + " 00:00:00"
+    let nextYear = "April 1, " + temp.toString() + " 00:00:00"
 
     let startDate = new Date(thisYear)
     let endDate = new Date(nextYear)
 
     let response = {
-        "success": false,
         "result": []
     }
 
@@ -528,62 +530,84 @@ router.get('/ngo-report', async function (req, res, next) {
         "fields": ["qty", "from"]
     }
 
-    for (let i = 0; i < listOfNgos.length; i++) {
-        queryString["selector"]["txType"]["$in"] = ["TransferToken", "TransferToken_snapshot", "ReleaseFundsFromEscrow"];
-        queryString["selector"]["to"] = listOfNgos[i] + ".ngo.csr.com";
+    try {
+        console.log(listOfNgos);
+        for (let i = 0; i < listOfNgos.length; i++) {
+            queryString["selector"]["txType"]["$in"] = ["TransferToken", "TransferToken_snapshot", "ReleaseFundsFromEscrow"];
+            queryString["selector"]["to"] = listOfNgos[i] + ".ngo.csr.com";
 
-        let args = JSON.stringify(queryString);
-        logger.debug(`query string:\n ${args}`);
+            let args = JSON.stringify(queryString);
+            logger.debug(`query string:\n ${args}`);
 
-        let message = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
-        message = message[0]
-        //console.log(message.toString())
-        let newObject = JSON.parse(message.toString())
-        let ngoData = {}
-        ngoData["ngo"] = listOfNgos[i]
+            let message = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
+            message = JSON.parse(message.toString());
 
-        let total = 0;
-        let setOfContributors = new Set();
-        for (let j = 0; j < newObject.length; j++) {
-            total += newObject[j]["Record"]["qty"];
-            setOfContributors.add(newObject[j]["Record"]["from"]);
+            message.forEach(elem => {
+                elem['Record'] = JSON.parse(elem['Record'])
+            })
+
+            logger.debug(`response1 :  ${JSON.stringify(message, null, 2)}`)
+            let ngoData = {}
+            ngoData["ngo"] = listOfNgos[i]
+
+            let total = 0;
+            let setOfContributors = new Set();
+            for (let j = 0; j < message.length; j++) {
+                total += message[j]["Record"]["qty"];
+                setOfContributors.add(message[j]["Record"]["from"]);
+            }
+            ngoData["totalReceived"] = total;
+            ngoData["contributors"] = Array.from(setOfContributors).map(splitOrgName);
+
+            //get all redeemed amount
+            queryString["selector"]["txType"]["$in"] = ["ApproveRedeemRequest"];
+            args = JSON.stringify(queryString);
+            logger.debug(`query1 string:\n ${args}`);
+
+            message2 = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
+            message2 = JSON.parse(message2.toString());
+
+            message2.forEach(elem => {
+                elem['Record'] = JSON.parse(elem['Record'])
+            })
+
+            logger.debug(`response2 :  ${JSON.stringify(message2, null, 2)}`)
+
+            total = 0;
+            for (let j = 0; j < message2.length; j++) {
+                total += message2[j]["Record"]["qty"]
+            }
+            ngoData["totalRedeemed"] = total;
+
+            //get all locked amounts
+            queryString["selector"]["txType"]["$in"] = ["FundsToEscrowAccount", "FundsToEscrowAccount_snapshot"];
+            args = JSON.stringify(queryString);
+            logger.debug(`query2 string:\n ${args}`);
+
+            message3 = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
+            message3 = JSON.parse(message3.toString());
+
+            message3.forEach(elem => {
+                elem['Record'] = JSON.parse(elem['Record'])
+            })
+
+            logger.debug(`response3 :  ${JSON.stringify(message3, null, 2)}`)
+
+            total = 0;
+            for (let j = 0; j < message3.length; j++) {
+                total += message3[j]["Record"]["qty"]
+            }
+            ngoData["totalLocked"] = total;
+
+            response["result"].push(ngoData);
+            logger.debug(response);
         }
-        ngoData["totalReceived"] = total;
-        ngoData["contributors"] = Array.from(setOfContributors).map(splitOrgName);
-
-        //get all redeemed amount
-        queryString["selector"]["txType"]["$in"] = ["ApproveRedeemRequest"];
-        args = JSON.stringify(queryString);
-        logger.debug(`query string:\n ${args}`);
-
-        message = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
-        newObject = JSON.parse(message[0].toString())
-
-        total = 0;
-        for (let j = 0; j < newObject.length; j++) {
-            total += newObject[j]["Record"]["qty"]
-        }
-        ngoData["totalRedeemed"] = total;
-
-        //get all locked amounts
-        queryString["selector"]["txType"]["$in"] = ["FundsToEscrowAccount", "FundsToEscrowAccount_snapshot"];
-        args = JSON.stringify(queryString);
-        logger.debug(`query string:\n ${args}`);
-
-        message = await await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
-        newObject = JSON.parse(message[0].toString())
-
-        total = 0;
-        for (let j = 0; j < newObject.length; j++) {
-            total += newObject[j]["Record"]["qty"]
-        }
-        ngoData["totalLocked"] = total;
-
-        response["result"].push(ngoData);
-        logger.debug(response);
+        res.json(getMessage(true, response['result']));
+    }
+    catch (e) {
+        generateError(e, 'Failed to query CommonQuery', 401, next);
     }
 
-    res.json(getMessage(true, response));
 });
 
 //get the details of contributions to an ngo in the current financial year
@@ -607,9 +631,9 @@ router.get('/ngo-contribution-details', async function (req, res, next) {
         year -= 1;
     }
 
-    let next = year + 1;
+    let temp = year + 1;
     let thisYear = "April 1, " + year.toString() + " 00:00:00"
-    let nextYear = "April 1, " + next.toString() + " 00:00:00"
+    let nextYear = "April 1, " + temp.toString() + " 00:00:00"
     let startDate = new Date(thisYear)
     let endDate = new Date(nextYear)
 
@@ -633,21 +657,25 @@ router.get('/ngo-contribution-details', async function (req, res, next) {
 
     try {
         let message = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
-        logger.debug(message[0].toString())
+        message = JSON.parse(message.toString());
 
-        let newObject = JSON.parse(message[0].toString())
+        message.forEach(elem => {
+            elem['Record'] = JSON.parse(elem['Record'])
+        })
 
-        for (let i = 0; i < newObject.length; i++) {
-            let from = newObject[i]["Record"]["from"]
+        logger.debug(`response :  ${JSON.stringify(message, null, 2)}`)
+
+        for (let i = 0; i < message.length; i++) {
+            let from = message[i]["Record"]["from"]
             if (response["result"][from] === undefined) {
                 response["result"][from] = { "totalTransferred": 0, "totalLocked": 0 }
             }
 
-            if (newObject[i]["Record"]["txType"] === "TransferToken" || newObject[i]["Record"]["txType"] === "TransferToken_snapshot") {
-                response["result"][from]["totalTransferred"] += newObject[i]["Record"]["qty"]
+            if (message[i]["Record"]["txType"] === "TransferToken" || message[i]["Record"]["txType"] === "TransferToken_snapshot") {
+                response["result"][from]["totalTransferred"] += message[i]["Record"]["qty"]
             }
             else {
-                response["result"][from]["totalLocked"] += newObject[i]["Record"]["qty"]
+                response["result"][from]["totalLocked"] += message[i]["Record"]["qty"]
             }
         }
 
@@ -658,7 +686,7 @@ router.get('/ngo-contribution-details', async function (req, res, next) {
         });
 
         // response["success"] = true;
-        res.json(getMessage(true, response));
+        res.json(getMessage(true, response['result']));
     }
     catch (e) {
         generateError(e, 'Failed to query', 401, next);
@@ -702,7 +730,6 @@ router.get('/balance', async function (req, res, next) {
                 response['snapshotBalance'] = Number(newObject[i]['Record'])
             }
         }
-        response.success = true;
 
         if (req.orgName === 'Corporate') {
             queryString = {
@@ -749,13 +776,13 @@ router.get('/balance', async function (req, res, next) {
 //get a list of all corporate names
 router.get('/corporate-names', async function (req, res, next) {
     //joining path of directory 
-    let directoryPath = path.join(__dirname, '..', 'wallet-corporate');
+    let directoryPath = path.join(__dirname, '..', '..', 'wallet-corporate');
 
     let filenames = fs.readdirSync(directoryPath);
     logger.debug("\nCurrent directory filenames:");
     let listOfCorporates = filenames.filter(function (value, index, arr) {
-        return value != 'admin' && value != 'ca';
-    });
+        return (value != 'admin.id' && value != 'ca.id');
+    }).map(_ => _ = _.split('.')[0]);
 
     res.json(getMessage(true, listOfCorporates));
 });
@@ -763,13 +790,16 @@ router.get('/corporate-names', async function (req, res, next) {
 //gives all corporate names along with their contribution
 router.get('/corporate-contributions', async function (req, res, next) {
     //get all corporate present
-    let args = [JSON.stringify("queryString")]
+    // let args = [JSON.stringify("queryString")]
+    // logger.debug(`query string:\n ${args}`);
 
     try {
-        let message = await query(req.userName, req.orgName, 'GetAllCorporates', CHAINCODE_NAME, CHANNEL_NAME, JSON.stringify(args));
+        let message = await query(req.userName, req.orgName, 'GetAllCorporates', CHAINCODE_NAME, CHANNEL_NAME, '');
+        message = JSON.parse(message.toString());
 
-        let corporateList = new Object()
-        corporateList = JSON.parse(message.toString())
+        logger.debug(`response1 :  ${JSON.stringify(message, null, 2)}`)
+
+        let corporateList = message
 
         logger.debug(`corporate list: ${corporateList}`)
 
@@ -777,16 +807,12 @@ router.get('/corporate-contributions', async function (req, res, next) {
 
         for (let corporate of corporateList) {
 
-            let args = []
-            let message
-            let queryString
-
             let resultObject = new Object()
 
             resultObject.corporate = corporate
 
             //get amount assigned to corporate
-            queryString = {
+            let queryString = {
                 "selector": {
                     "docType": "Transaction",
                     "txType": "AssignToken",
@@ -795,40 +821,44 @@ router.get('/corporate-contributions', async function (req, res, next) {
                 "fields": ["qty"]
             }
 
-            args = JSON.stringify(queryString);
+            let args = JSON.stringify(queryString);
             logger.debug(`query string:\n ${args}`);
 
-            message = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
-            newObject = new Object()
-            newObject = JSON.parse(message.toString())
+            message2 = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
+            message2 = JSON.parse(message2.toString());
+
+            logger.debug(`response2 :  ${JSON.stringify(message2, null, 2)}`)
 
             let totalAssign = 0.0
-            for (let assign of newObject) {
+            for (let assign of message2) {
                 totalAssign += assign.Record.qty
             }
             resultObject.assignedValue = totalAssign
 
             //get balance of corporate
-            args = [corporate]
-            message = await query(req.userName, req.orgName, 'GetBalanceCorporate', CHAINCODE_NAME, CHANNEL_NAME, JSON.stringify(args));
-            newObject = new Object()
-            newObject = JSON.parse(message.toString())
+            message3 = await query(req.userName, req.orgName, 'GetBalanceCorporate', CHAINCODE_NAME, CHANNEL_NAME, corporate);
+            message3 = JSON.parse(message3.toString());
 
-            resultObject.balance = newObject.balance
-            resultObject.escrowBalance = newObject.escrowBalance
-            resultObject.snapshotBalance = newObject.snapshotBalance
+            logger.debug(`response3 :  ${JSON.stringify(message3, null, 2)}`)
+
+            resultObject.balance = message3.balance
+            resultObject.escrowBalance = message3.escrowBalance
+            resultObject.snapshotBalance = message3.snapshotBalance
 
             //get all the projects the corporate is contributed
             let list1 = corporate.split(".")
             let res = list1[0] + "\\\\." + list1[1] + "\\\\." + list1[2] + "\\\\." + list1[3]
             queryString = "{\"selector\":{\"docType\":\"Project\",\"contributors." + res + "\":{\"$exists\":true}},\"fields\":[\"_id\"]}"
+           
             args = queryString
             logger.debug(`query string:\n ${args}`);
 
-            message = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
-            newObject = new Object()
-            newObject = JSON.parse(message.toString())
-            resultObject.projectCount = newObject.length
+            message4 = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
+            message4 = JSON.parse(message4.toString());
+
+            logger.debug(`response4 :  ${JSON.stringify(message4, null, 2)}`)
+    
+            resultObject.projectCount = message4.length
 
             result.push(resultObject)
         }

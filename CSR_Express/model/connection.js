@@ -113,10 +113,10 @@ let orgSchema = Schema({
 }, { collection: "OrganisationProfile" })
 
 //to hash the password before saving to mongodb.
-orgSchema.pre('save', async function (next) {
-    this.password = bcrypt.hashSync(this.password, 10);
-    //console.log('hashed password: ' + this.password);
-});
+// orgSchema.pre('save', async function (next) {
+//    this.password = bcrypt.hashSync(this.password, 10);
+//    console.log('hashed password: ' + this.password);
+// });
 
 let notificationSchema = Schema({
     username: String,

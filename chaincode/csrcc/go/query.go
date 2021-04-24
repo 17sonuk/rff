@@ -556,8 +556,9 @@ func (s *SmartContract) GetCorporateDetails(ctx contractapi.TransactionContextIn
 		args := org
 		//get balance of corresponding corporates
 		result1, err := s.GetBalanceCorporate(ctx, args)
+		result2 := []byte(result1)
 		InfoLogger.Printf(string(result1))
-		json.Unmarshal(result1, &recordObj)
+		json.Unmarshal(result2, &recordObj)
 		balance := recordObj.Balance
 		escrowBalance := recordObj.EscrowBalance
 		snapshotBalance := recordObj.SnapshotBalance
@@ -599,7 +600,7 @@ func (s *SmartContract) GetCorporateDetails(ctx contractapi.TransactionContextIn
 }
 
 //get balance of only corporate
-func (s *SmartContract) GetBalanceCorporate(ctx contractapi.TransactionContextInterface, arg string) ([]byte, error) {
+func (s *SmartContract) GetBalanceCorporate(ctx contractapi.TransactionContextInterface, arg string) (string, error) {
 	InfoLogger.Printf("*************** getBalanceCorporate Started ***************")
 	InfoLogger.Printf("args received:", arg)
 
@@ -614,7 +615,7 @@ func (s *SmartContract) GetBalanceCorporate(ctx contractapi.TransactionContextIn
 	queryString := fmt.Sprintf("{\"selector\":{\"docType\":\"EscrowDetails\", \"corporate\": \"%s\"}}", orgName)
 	queryResults, err := GetQueryResultForQueryString(ctx, queryString)
 	if err != nil {
-		return nil, fmt.Errorf(err.Error())
+		return "", fmt.Errorf(err.Error())
 	}
 	InfoLogger.Printf("query result:", string(queryResults))
 
@@ -642,7 +643,7 @@ func (s *SmartContract) GetBalanceCorporate(ctx contractapi.TransactionContextIn
 	balJSON, _ := json.Marshal(allBalances)
 	jsonStr := string(balJSON)
 	InfoLogger.Printf("*************** getBalanceCorporate Successfull ***************")
-	return []byte(jsonStr), nil
+	return jsonStr, nil
 }
 
 func (s *SmartContract) GetAllCorporates(ctx contractapi.TransactionContextInterface) ([]string, error) {
