@@ -5,7 +5,7 @@ const { NODE_ENV, PORT } = process.env;
 const cors = require('cors');
 const express = require('express');
 
-const connectionToMongo = require('./model/connection2')
+const connectionToMongo = require('./model/connection')
 connectionToMongo();
 
 const { getMessage } = require('./utils/functions');
