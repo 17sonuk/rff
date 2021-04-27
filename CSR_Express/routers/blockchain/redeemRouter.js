@@ -29,7 +29,7 @@ router.post('/request', async (req, res, next) => {
 
     try {
         await invoke(req.userName, req.orgName, "RedeemRequest", CHAINCODE_NAME, CHANNEL_NAME, args);
-        res.json(getMessage(true, 'Successfully invoked RedeemRequest'));
+        return res.json(getMessage(true, 'Successfully invoked RedeemRequest'));
     }
     catch (e) {
         generateError(e, 'Failed to invoke RedeemRequest', 401, next);
@@ -56,7 +56,7 @@ router.post('/approve', async (req, res, next) => {
 
     try {
         await invoke(req.userName, req.orgName, "ApproveRedeemRequest", CHAINCODE_NAME, CHANNEL_NAME, args);
-        res.json(getMessage(true, 'Successfully invoked ApproveRedeemRequest'));
+        return res.json(getMessage(true, 'Successfully invoked ApproveRedeemRequest'));
     }
     catch (e) {
         generateError(e, 'Failed to invoke ApproveRedeemRequest', 401, next);
@@ -128,7 +128,7 @@ router.get('/request/all', async (req, res, next) => {
         }
 
         finalResponse['records'] = allRecords
-        res.json(getMessage(true, finalResponse))
+        return res.json(getMessage(true, finalResponse))
         /*
             newObject = new Object()
             newObject = JSON.parse(message.toString())
@@ -138,7 +138,7 @@ router.get('/request/all', async (req, res, next) => {
             }
     
             newObject.success = true;
-            res.send(newObject);
+            return res.send(newObject);
         */
     }
     catch (e) {

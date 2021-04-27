@@ -65,6 +65,19 @@ userService.approveUser = (userName, pan) => {
     })
 }
 
+//reject user
+userService.rejectUser = (userName, pan) => {
+    return userModel.rejectUser(userName, pan).then(data => {
+        if (data) {
+            return data;
+        } else {
+            let err = new Error("Bad Connection")
+            err.status = 500
+            throw err
+        }
+    })
+}
+
 //login user
 userService.login = (userName, password) => {
     return userModel.getUserDetails(userName).then(data => {

@@ -51,6 +51,17 @@ router.post('/approve-user', (req, res, next) => {
         .catch(err => next(err))
 })
 
+//reject user
+router.post('/reject-user', (req, res, next) => {
+    logger.debug(`router-rejectUser: ${JSON.stringify(req.body, null, 2)}`);
+
+    userService.rejectUser(req.body.userName, req.body.pan)
+        .then((data) => {
+            res.json(data)
+        })
+        .catch(err => next(err))
+})
+
 //get profit amount of corporate for Current financial year
 router.get('/profit-corporate', (req, res, next) => {
     logger.debug(`router-getProfitCorporate: ${JSON.stringify(req.body, null, 2)}`);

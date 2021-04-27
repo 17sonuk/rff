@@ -57,12 +57,12 @@ mainRouter.use((req, res, next) => {
     }
 });
 
-mainRouter.use((req, res, next) => {
-    req.userName = req.header('userName');
-    req.orgName = req.header('orgName');
-    logger.debug(`username ${req.userName} orgName ${req.orgName}`)
-    next();
-})
+// mainRouter.use((req, res, next) => {
+//     req.userName = req.header('userName');
+//     req.orgName = req.header('orgName');
+//     logger.debug(`username ${req.userName} orgName ${req.orgName}`)
+//     next();
+// })
 
 // Login and Generate JWT Token
 mainRouter.post('/users', async (req, res, next) => {
@@ -82,7 +82,7 @@ mainRouter.post('/users', async (req, res, next) => {
     let mongoResponse = {};
     let orgName;
 
-    if (userName.length < 4 && (userName.startsWith('ca2') || userName.startsWith('it'))) {
+    if (userName.length < 4 && (userName.startsWith('ca') || userName.startsWith('it'))) {
         if (password === 'test') {
             mongoResponse = { ...getMessage(false, 'Login successfull!'), role: "CreditsAuthority" };
             orgName = 'creditsauthority';
@@ -109,16 +109,25 @@ mainRouter.post('/users', async (req, res, next) => {
 
     try {
         await registerUser(userName, orgName);
-        res.json({
+        return res.json({
+            success: true,
             name: mongoResponse.name,
             role: mongoResponse.role,
             token: token
         })
     }
     catch (e) {
-        logger.error(e)
-        if (e.errors[0]['code'] === 0) {
-            res.json({
+        logger.debug(e.message)
+        if (e.message === `An identity for the user ${userName} already exists in the wallet`) {
+            return res.json({
+                success: true,
+                name: mongoResponse.name,
+                role: mongoResponse.role,
+                token: token
+            })
+        } else if (e.errors[0]['code'] === 0) {
+            return res.json({
+                success: true,
                 name: mongoResponse.name,
                 role: mongoResponse.role,
                 token: token

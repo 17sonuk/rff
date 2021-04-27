@@ -49,7 +49,7 @@ router.get('/funds-raised-by-ngo', async function (req, res, next) {
         }
 
         contributors = [...new Set(contributors)].length
-        res.json(getMessage(true, { fundsRaised: amount, contributorsCount: contributors }));
+        return res.json(getMessage(true, { fundsRaised: amount, contributorsCount: contributors }));
     }
     catch (e) {
         generateError(e, 'Failed to query', 401, next);
@@ -62,7 +62,7 @@ router.get('/getRecord/:recordKey', async function (req, res, next) {
     const recordKey = req.params.recordKey;
 
     if (!recordKey) {
-        res.json(fieldErrorMessage('\'recordKey\''));
+        return res.json(fieldErrorMessage('\'recordKey\''));
     }
 
     let queryString = {
@@ -119,7 +119,7 @@ router.get('/getRecord/:recordKey', async function (req, res, next) {
         }
 
         logger.debug(`Modified response :  ${JSON.stringify(message, null, 2)}`);
-        res.json(getMessage(true, message));
+        return res.json(getMessage(true, message));
     }
     catch (e) {
         generateError(e, 'Failed to query', 401, next);
@@ -130,7 +130,7 @@ router.get('/total-locked-and-validity-of-corporate', async function (req, res, 
     const corporate = req.query.corporate;
 
     if (!corporate) {
-        res.json(fieldErrorMessage('\'corporate\''));
+        return res.json(fieldErrorMessage('\'corporate\''));
     }
 
     let queryString = {
@@ -178,7 +178,7 @@ router.get('/total-locked-and-validity-of-corporate', async function (req, res, 
             })
         })
 
-        res.json(getMessage(true, result));
+        return res.json(getMessage(true, result));
     }
     catch (e) {
         generateError(e, 'Failed to query', 401, next);
@@ -191,7 +191,7 @@ router.get('/amount-parked', async function (req, res, next) {
     const userDLTName = req.userName + "." + req.orgName.toLowerCase() + ".csr.com";
 
     if (!projectId) {
-        res.json(fieldErrorMessage('\'projectId\''));
+        return res.json(fieldErrorMessage('\'projectId\''));
     }
 
     let queryString = {
@@ -224,7 +224,7 @@ router.get('/amount-parked', async function (req, res, next) {
             }
         }
 
-        res.json(getMessage(true, response));
+        return res.json(getMessage(true, response));
     }
     catch (e) {
         generateError(e, 'Failed to query', 401, next);
@@ -237,8 +237,7 @@ router.get('/it-data', async function (req, res, next) {
     const year = req.query.year;
 
     if (!year) {
-        res.json(fieldErrorMessage('\'year\''));
-        return;
+        return res.json(fieldErrorMessage('\'year\''));
     }
 
     let queryString = {
@@ -255,7 +254,7 @@ router.get('/it-data', async function (req, res, next) {
 
         // let newObject = new Object()
         let newObject = JSON.parse(message.toString())
-        res.json(getMessage(true, { newObject }));
+        return res.json(getMessage(true, { newObject }));
     }
     catch (e) {
         generateError(e, 'Failed to query', 401, next);
@@ -269,15 +268,15 @@ router.get('/it-report', async function (req, res, next) {
     const year = req.query.year
 
     if (!responseType) {
-        res.json(fieldErrorMessage('\'responseType\''));
+        return res.json(fieldErrorMessage('\'responseType\''));
     }
     if (!year) {
-        res.json(fieldErrorMessage('\'year\''));
+        return res.json(fieldErrorMessage('\'year\''));
     }
 
-    let next = Number(year) + 1
+    let temp = Number(year) + 1
     let thisYear = "April 1, " + year + " 00:00:00"
-    let nexYear = "March 31, " + next.toString() + " 00:00:00"
+    let nexYear = "March 31, " + temp.toString() + " 00:00:00"
 
     let date1 = new Date(thisYear)
     let date2 = new Date(nexYear)
@@ -312,17 +311,18 @@ router.get('/it-report', async function (req, res, next) {
 
     try {
         let message = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
-
         let objref = JSON.parse(message.toString());
 
         for (let i = 0; i < objref.length; i++) {
+            objref[i].Record = JSON.parse(objref[i].Record)
             let mit = objref[i].Record.objRef
 
             let mit1 = mit.split(",")
-            logger.debug("mit1", mit1)
+            logger.debug(`mit1 ${mit1}`)
 
             for (let i = 0; i < mit1.length; i++) {
                 let mit2 = mit1[i].split(":")
+                logger.debug(`mit2 ${mit2[0]} ${mit2[2]}`)
                 if (m.get(mit2[0]) == undefined) {
                     m.set(mit2[0], Number(mit2[2]))
                 } else {
@@ -343,9 +343,15 @@ router.get('/it-report', async function (req, res, next) {
         message = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
 
         let ItList = JSON.parse(message.toString())
+
         if (ItList.length <= 0) {
-            res.json(getMessage(true, "no record found for the perticular year"));
+            return res.json(getMessage(true, "no record found for the perticular year"));
         }
+
+        ItList.forEach(elem => {
+            elem['Record'] = JSON.parse(elem['Record'])
+        })
+
         ItList = ItList[0]
 
         for (let i = 0; i < ItList.Record.length; i++) {
@@ -395,8 +401,11 @@ router.get('/it-report', async function (req, res, next) {
             logger.debug(`query string:\n ${args}`);
 
             message = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
-
             let transactionList = JSON.parse(message.toString())
+
+            transactionList.forEach(elem => {
+                elem['Record'] = JSON.parse(elem['Record'])
+            })
 
             let creditsReceived = 0.0
             let creditsLocked = 0.0
@@ -459,11 +468,11 @@ router.get('/it-report', async function (req, res, next) {
         }
 
         if (responseType === 'json') {
-            res.json(getMessage(true, result));
+            return res.json(getMessage(true, result));
         }
         else if (responseType === 'excel') {
             let excelResponse = convertToExcel(result, 'report');
-            res.json(getMessage(true, excelResponse));
+            return res.json(getMessage(true, excelResponse));
         }
         else {
             generateError(e, 'responseType should be json or excel', 401, next);
@@ -494,7 +503,7 @@ router.get('/ngo-report', async function (req, res, next) {
     const year = req.query.year
 
     if (!year) {
-        res.json(fieldErrorMessage('\'year\''));
+        return res.json(fieldErrorMessage('\'year\''));
     }
 
     //joining path of directory 
@@ -602,7 +611,7 @@ router.get('/ngo-report', async function (req, res, next) {
             response["result"].push(ngoData);
             logger.debug(response);
         }
-        res.json(getMessage(true, response['result']));
+        return res.json(getMessage(true, response['result']));
     }
     catch (e) {
         generateError(e, 'Failed to query CommonQuery', 401, next);
@@ -615,7 +624,7 @@ router.get('/ngo-contribution-details', async function (req, res, next) {
     const ngoName = req.query.ngoName;
 
     if (!ngoName) {
-        res.json(fieldErrorMessage('\'ngoName\''));
+        return res.json(fieldErrorMessage('\'ngoName\''));
     }
 
     let response = {
@@ -686,7 +695,7 @@ router.get('/ngo-contribution-details', async function (req, res, next) {
         });
 
         // response["success"] = true;
-        res.json(getMessage(true, response['result']));
+        return res.json(getMessage(true, response['result']));
     }
     catch (e) {
         generateError(e, 'Failed to query', 401, next);
@@ -719,7 +728,6 @@ router.get('/balance', async function (req, res, next) {
 
     try {
         let message = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
-
         let newObject = JSON.parse(message.toString())
 
         for (let i = 0; i < newObject.length; i++) {
@@ -731,7 +739,7 @@ router.get('/balance', async function (req, res, next) {
             }
         }
 
-        if (req.orgName === 'Corporate') {
+        if (req.orgName === 'corporate') {
             queryString = {
                 'selector': {
                     'docType': "EscrowDetails",
@@ -754,10 +762,11 @@ router.get('/balance', async function (req, res, next) {
                 generateError(e, 'Failed to query', 401, next);
             }
             else {
-                newObject = JSON.parse(message.toString())
+                message = JSON.parse(message.toString())
 
-                for (let i = 0; i < newObject.length; i++) {
-                    let funds = newObject[i]['Record']['funds']
+                for (let i = 0; i < message.length; i++) {
+                    message[i]['Record'] = JSON.parse(message[i]['Record'])
+                    let funds = message[i]['Record']['funds']
                     for (let j = 0; j < funds.length; j++) {
                         response['escrowBalance'] += funds[j]['qty']
                     }
@@ -766,7 +775,7 @@ router.get('/balance', async function (req, res, next) {
             }
         }
 
-        res.json(getMessage(true, response));
+        return res.json(getMessage(true, response));
     }
     catch (e) {
         generateError(e, 'Failed to query', 401, next);
@@ -784,7 +793,7 @@ router.get('/corporate-names', async function (req, res, next) {
         return (value != 'admin.id' && value != 'ca.id');
     }).map(_ => _ = _.split('.')[0]);
 
-    res.json(getMessage(true, listOfCorporates));
+    return res.json(getMessage(true, listOfCorporates));
 });
 
 //gives all corporate names along with their contribution
@@ -827,6 +836,10 @@ router.get('/corporate-contributions', async function (req, res, next) {
             message2 = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
             message2 = JSON.parse(message2.toString());
 
+            message2.forEach(elem => {
+                elem['Record'] = JSON.parse(elem['Record'])
+            })
+
             logger.debug(`response2 :  ${JSON.stringify(message2, null, 2)}`)
 
             let totalAssign = 0.0
@@ -849,7 +862,7 @@ router.get('/corporate-contributions', async function (req, res, next) {
             let list1 = corporate.split(".")
             let res = list1[0] + "\\\\." + list1[1] + "\\\\." + list1[2] + "\\\\." + list1[3]
             queryString = "{\"selector\":{\"docType\":\"Project\",\"contributors." + res + "\":{\"$exists\":true}},\"fields\":[\"_id\"]}"
-           
+
             args = queryString
             logger.debug(`query string:\n ${args}`);
 
@@ -857,12 +870,12 @@ router.get('/corporate-contributions', async function (req, res, next) {
             message4 = JSON.parse(message4.toString());
 
             logger.debug(`response4 :  ${JSON.stringify(message4, null, 2)}`)
-    
+
             resultObject.projectCount = message4.length
 
             result.push(resultObject)
         }
-        res.json(getMessage(true, result));
+        return res.json(getMessage(true, result));
     }
     catch (e) {
         generateError(e, 'Failed to query', 401, next);

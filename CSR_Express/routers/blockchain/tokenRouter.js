@@ -22,17 +22,17 @@ router.post('/request', async (req, res, next) => {
     const proofDocHash = req.body.proofDocHash;
 
     if (!CHAINCODE_NAME) {
-        res.json(fieldErrorMessage('\'chaincodeName\''));
+        return res.json(fieldErrorMessage('\'chaincodeName\''));
     } else if (!CHANNEL_NAME) {
-        res.json(fieldErrorMessage('\'channelName\''));
+        return res.json(fieldErrorMessage('\'channelName\''));
     } else if (!amount) {
-        res.json(fieldErrorMessage('\'amount\''));
+        return res.json(fieldErrorMessage('\'amount\''));
     } else if (!bankTxId) {
-        res.json(fieldErrorMessage('\'bankTxId\''));
+        return res.json(fieldErrorMessage('\'bankTxId\''));
     } else if (!proofDocName) {
-        res.json(fieldErrorMessage('\'proofDocName\''));
+        return res.json(fieldErrorMessage('\'proofDocName\''));
     } else if (!proofDocHash) {
-        res.json(fieldErrorMessage('\'proofDocHash\''));
+        return res.json(fieldErrorMessage('\'proofDocHash\''));
     }
 
     let args = [amount, "corporate.csr.com", bankTxId, proofDocName, proofDocHash];
@@ -45,7 +45,7 @@ router.post('/request', async (req, res, next) => {
 
     try {
         await invoke(req.userName, req.orgName, "RequestTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
-        res.json(getMessage(true, 'Successfully invoked RequestTokens'));
+        return res.json(getMessage(true, 'Successfully invoked RequestTokens'));
     }
     catch (e) {
         generateError(e, 'Failed to invoke RequestTokens', 401, next);
@@ -60,11 +60,11 @@ router.post('/assign', async (req, res, next) => {
     const bankTxId = req.body.bankTxId;
 
     if (!CHAINCODE_NAME) {
-        res.json(fieldErrorMessage('\'chaincodeName\''));
+        return res.json(fieldErrorMessage('\'chaincodeName\''));
     } else if (!CHANNEL_NAME) {
-        res.json(fieldErrorMessage('\'channelName\''));
+        return res.json(fieldErrorMessage('\'channelName\''));
     } else if (!bankTxId) {
-        res.json(fieldErrorMessage('\'bankTxId\''));
+        return res.json(fieldErrorMessage('\'bankTxId\''));
     }
 
     let args = [bankTxId]
@@ -76,7 +76,7 @@ router.post('/assign', async (req, res, next) => {
 
     try {
         await invoke(req.userName, req.orgName, "AssignTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
-        res.json(getMessage(true, 'Successfully invoked AssignTokens'));
+        return res.json(getMessage(true, 'Successfully invoked AssignTokens'));
     }
     catch (e) {
         generateError(e, 'Failed to invoke AssignTokens', 401, next);
@@ -92,13 +92,13 @@ router.post('/reject', async (req, res, next) => {
     const comment = req.body.comment;
 
     if (!CHAINCODE_NAME) {
-        res.json(fieldErrorMessage('\'chaincodeName\''));
+        return res.json(fieldErrorMessage('\'chaincodeName\''));
     } else if (!CHANNEL_NAME) {
-        res.json(fieldErrorMessage('\'channelName\''));
+        return res.json(fieldErrorMessage('\'channelName\''));
     } else if (!bankTxId) {
-        res.json(fieldErrorMessage('\'bankTxId\''));
+        return res.json(fieldErrorMessage('\'bankTxId\''));
     } else if (!comment) {
-        res.json(fieldErrorMessage('\'comment\''));
+        return res.json(fieldErrorMessage('\'comment\''));
     }
 
     let args = [bankTxId]
@@ -112,7 +112,7 @@ router.post('/reject', async (req, res, next) => {
 
     try {
         await invoke(req.userName, req.orgName, "RejectTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
-        res.json(getMessage(true, 'Successfully invoked RejectTokens'));
+        return res.json(getMessage(true, 'Successfully invoked RejectTokens'));
     }
     catch (e) {
         generateError(e, 'Failed to invoke RejectTokens', 401, next);
@@ -131,19 +131,19 @@ router.post('/transfer', async (req, res, next) => {
     const rating = req.body.rating.toString();
 
     if (!CHAINCODE_NAME) {
-        res.json(fieldErrorMessage('\'chaincodeName\''));
+        return res.json(fieldErrorMessage('\'chaincodeName\''));
     } else if (!CHANNEL_NAME) {
-        res.json(fieldErrorMessage('\'channelName\''));
+        return res.json(fieldErrorMessage('\'channelName\''));
     } else if (!amount) {
-        res.json(fieldErrorMessage('\'amount\''));
+        return res.json(fieldErrorMessage('\'amount\''));
     } else if (!projectId) {
-        res.json(fieldErrorMessage('\'projectId\''));
+        return res.json(fieldErrorMessage('\'projectId\''));
     } else if (!phaseNumber) {
-        res.json(fieldErrorMessage('\'phaseNumber\''));
+        return res.json(fieldErrorMessage('\'phaseNumber\''));
     } else if (!reviewMsg) {
-        res.json(fieldErrorMessage('\'reviewMsg\''));
+        return res.json(fieldErrorMessage('\'reviewMsg\''));
     } else if (!rating) {
-        res.json(fieldErrorMessage('\'rating\''));
+        return res.json(fieldErrorMessage('\'rating\''));
     }
 
     let args = [amount, projectId, phaseNumber, reviewMsg, rating, Date.now().toString(), uuid().toString(), uuid().toString()]
@@ -152,17 +152,17 @@ router.post('/transfer', async (req, res, next) => {
 
     try {
         await invoke(req.userName, req.orgName, "TransferTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
-        //add contributor in mongoDB
-        //assumption: mongo service won't fail.
-        // projectService.addContributor(projectId, req.userName)
-        //     .then((data) => {
-        //         logger.debug(`transfer success ----- ${data}`)
-        //         res.send(message);
-        //     })
-        //     .catch(err => {
-        //         generateError(err, 'Failed to add contributor in mongo', 401, next);
-        //     });
-        res.json(getMessage(true, "Transferred succesfully"))
+        logger.debug('Blockchain transfer success')
+        // add contributor in mongoDB
+        // assumption: mongo service won't fail.
+        projectService.addContributor(projectId, req.userName)
+            .then((data) => {
+                logger.debug('Mongo add contributors success')
+                return res.json(getMessage(true, "Transferred succesfully"))
+            })
+            .catch(err => {
+                generateError(err, 'Failed to add contributor in mongo', 401, next);
+            });
     }
     catch (e) {
         generateError(e, 'Failed to invoke TransferTokens', 401, next);
@@ -183,16 +183,16 @@ router.get('/all-requests', async (req, res, next) => {
     logger.debug('status : ' + status);
 
     if (!CHAINCODE_NAME) {
-        res.json(fieldErrorMessage('\'chaincodeName\''));
+        return res.json(fieldErrorMessage('\'chaincodeName\''));
     }
     if (!CHANNEL_NAME) {
-        res.json(fieldErrorMessage('\'channelName\''));
+        return res.json(fieldErrorMessage('\'channelName\''));
     }
     if (!pageSize) {
-        res.json(fieldErrorMessage('\'pageSize\''));
+        return res.json(fieldErrorMessage('\'pageSize\''));
     }
     if (!status) {
-        res.json(fieldErrorMessage('\'status\''));
+        return res.json(fieldErrorMessage('\'status\''));
     }
     if (!bookmark) {
         bookmark = '';
@@ -213,7 +213,7 @@ router.get('/all-requests', async (req, res, next) => {
         queryString['selector']['from'] = userDLTName
     }
     else {
-        res.json(getMessage(false, 'Unauthorised token tx request access...'))
+        return res.json(getMessage(false, 'Unauthorised token tx request access...'))
     }
 
     let args = [JSON.stringify(queryString), String(pageSize), bookmark];
@@ -223,18 +223,19 @@ router.get('/all-requests', async (req, res, next) => {
     try {
         let message = await query(req.userName, req.orgName, "CommonQueryPagination", CHAINCODE_NAME, CHANNEL_NAME, args);
         message = JSON.parse(message.toString());
-        
+
         logger.debug(JSON.stringify(message, null, 2))
 
         if (message.toString().includes("Error:")) {
             let errorMessage = message.toString().split("Error:")[1].trim()
-            res.json(getMessage(false, errorMessage))
+            return res.json(getMessage(false, errorMessage))
         }
         else {
-            message['Results'].forEach(elem => {
+            message['Results'] = message['Results'].map(elem => {
                 elem['Record'] = JSON.parse(elem['Record'])
                 elem['Record']['from'] = splitOrgName(elem['Record']['from'])
                 elem['Record']['role'] = splitOrgName(elem['Record']['role'])
+                return elem['Record']
             })
 
             let finalResponse = {}
@@ -244,7 +245,7 @@ router.get('/all-requests', async (req, res, next) => {
             finalResponse["metaData"]["recordsCount"] = message["RecordsCount"];
             finalResponse["metaData"]["bookmark"] = message["Bookmark"];
             finalResponse['records'] = message['Results']
-            res.json(getMessage(true, finalResponse));
+            return res.json(getMessage(true, finalResponse));
         }
     }
     catch (e) {

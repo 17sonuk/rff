@@ -34,10 +34,10 @@ app.use((err, req, res, next) => {
     res.locals.error = NODE_ENV === 'development' ? err : {};
 
     // add this line to include winston logging
-    logger.error(`${req.method} - ${req.ip} - ${req.originalUrl} - ${err.status || 500}\n${err.stack}`);
+    logger.error(`${req.method} - ${req.ip} - ${req.originalUrl} - ${err.status || 500}\n${err.stack || err}`);
 
     // render the error page
-    res.status(err.status || 500).json(getMessage(false, err.label));
+    return res.status(err.status || 500).json(getMessage(false, err.label));
 });
 
 app.listen(PORT, () => {

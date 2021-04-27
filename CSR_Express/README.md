@@ -8,6 +8,7 @@
 ### How to run?
 
 ```
-npm install
+nvm alias default v12.13.1
+npm rebuild
 node app
 ```

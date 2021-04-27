@@ -62,21 +62,14 @@ router.post('/razorpay', async (req, res) => {
 router.get('/razorpay/payment', (req, res) => {
     logger.debug('==================== razorpay fetch payment details ==================');
 
-    if (req.orgname !== "creditsauthority") {
-        let errorResponse = {
-            "success": false,
-            "message": "Unauthorized!"
-        }
-        generateError(e, errorResponse, 401, next);
-        //res.send(errorResponse);
-        return;
+    if (req.orgName !== "creditsauthority") {
+        return res.json({ success: false, message: "Unauthorized" })
     }
 
     let paymentId = req.query.paymentId;
 
     if (!paymentId) {
-        res.json(fieldErrorMessage('\'paymentId\''));
-        return;
+        return res.json(fieldErrorMessage('\'paymentId\''));
     }
 
     // https://api.razorpay.com/v1/payments/pay_DG4ZdRK8ZnXC3k

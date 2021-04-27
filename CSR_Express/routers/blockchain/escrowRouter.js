@@ -34,7 +34,7 @@ router.post('/fund/reserve', async (req, res, next) => {
 
     try {
         await invoke(req.userName, req.orgName, 'ReserveFundsForProject', CHAINCODE_NAME, CHANNEL_NAME, args);
-        res.json(getMessage(true, 'Successfully Reserved funds!'));
+        return res.json(getMessage(true, 'Successfully Reserved funds!'));
     }
     catch (e) {
         generateError(e, 'Failed to invoke', 401, next);
@@ -51,10 +51,10 @@ router.post('/fund/release', async (req, res, next) => {
     const phaseNumber = req.body.phaseNumber.toString();
 
     if (!amount) {
-        res.json(fieldErrorMessage('\'amount\''));
+        return res.json(fieldErrorMessage('\'amount\''));
     }
     if (!projectId) {
-        res.json(fieldErrorMessage('\'projectId\''));
+        return res.json(fieldErrorMessage('\'projectId\''));
     }
 
     let args = [projectId, amount, Date.now().toString(), uuid().toString(), rating, reviewMsg, phaseNumber]
@@ -63,7 +63,7 @@ router.post('/fund/release', async (req, res, next) => {
 
     try {
         await invoke(req.userName, req.orgName, 'ReleaseFundsForProject', CHAINCODE_NAME, CHANNEL_NAME, args);
-        res.json(getMessage(true, 'Successfully Released funds!'));
+        return res.json(getMessage(true, 'Successfully Released funds!'));
     }
     catch (e) {
         generateError(e, 'Failed to invoke', 401, next);

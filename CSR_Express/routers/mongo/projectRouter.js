@@ -70,14 +70,15 @@ router.put('/updateProject', (req, res, next) => {
         .catch(err => next(err))
 })
 
-router.put('/addContributor/:projectId', (req, res, next) => {
-    logger.debug(`router-addContributor: ${req.params.projectId} ${req.body.contributor}`);
+// not getting used. already used inside transfer token
+// router.put('/addContributor/:projectId', (req, res, next) => {
+//     logger.debug(`router-addContributor: ${req.params.projectId} ${req.body.contributor}`);
 
-    projectService.addContributor(req.params.projectId, req.body.contributor)
-        .then((data) => {
-            res.json(data)
-        })
-        .catch(err => next(err))
-})
+//     projectService.addContributor(req.params.projectId, req.body.contributor)
+//         .then((data) => {
+//             res.json(data)
+//         })
+//         .catch(err => next(err))
+// })
 
 module.exports = router;

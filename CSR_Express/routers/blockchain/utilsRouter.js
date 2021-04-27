@@ -22,7 +22,7 @@ router.post('/snapshot/create', async (req, res, next) => {
 
     try {
         await invoke(req.userName, req.orgName, "SnapshotCurrentCorporateBalances", CHAINCODE_NAME, CHANNEL_NAME, args);
-        res.json(getMessage(true, 'Successfully invoked SnapshotCurrentCorporateBalances'));
+        return res.json(getMessage(true, 'Successfully invoked SnapshotCurrentCorporateBalances'));
     }
     catch (e) {
         generateError(e, 'Failed to invoke SnapshotCurrentCorporateBalances', 401, next);
@@ -36,8 +36,7 @@ router.post('/unspent/transfer', async (req, res, next) => {
     const govtAddress = req.body.govtAddress.toString();
 
     if (!govtAddress) {
-        res.json(getErrorMessage('\'govtAddress\''));
-        return;
+        return res.json(getErrorMessage('\'govtAddress\''));
     }
 
     let args = [govtAddress, Date.now().toString(), uuid().toString()];
@@ -47,7 +46,7 @@ router.post('/unspent/transfer', async (req, res, next) => {
 
     try {
         await invoke(req.userName, req.orgName, "TransferUnspentTokensToGovt", CHAINCODE_NAME, CHANNEL_NAME, args);
-        res.json(getMessage(true, 'Successfully invoked TransferUnspentTokensToGovt'));
+        return res.json(getMessage(true, 'Successfully invoked TransferUnspentTokensToGovt'));
     }
     catch (e) {
         generateError(e, 'Failed to invoke TransferUnspentTokensToGovt', 401, next);
@@ -68,7 +67,7 @@ router.post('/add-corporate-pan', async (req, res, next) => {
 
     try {
         await invoke(req.userName, req.orgName, "AddCorporatePan", CHAINCODE_NAME, CHANNEL_NAME, args);
-        res.json(getMessage(true, 'Successfully invoked AddCorporatePan'));
+        return res.json(getMessage(true, 'Successfully invoked AddCorporatePan'));
     }
     catch (e) {
         generateError(e, 'Failed to invoke AddCorporatePan', 401, next);
@@ -92,7 +91,7 @@ router.post('/it-data', async (req, res, next) => {
 
     try {
         await invoke(req.userName, req.orgName, "SaveItData", CHAINCODE_NAME, CHANNEL_NAME, args);
-        res.json(getMessage(true, 'Successfully invoked SaveItData'));
+        return res.json(getMessage(true, 'Successfully invoked SaveItData'));
     }
     catch (e) {
         generateError(e, 'Failed to invoke SaveItData', 401, next);
@@ -115,7 +114,7 @@ async function saveITData(req, res, next, data) {
 
     try {
         await invoke(req.userName, req.orgName, "SaveItData", CHAINCODE_NAME, CHANNEL_NAME, args);
-        res.json(getMessage(true, 'Successfully invoked SaveItData'));
+        return res.json(getMessage(true, 'Successfully invoked SaveItData'));
     }
     catch (e) {
         generateError(e, 'Failed to invoke SaveItData', 401, next);
@@ -131,7 +130,7 @@ router.post('/upload-excel', async (req, res, next) => {
     // console.log(rows)
     let temp = Object.keys(rows[0])
     if (!(temp.includes('panNumber') && temp.includes('corporateName') && temp.includes('totalLiability'))) {
-        res.json(getMessage(false, 'Column names should be corporateName, panNumber and totalLiability.'))
+        return res.json(getMessage(false, 'Column names should be corporateName, panNumber and totalLiability.'))
     }
     else {
         saveITData(req, res, next, rows)

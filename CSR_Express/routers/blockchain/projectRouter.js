@@ -37,7 +37,7 @@ router.post('/create', async (req, res, next) => {
 
     try {
         await invoke(req.userName, req.orgName, "CreateProject", CHAINCODE_NAME, CHANNEL_NAME, args);
-        res.json({ ...getMessage(true, 'Successfully invoked CreateProject'), 'projectId': projectId });
+        return res.json({ ...getMessage(true, 'Successfully invoked CreateProject'), 'projectId': projectId });
     }
     catch (e) {
         generateError(e, 'Failed to invoke CreateProject', 401, next);
@@ -54,15 +54,15 @@ router.put('/update', async (req, res, next) => {
     const status = req.body.status;
 
     if (!CHAINCODE_NAME) {
-        res.json(fieldErrorMessage('\'chaincodeName\''));
+        return res.json(fieldErrorMessage('\'chaincodeName\''));
     } else if (!CHANNEL_NAME) {
-        res.json(fieldErrorMessage('\'CHANNEL_NAME\''));
+        return res.json(fieldErrorMessage('\'CHANNEL_NAME\''));
     } else if (!projectId) {
-        res.json(fieldErrorMessage('\'projectId\''));
+        return res.json(fieldErrorMessage('\'projectId\''));
     } else if (!phaseNumber) {
-        res.json(fieldErrorMessage('\'phaseNumber\''));
+        return res.json(fieldErrorMessage('\'phaseNumber\''));
     } else if (!status) {
-        res.json(fieldErrorMessage('\'status\''));
+        return res.json(fieldErrorMessage('\'status\''));
     }
 
     let args = [projectId, phaseNumber, status, Date.now().toString(), uuid().toString()];
@@ -71,7 +71,7 @@ router.put('/update', async (req, res, next) => {
 
     try {
         await invoke(req.userName, req.orgName, "UpdateProject", CHAINCODE_NAME, CHANNEL_NAME, args);
-        res.json(getMessage(true, 'Successfully invoked UpdateProject'));
+        return res.json(getMessage(true, 'Successfully invoked UpdateProject'));
     }
     catch (e) {
         generateError(e, 'Failed to invoke UpdateProject', 401, next);
@@ -87,11 +87,11 @@ router.put('/updateVisibleTo', async (req, res, next) => {
     const corporateName = req.body.corporateName;
 
     if (!CHAINCODE_NAME) {
-        res.json(fieldErrorMessage('\'chaincodeName\''));
+        return res.json(fieldErrorMessage('\'chaincodeName\''));
     } else if (!CHANNEL_NAME) {
-        res.json(fieldErrorMessage('\'channelName\''));
+        return res.json(fieldErrorMessage('\'channelName\''));
     } else if (!projectId) {
-        res.json(fieldErrorMessage('\'projectId\''));
+        return res.json(fieldErrorMessage('\'projectId\''));
     } else if (!corporateName) {
         corporateName = "all"
     }
@@ -102,7 +102,7 @@ router.put('/updateVisibleTo', async (req, res, next) => {
 
     try {
         await invoke(req.userName, req.orgName, "UpdateVisibleTo", CHAINCODE_NAME, CHANNEL_NAME, args);
-        res.json(getMessage(true, 'Successfully invoked UpdateVisibleTo'));
+        return res.json(getMessage(true, 'Successfully invoked UpdateVisibleTo'));
     }
     catch (e) {
         generateError(e, 'Failed to invoke UpdateVisibleTo', 401, next);
@@ -120,15 +120,15 @@ router.post('/validate-phase', async (req, res, next) => {
     const rejectionComment = req.body.rejectionComment;
 
     if (!CHAINCODE_NAME) {
-        res.json(fieldErrorMessage('\'chaincodeName\''));
+        return res.json(fieldErrorMessage('\'chaincodeName\''));
     } else if (!CHANNEL_NAME) {
-        res.json(fieldErrorMessage('\'channelName\''));
+        return res.json(fieldErrorMessage('\'channelName\''));
     } else if (!projectId) {
-        res.json(fieldErrorMessage('\'projectId\''));
+        return res.json(fieldErrorMessage('\'projectId\''));
     } else if (!phaseNumber) {
-        res.json(fieldErrorMessage('\'phaseNumber\''));
+        return res.json(fieldErrorMessage('\'phaseNumber\''));
     } else if (!validated) {
-        res.json(fieldErrorMessage('\'validated\''));
+        return res.json(fieldErrorMessage('\'validated\''));
     }
 
     let args = [projectId, phaseNumber, validated, rejectionComment, Date.now().toString(), uuid().toString()]
@@ -137,7 +137,7 @@ router.post('/validate-phase', async (req, res, next) => {
 
     try {
         await invoke(req.userName, req.orgName, "ValidatePhase", CHAINCODE_NAME, CHANNEL_NAME, args);
-        res.json(getMessage(true, 'Successfully invoked ValidatePhase'));
+        return res.json(getMessage(true, 'Successfully invoked ValidatePhase'));
     }
     catch (e) {
         generateError(e, 'Failed to invoke ValidatePhase', 401, next);
@@ -156,19 +156,19 @@ router.post('/add-document-hash', async (req, res, next) => {
     const docName = req.body.docName;
 
     if (!CHAINCODE_NAME) {
-        res.json(fieldErrorMessage('\'chaincodeName\''));
+        return res.json(fieldErrorMessage('\'chaincodeName\''));
     } else if (!CHANNEL_NAME) {
-        res.json(fieldErrorMessage('\'channelName\''));
+        return res.json(fieldErrorMessage('\'channelName\''));
     } else if (!projectId) {
-        res.json(fieldErrorMessage('\'projectId\''));
+        return res.json(fieldErrorMessage('\'projectId\''));
     } else if (!phaseNumber) {
-        res.json(fieldErrorMessage('\'phaseNumber\''));
+        return res.json(fieldErrorMessage('\'phaseNumber\''));
     } else if (!criterion) {
-        res.json(fieldErrorMessage('\'criterion\''));
+        return res.json(fieldErrorMessage('\'criterion\''));
     } else if (!docHash) {
-        res.json(fieldErrorMessage('\'docHash\''));
+        return res.json(fieldErrorMessage('\'docHash\''));
     } else if (!docName) {
-        res.json(fieldErrorMessage('\'docName\''));
+        return res.json(fieldErrorMessage('\'docName\''));
     }
 
     let args = [projectId, phaseNumber, criterion, docHash, docName, Date.now().toString(), uuid().toString()];
@@ -177,7 +177,7 @@ router.post('/add-document-hash', async (req, res, next) => {
 
     try {
         await invoke(req.userName, req.orgName, "AddDocumentHash", CHAINCODE_NAME, CHANNEL_NAME, args);
-        res.json(getMessage(true, 'Successfully invoked AddDocumentHash'));
+        return res.json(getMessage(true, 'Successfully invoked AddDocumentHash'));
     }
     catch (e) {
         generateError(e, 'Failed to invoke AddDocumentHash', 401, next);
@@ -200,22 +200,22 @@ router.get('/all', async (req, res, next) => {
     logger.debug('query params : self-' + self + ' ongoing-' + ongoing + ' newRecords-' + newRecords + ' pageSize-' + pageSize + ' bookmark-' + bookmark + ' ngoName-' + ngoName);
 
     if (!CHAINCODE_NAME) {
-        res.json(fieldErrorMessage('\'chaincodeName\''));
+        return res.json(fieldErrorMessage('\'chaincodeName\''));
     }
     if (!CHANNEL_NAME) {
-        res.json(fieldErrorMessage('\'channelName\''));
+        return res.json(fieldErrorMessage('\'channelName\''));
     }
     if (!self) {
-        res.json(fieldErrorMessage('\'self\''));
+        return res.json(fieldErrorMessage('\'self\''));
     }
     if (!ongoing) {
-        res.json(fieldErrorMessage('\'ongoing\''));
+        return res.json(fieldErrorMessage('\'ongoing\''));
     }
     if (!newRecords) {
-        res.json(fieldErrorMessage('\'newRecords\''));
+        return res.json(fieldErrorMessage('\'newRecords\''));
     }
     if (!pageSize) {
-        res.json(fieldErrorMessage('\'pageSize\''));
+        return res.json(fieldErrorMessage('\'pageSize\''));
     }
 
     let queryString = {
@@ -274,7 +274,7 @@ router.get('/all', async (req, res, next) => {
         message = JSON.parse(message.toString());
         if (message.toString().includes("Error:")) {
             let errorMessage = message.toString().split("Error:")[1].trim()
-            res.json(getMessage(false, errorMessage))
+            return res.json(getMessage(false, errorMessage))
         }
         else {
             // let responseMetaObj = new Object()
@@ -343,8 +343,8 @@ router.get('/all', async (req, res, next) => {
             }
 
             logger.debug(`All : ${JSON.stringify(allRecords, null, 2)}`);
-            finalResponse["allRecords"] = allRecords
-            res.json(getMessage(true, finalResponse))
+            finalResponse["records"] = allRecords
+            return res.json(getMessage(true, finalResponse))
         }
     }
     catch (e) {
@@ -357,10 +357,10 @@ router.get('/total-ongoing-projects', async (req, res, next) => {
     logger.debug('==================== QUERY BY CHAINCODE: getTotalOngoingProjectCount ==================');
 
     if (!CHAINCODE_NAME) {
-        res.json(fieldErrorMessage('\'chaincodeName\''));
+        return res.json(fieldErrorMessage('\'chaincodeName\''));
     }
     if (!CHANNEL_NAME) {
-        res.json(fieldErrorMessage('\'channelName\''));
+        return res.json(fieldErrorMessage('\'channelName\''));
     }
 
     let queryString = {
@@ -383,7 +383,7 @@ router.get('/total-ongoing-projects', async (req, res, next) => {
 
         logger.debug(`response :  ${JSON.stringify(message, null, 2)}`)
 
-        res.json({ ...getMessage(true, 'CommonQuery successful'), projectCount: message.length })
+        return res.json({ ...getMessage(true, 'CommonQuery successful'), projectCount: message.length })
     }
     catch (e) {
         generateError(e, 'Failed to query CommonQuery', 401, next);
@@ -398,13 +398,13 @@ router.get('/corporate-project-details', async (req, res, next) => {
     logger.debug('corporate : ' + corporate);
 
     if (!CHAINCODE_NAME) {
-        res.json(fieldErrorMessage('\'chaincodeName\''));
+        return res.json(fieldErrorMessage('\'chaincodeName\''));
     }
     if (!CHANNEL_NAME) {
-        res.json(fieldErrorMessage('\'channelName\''));
+        return res.json(fieldErrorMessage('\'channelName\''));
     }
     if (!corporate) {
-        res.json(fieldErrorMessage('\'corporate\''));
+        return res.json(fieldErrorMessage('\'corporate\''));
     }
 
     //let contributor = 'contributors.' + corporate + '\\.corporate\\.csr\\.com'
@@ -429,7 +429,7 @@ router.get('/corporate-project-details', async (req, res, next) => {
             returnObject.projectName = e.Record.projectName
             result.push(returnObject)
         })
-        res.send(result)
+        return res.send(result)
     }
     catch (e) {
         generateError(e, 'Failed to query CommonQuery', 401, next);
@@ -500,7 +500,7 @@ router.get('/corporate-project-transactions', async (req, res, next) => {
             message[i]['Record']['to'] = splitOrgName(message[i]['Record']['to']);
         }
 
-        res.json({ ...getMessage(true, 'CommonQuery successful'), "allRecords": message });
+        return res.json({ ...getMessage(true, 'CommonQuery successful'), "records": message });
     }
     catch (e) {
         generateError(e, 'Failed to query CommonQuery', 401, next);
@@ -515,13 +515,13 @@ router.get('/locked-details', async (req, res, next) => {
     logger.debug('projectId : ' + projectId);
 
     if (!CHAINCODE_NAME) {
-        res.json(fieldErrorMessage('\'chaincodeName\''));
+        return res.json(fieldErrorMessage('\'chaincodeName\''));
     }
     if (!CHANNEL_NAME) {
-        res.json(fieldErrorMessage('\'channelName\''));
+        return res.json(fieldErrorMessage('\'channelName\''));
     }
     if (!projectId) {
-        res.json(fieldErrorMessage('\'projectId\''));
+        return res.json(fieldErrorMessage('\'projectId\''));
     }
 
     // let args = JSON.stringify("queryString");
@@ -568,7 +568,7 @@ router.get('/locked-details', async (req, res, next) => {
                     returnObject.quantity = totalsum
                     result.push(returnObject)
                 })
-                res.json({ ...getMessage(true, "CommonQuery successful"), Records: result })
+                return res.json({ ...getMessage(true, "CommonQuery successful"), Records: result })
             }
             catch (e) {
                 generateError(e, 'Failed to query CommonQuery', 401, next);
@@ -588,13 +588,13 @@ router.get('/total-corporate-ongoing-projects', async (req, res, next) => {
     logger.debug('corporate : ' + corporate);
 
     if (!CHAINCODE_NAME) {
-        res.json(fieldErrorMessage('\'chaincodeName\''));
+        return res.json(fieldErrorMessage('\'chaincodeName\''));
     }
     if (!CHANNEL_NAME) {
-        res.json(fieldErrorMessage('\'channelName\''));
+        return res.json(fieldErrorMessage('\'channelName\''));
     }
     if (!corporate) {
-        res.json(fieldErrorMessage('\'corporate\''));
+        return res.json(fieldErrorMessage('\'corporate\''));
     }
 
     // let contributor = 'contributors.' + corporate + '\\.corporate\\.csr\\.com'
@@ -608,7 +608,7 @@ router.get('/total-corporate-ongoing-projects', async (req, res, next) => {
 
         logger.debug(`response :  ${JSON.stringify(message, null, 2)}`)
 
-        res.json({ ...getMessage(true, 'CommonQuery successful'), projectCount: message.length })
+        return res.json({ ...getMessage(true, 'CommonQuery successful'), projectCount: message.length })
     }
     catch (e) {
         generateError(e, 'Failed to query CommonQuery', 401, next);
@@ -625,17 +625,17 @@ router.get('/total-project-locked-amount', async (req, res, next) => {
     logger.debug('projectId : ' + projectId);
 
     if (!CHAINCODE_NAME) {
-        res.json(fieldErrorMessage('\'chaincodeName\''));
+        return res.json(fieldErrorMessage('\'chaincodeName\''));
     }
     if (!CHANNEL_NAME) {
-        res.json(fieldErrorMessage('\'channelName\''));
+        return res.json(fieldErrorMessage('\'channelName\''));
     }
     //if (!corporate) {
-    //    res.json(fieldErrorMessage('\'corporate\''));
+    //    return res.json(fieldErrorMessage('\'corporate\''));
     //    return;
     //}
     if (!projectId) {
-        res.json(fieldErrorMessage('\'projectId\''));
+        return res.json(fieldErrorMessage('\'projectId\''));
     }
 
     let queryString = {
@@ -669,7 +669,7 @@ router.get('/total-project-locked-amount', async (req, res, next) => {
             })
         })
 
-        res.json({ ...getMessage(true, 'CommonQuery successful'), lockedAmount: result })
+        return res.json({ ...getMessage(true, 'CommonQuery successful'), lockedAmount: result })
     }
     catch (e) {
         generateError(e, 'Failed to query CommonQuery', 401, next);
@@ -793,7 +793,7 @@ router.get('/ngo-project-and-locked-details', async (req, res, next) => {
                 generateError(e, 'Failed to query CommonQuery', 401, next);
             }
         }
-        res.json({ ...getMessage(true, 'CommonQuery successful'), 'allRecords': response })
+        return res.json({ ...getMessage(true, 'CommonQuery successful'), 'records': response })
     }
     catch (e) {
         generateError(e, 'Failed to query CommonQuery', 401, next);
@@ -809,13 +809,13 @@ router.get('/ngo-project-transactions', async (req, res, next) => {
     logger.debug('projectId : ' + projectId);
 
     if (!CHAINCODE_NAME) {
-        res.json(fieldErrorMessage('\'chaincodeName\''));
+        return res.json(fieldErrorMessage('\'chaincodeName\''));
     }
     if (!CHANNEL_NAME) {
-        res.json(fieldErrorMessage('\'channelName\''));
+        return res.json(fieldErrorMessage('\'channelName\''));
     }
     if (!projectId) {
-        res.json(fieldErrorMessage('\'projectId\''));
+        return res.json(fieldErrorMessage('\'projectId\''));
     }
 
     let regex = projectId + "$";
@@ -845,7 +845,7 @@ router.get('/ngo-project-transactions', async (req, res, next) => {
 
         logger.debug(`response :  ${JSON.stringify(message, null, 2)}`)
 
-        res.json({ ...getMessage(true, 'CommonQuery successful'), "allRecords": message });
+        return res.json({ ...getMessage(true, 'CommonQuery successful'), "records": message });
     }
     catch (e) {
         generateError(e, 'Failed to query CommonQuery', 401, next);
@@ -859,13 +859,13 @@ router.get('/transactions', async (req, res, next) => {
     logger.debug('projectId : ' + projectId);
 
     if (!CHAINCODE_NAME) {
-        res.json(fieldErrorMessage('\'chaincodeName\''));
+        return res.json(fieldErrorMessage('\'chaincodeName\''));
     }
     if (!CHANNEL_NAME) {
-        res.json(fieldErrorMessage('\'channelName\''));
+        return res.json(fieldErrorMessage('\'channelName\''));
     }
     if (!projectId) {
-        res.json(fieldErrorMessage('\'projectId\''));
+        return res.json(fieldErrorMessage('\'projectId\''));
     }
 
     let queryString = {
@@ -901,7 +901,7 @@ router.get('/transactions', async (req, res, next) => {
 
         logger.debug(`response :  ${JSON.stringify(message, null, 2)}`)
 
-        res.json({ ...getMessage(true, 'CommonQuery successful'), "allRecords": message });
+        return res.json({ ...getMessage(true, 'CommonQuery successful'), "records": message });
     }
     catch (e) {
         generateError(e, 'Failed to query CommonQuery', 401, next);
@@ -917,13 +917,13 @@ router.get('/getCorporateProjectDetails', async (req, res, next) => {
     logger.debug('corporate : ' + corporate);
 
     if (!CHAINCODE_NAME) {
-        res.json(fieldErrorMessage('\'chaincodeName\''));
+        return res.json(fieldErrorMessage('\'chaincodeName\''));
     }
     if (!CHANNEL_NAME) {
-        res.json(fieldErrorMessage('\'channelName\''));
+        return res.json(fieldErrorMessage('\'channelName\''));
     }
     if (!corporate) {
-        res.json(fieldErrorMessage('\'corporate\''));
+        return res.json(fieldErrorMessage('\'corporate\''));
     }
 
     let args = '{"selector":{"docType":"Project","contributors.' + corporate + '\\\\.corporate\\\\.csr\\\\.com":{"$exists":true}}}'
@@ -982,7 +982,7 @@ router.get('/getCorporateProjectDetails', async (req, res, next) => {
 
             result.push(response)
         });
-        res.json({ ...getMessage(true, 'CommonQuery successful'), 'allRecords': result })
+        return res.json({ ...getMessage(true, 'CommonQuery successful'), 'records': result })
     }
     catch (e) {
         generateError(e, 'Failed to query CommonQuery', 401, next);

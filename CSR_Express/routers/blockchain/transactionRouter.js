@@ -82,7 +82,37 @@ router.get('/parked-by-corporate', async (req, res, next) => {
                 generateError(e, 'Failed to query', 401, next);
             }
         }
-        res.json(getMessage(true, message));
+        return res.json(getMessage(true, message));
+    }
+    catch (e) {
+        generateError(e, 'Failed to query', 401, next);
+    }
+});
+
+// get snapshot and transfer to gov Transactions for CA
+router.get('/transactions', async function (req, res, next) {
+
+    let queryString = {
+        "selector": {
+            "docType": "Transaction",
+            "from": req.userName + '.creditsauthority.csr.com'
+        }
+    }
+
+    const args = JSON.stringify(queryString)
+    logger.debug(`query string:\n ${args}`);
+
+    try {
+        let message = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
+        message = JSON.parse(message.toString());
+
+        message.forEach(elem => {
+            elem['Record'] = JSON.parse(elem['Record'])
+        })
+
+        logger.debug(`response :  ${JSON.stringify(message, null, 2)}`)
+
+        return res.json(getMessage(true, message));
     }
     catch (e) {
         generateError(e, 'Failed to query', 401, next);

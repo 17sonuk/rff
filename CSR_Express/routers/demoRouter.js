@@ -5,7 +5,7 @@ const enrollAdmin = require('../fabric-sdk/enrollAdmin');
 const invoke = require('../fabric-sdk/invoke');
 const query = require('../fabric-sdk/query');
 const registerUser = require('../fabric-sdk/registerUser');
-const { fieldErrorMessage, generateError, getMessage } = require('../utils/functions');
+const { generateError, getMessage } = require('../utils/functions');
 
 projectRouter.get('/enrollAdmin', async (req, res, next) => {
     let orgName = req.query.orgName;
@@ -66,8 +66,17 @@ projectRouter.get('/query', async function (req, res, next) {
         }
     }
     try {
-        let result = await query(userName, orgName, fcName, ccName, channelName, JSON.stringify(args));
+        let result = await query('userName', orgName, fcName, ccName, channelName, JSON.stringify(args));
         res.json(getMessage(true, result));
+    }
+    catch (e) {
+        generateError(e, 'Failed to query', 401, next);
+    }
+});
+
+projectRouter.get('/testQuery', async function (req, res, next) {
+    try {
+        res.json(getMessage(true, '123'));
     }
     catch (e) {
         generateError(e, 'Failed to query', 401, next);

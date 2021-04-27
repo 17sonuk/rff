@@ -78,6 +78,17 @@ userModel.approveUser = (userName, pan) => {
     })
 }
 
+// approve users
+userModel.rejectUser = (userName, pan) => {
+    return orgModel.deleteOne({ userName: userName, pan: pan }).then(data => {
+        if (data) {
+            return data
+        } else {
+            return null
+        }
+    })
+}
+
 //get current balancesheet amount
 userModel.getAmountFromBalanceSheet = (userName) => {
     return orgModel.findOne({ userName: userName, role: 'Corporate' }, { _id: 0, file: 1 }).then(data => {
