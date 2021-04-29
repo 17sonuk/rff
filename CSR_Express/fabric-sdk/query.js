@@ -44,7 +44,7 @@ async function main(userName, orgName, functionName, chaincodeName, channelName,
     if (args.length > 0) {
         result = await contract.evaluateTransaction(functionName, args);
     } else {
-        result = await contract.evaluateTransaction(functionName);
+        result = await contract.evaluateTransaction(functionName, args);
     }
     logger.debug(`Transaction has been evaluated`);
 

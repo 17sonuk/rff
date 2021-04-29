@@ -63,6 +63,33 @@ router.post('/approve', async (req, res, next) => {
     }
 });
 
+//****************************** Reject RedeemRequest *******************************
+router.post('/reject', async (req, res, next) => {
+    logger.debug('==================== INVOKE REJECT REDEEM REQUEST ON CHAINCODE ==================');
+
+    //extract parameters from request body.
+    var uid = req.body.id;
+    let rejectionComments = req.body.rejectionComments;
+
+    if (!uid) {
+        return res.json(fieldErrorMessage('\'uid\''));
+    } else if (!rejectionComments) {
+        return res.json(fieldErrorMessage('\'rejectionComments\''));
+    }
+
+    let args = [uid, rejectionComments, Date.now().toString(), uuid().toString()]
+    args = JSON.stringify(args);
+    logger.debug('args  : ' + args);
+
+    try {
+        await invoke(req.userName, req.orgName, "RejectRedeemRequest", CHAINCODE_NAME, CHANNEL_NAME, args);
+        return res.json(getMessage(true, 'Successfully invoked RejectRedeemRequest'));
+    }
+    catch (e) {
+        generateError(e, 'Failed to invoke RejectRedeemRequest', 401, next);
+    }
+});
+
 // get All Redeem Requests
 router.get('/request/all', async (req, res, next) => {
     logger.debug('==================== QUERY BY CHAINCODE: getAllRedeemRequests ==================');
@@ -107,7 +134,7 @@ router.get('/request/all', async (req, res, next) => {
     try {
         let message = await query(req.userName, req.orgName, "CommonQueryPagination", CHAINCODE_NAME, CHANNEL_NAME, args);
         message = JSON.parse(message.toString());
-        
+
         message['Results'].forEach(elem => {
             elem['Record'] = JSON.parse(elem['Record'])
         })
@@ -119,7 +146,7 @@ router.get('/request/all', async (req, res, next) => {
         //populate the MetaData
         finalResponse["metaData"] = {}
         finalResponse["metaData"]["recordsCount"] = message["RecordsCount"];
-        finalResponse["metaData"]["bookmark"] = message["Bookmark"];       
+        finalResponse["metaData"]["bookmark"] = message["Bookmark"];
 
         for (let i = 0; i < newObject.length; i++) {
             newObject[i]['Record']['from'] = splitOrgName(newObject[i]['Record']['from'])

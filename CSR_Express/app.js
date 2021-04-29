@@ -37,9 +37,9 @@ app.use((err, req, res, next) => {
     logger.error(`${req.method} - ${req.ip} - ${req.originalUrl} - ${err.status || 500}\n${err.stack || err}`);
 
     // render the error page
-    return res.status(err.status || 500).json(getMessage(false, err.label));
+    return res.status(err.status || 500).json(getMessage(false, (err.label || err.message)));
 });
 
 app.listen(PORT, () => {
-    console.log(`Express is running on port ${PORT}`);
+    logger.info(`Express is running on port ${PORT}`);
 });

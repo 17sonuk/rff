@@ -40,17 +40,17 @@ async function main(userName, orgName) {
     if (!adminIdentity) {
         logger.debug('An identity for the admin user "admin" does not exist in the wallet');
         logger.debug('Run the enrollAdmin.js application before retrying');
-        // try {
-        //     await enrollAdmin(orgName);
-        // }
-        // catch (e) {
-        //     console.log(e, "-------------")
-        //     if (e.message === 'An identity for the admin user "admin" already exists in the wallet') {
-        //         // logger.debug(e.message)
-        //     } else {
-        //         throw new Error('An identity for the admin user "admin" does not exist in the wallet');
-        //     }
-        // }
+        try {
+            await enrollAdmin(orgName);
+        }
+        catch (e) {
+            console.log(e, "-------------")
+            if (e.message === 'An identity for the admin user "admin" already exists in the wallet') {
+                // logger.debug(e.message)
+            } else {
+                throw new Error('An identity for the admin user "admin" does not exist in the wallet');
+            }
+        }
     }
 
     // build a user object for authenticating with the CA

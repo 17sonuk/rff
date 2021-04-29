@@ -125,12 +125,19 @@ userService.getAmountFromBalanceSheet = (userName) => {
             let total = 0;
             let j = 0;
             for (let i = 0; i < data.file.length; i++) {
-                if (data.file[i].year == year_p1 || data.file[i].year == year_p2 || data.file[i].year == year_p3) { total += Number(data.file[i].amount); j++; }
+                if (data.file[i].year == year_p1 || data.file[i].year == year_p2 || data.file[i].year == year_p3) {
+                    total += Number(data.file[i].amount); j++;
+                }
             }
-            if (j == 3) return { success: true, amount: Math.ceil(total / 300) * 2 };
-            else return { success: false, message: 'balance sheets are not avilable.' }
+            if (j == 3) {
+                return { success: true, amount: Math.ceil(total / 3) * 0.02 };
+            } else if (j < 3) {
+                return { success: false, message: 'balance sheets are not avilable.' };
+            }
 
-        } else return { success: false, message: 'not getting files from db' }
+        } else {
+            return { success: false, message: 'not getting files from db' };
+        }
     })
 }
 

@@ -20,13 +20,13 @@ const options = {
             colorize({ all: true })
         ),
     },
-    // file: {
-    //     level: 'info',
-    //     filename: 'app.log',
-    //     format: combine(
-    //         myFormat
-    //     ),
-    // }
+    file: {
+        level: 'debug',
+        filename: 'app.log',
+        format: combine(
+            myFormat
+        ),
+    }
 };
 
 let logger = createLogger({
@@ -34,7 +34,7 @@ let logger = createLogger({
     level: 'debug',
     transports: [
         new transports.Console(options.console),
-        // new transports.File(options.file)
+        new transports.File(options.file)
     ]
 });
 
