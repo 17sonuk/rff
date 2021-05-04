@@ -10,15 +10,15 @@ logger.debug('<<<<<<<<<<<<<< user model >>>>>>>>>>>>>>>>>')
 
 // onboarding of user
 userModel.registerUser = (obj) => {
-    let criteria = [{ userName: obj.userName }, { pan: obj.pan }]
+    let criteria = [{ userName: obj.userName }, { email: obj.email }]
     if (obj.regId) {
         criteria.push({ regId: obj.regId });
     }
     return orgModel.find({ $or: criteria }).then(user => {
         if (user.length > 0) {
             let message = 'duplicate fields - ';
-            if (user[0].pan == obj.pan) {
-                message += 'pan number, ';
+            if (user[0].email == obj.email) {
+                message += 'email, ';
             }
             if (user[0].userName == obj.userName) {
                 message += 'userName, ';
@@ -68,8 +68,8 @@ userModel.getUnapprovedUserDetails = () => {
 }
 
 // approve users
-userModel.approveUser = (userName, pan) => {
-    return orgModel.updateOne({ userName: userName, pan: pan }, { $set: { "status": 'approved' } }).then(data => {
+userModel.approveUser = (userName) => {
+    return orgModel.updateOne({ userName: userName }, { $set: { "status": 'approved' } }).then(data => {
         if (data) {
             return data
         } else {
@@ -79,8 +79,8 @@ userModel.approveUser = (userName, pan) => {
 }
 
 // approve users
-userModel.rejectUser = (userName, pan) => {
-    return orgModel.deleteOne({ userName: userName, pan: pan }).then(data => {
+userModel.rejectUser = (userName) => {
+    return orgModel.deleteOne({ userName: userName }).then(data => {
         if (data) {
             return data
         } else {

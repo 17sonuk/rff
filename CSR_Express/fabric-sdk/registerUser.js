@@ -36,12 +36,12 @@ async function main(userName, orgName) {
     }
 
     // Check to see if we've already enrolled the admin user.
-    const adminIdentity = await wallet.get('admin');
+    let adminIdentity = await wallet.get('admin');
     if (!adminIdentity) {
         logger.debug('An identity for the admin user "admin" does not exist in the wallet');
         logger.debug('Run the enrollAdmin.js application before retrying');
         try {
-            await enrollAdmin(orgName);
+            adminIdentity = await enrollAdmin(orgName);
         }
         catch (e) {
             console.log(e, "-------------")

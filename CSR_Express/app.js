@@ -1,4 +1,14 @@
 'use strict';
+const helmet = require("helmet");
+const authJson = require('./permissions.json');
+
+const authMap = {
+    'common': new Set(authJson.common),
+    'ngo': new Set(authJson.ngo),
+    'corporate': new Set(authJson.corporate),
+    'creditsauthority': new Set(authJson.creditsauthority)
+};
+
 require('dotenv').config();
 const { NODE_ENV, PORT } = process.env;
 
@@ -13,6 +23,7 @@ const mainRouter = require('./routers/mainRouter');
 const logger = require('./loggers/logger');
 
 const app = express();
+app.use(helmet());
 
 app.options('*', cors());
 app.use(cors());
@@ -23,6 +34,7 @@ app.use(express.urlencoded({
 }));
 
 app.use((req, res, next) => {
+    req.authMap = authMap;
     logger.info(`${req.method} - ${req.ip} - ${req.originalUrl}\n${JSON.stringify(req.body, null, 2)}`);
     next();
 });

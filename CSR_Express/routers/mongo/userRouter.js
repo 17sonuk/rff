@@ -44,7 +44,7 @@ router.get('/unapproved-users', (req, res, next) => {
 router.post('/approve-user', (req, res, next) => {
     logger.debug(`router-approveUser: ${JSON.stringify(req.body, null, 2)}`);
 
-    userService.approveUser(req.body.userName, req.body.pan)
+    userService.approveUser(req.body.userName)
         .then((data) => {
             res.json(data)
         })
@@ -55,7 +55,7 @@ router.post('/approve-user', (req, res, next) => {
 router.post('/reject-user', (req, res, next) => {
     logger.debug(`router-rejectUser: ${JSON.stringify(req.body, null, 2)}`);
 
-    userService.rejectUser(req.body.userName, req.body.pan)
+    userService.rejectUser(req.body.userName)
         .then((data) => {
             res.json(data)
         })

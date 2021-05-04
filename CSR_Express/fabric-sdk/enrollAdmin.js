@@ -51,8 +51,9 @@ async function main(orgName) {
         mspId: mspId,
         type: 'X.509',
     };
-    const walletResponse = await wallet.put('admin', x509Identity);
+    await wallet.put('admin', x509Identity);
     logger.debug('Successfully enrolled admin user "admin" and imported it into the wallet');
+    return x509Identity;
 }
 
 // main("ngo");

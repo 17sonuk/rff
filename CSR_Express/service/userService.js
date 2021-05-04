@@ -7,13 +7,9 @@ const userService = {};
 logger.debug('<<<<<<<<<<<<<< user service >>>>>>>>>>>>>>>>>')
 
 //Onboarding of user
-userService.registerUser = (obj) => {
-    if (obj['role'] === 'CA_Verifier' || obj['role'] === 'CA_Approver') {
-        obj['status'] = 'approved';
-    } else {
-        obj['status'] = 'created';
-    }
-
+userService.registerUser = (obj) => {    
+    obj['status'] = 'created';
+    
     obj['date'] = new Date().getTime();
     return userModel.registerUser(obj).then(data => {
         if (data) {
@@ -53,8 +49,8 @@ userService.getUnapprovedUserDetails = () => {
 }
 
 //approve user
-userService.approveUser = (userName, pan) => {
-    return userModel.approveUser(userName, pan).then(data => {
+userService.approveUser = (userName) => {
+    return userModel.approveUser(userName).then(data => {
         if (data) {
             return data;
         } else {
@@ -66,8 +62,8 @@ userService.approveUser = (userName, pan) => {
 }
 
 //reject user
-userService.rejectUser = (userName, pan) => {
-    return userModel.rejectUser(userName, pan).then(data => {
+userService.rejectUser = (userName) => {
+    return userModel.rejectUser(userName).then(data => {
         if (data) {
             return data;
         } else {

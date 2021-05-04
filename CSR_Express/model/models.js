@@ -46,18 +46,18 @@ const fileSchema = new Schema({
 
 const orgSchema = new Schema({
     name: { type: String, required: true },
-    userName: { type: String, required: true },
+    userName: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    role: { type: String, required: true },
+    role: { type: String, required: true, enum: ['Ngo', 'Corporate'] },
     date: Number,
     status: String,
     description: String,
     pan: { type: String, required: false },
-    email: [String],
+    email: { type: String, required: true, unique: true },
     regId: String,
     address: addressSchema,
-    contact: [contactSchema],
-    file: [fileSchema]
+    contact: [contactSchema]
+    //file: [fileSchema]
 }, { collection: "OrganisationProfile" })
 
 //to hash the password before saving to mongodb.

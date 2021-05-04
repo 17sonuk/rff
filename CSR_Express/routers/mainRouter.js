@@ -57,12 +57,30 @@ mainRouter.use((req, res, next) => {
     }
 });
 
-// mainRouter.use((req, res, next) => {
-//     req.userName = req.header('userName');
-//     req.orgName = req.header('orgName');
-//     logger.debug(`username ${req.userName} orgName ${req.orgName}`)
-//     next();
-// })
+
+mainRouter.use((req, res, next) => {
+    let roles = ['ngo', 'corporate', 'creditsauthority'];
+    //authorization logic
+    let authMap = req.authMap;
+
+    let skip = ['/mongo/user/login', '/mongo/user/onboard', '/users'];
+    console.log(req.path);
+    console.log(req.orgName);
+    if (skip.includes(req.path)) {
+        return next();
+    }
+
+    if (!roles.includes(req.orgName)) {
+        return res.json(getMessage(false, 'Unauthorized User!'));
+    }
+
+    if (!authMap[req.orgName].has(req.path) && !authMap['common'].has(req.path)) {
+        return res.json(getMessage(false, 'Unauthorized User!'));
+    }
+
+    logger.debug(`this role is authorized: orgName ${req.orgName}`)
+    next();
+})
 
 // Login and Generate JWT Token
 mainRouter.post('/users', async (req, res, next) => {
@@ -117,7 +135,7 @@ mainRouter.post('/users', async (req, res, next) => {
         })
     }
     catch (e) {
-        logger.debug(e.message)
+        console.log("------------",e.message, Object.keys(e))
         if (e.message === `An identity for the user ${userName} already exists in the wallet`) {
             return res.json({
                 success: true,
