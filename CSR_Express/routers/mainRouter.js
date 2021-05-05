@@ -62,10 +62,12 @@ mainRouter.use((req, res, next) => {
     let roles = ['ngo', 'corporate', 'creditsauthority'];
     //authorization logic
     let authMap = req.authMap;
+    
 
     let skip = ['/mongo/user/login', '/mongo/user/onboard', '/users'];
     console.log(req.path);
     console.log(req.orgName);
+    console.log(req.params)
     if (skip.includes(req.path)) {
         return next();
     }
@@ -73,7 +75,16 @@ mainRouter.use((req, res, next) => {
     if (!roles.includes(req.orgName)) {
         return res.json(getMessage(false, 'Unauthorized User!'));
     }
-
+    let paths=[
+    "/mongo/project/projects-ngo", 
+    "/mongo/project/create",
+    "/mongo/project/projects-corporate",
+    "/mongo/project/all"]
+    if(req.path.startsWith("/mongo/project")){
+       if(!paths.includes(req.path)){
+           return next();
+       }
+    }
     if (!authMap[req.orgName].has(req.path) && !authMap['common'].has(req.path)) {
         return res.json(getMessage(false, 'Unauthorized User!'));
     }
