@@ -16,7 +16,14 @@ router.post('/create', (req, res, next) => {
         .then((data) => {
             res.json(data)
         })
-        .catch(err => next(err))
+        .catch(err =>{ 
+            if(err['_message']){
+                err.status=400
+                err.message=err['_message'];
+            }
+            // console.log(err['_message'].toString())
+            next(err)
+        })
 })
 
 router.get('/projects-ngo', (req, res, next) => {

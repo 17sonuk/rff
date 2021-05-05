@@ -9,12 +9,17 @@ logger.debug('<<<<<<<<<<<<<< project service >>>>>>>>>>>>>>>>>')
 //Create project
 projectService.createProject = (project) => {
     return projectModel.createProject(project).then(projectData => {
-        if (projectData) {
-            return { success: true, message: 'project created in db' };
-        } else {
+        if (projectData.error && projectData.error === true) {
+
+            return { success: false, message: projectData.message };
+        } 
+        else if(!projectData){
             let err = new Error("Bad Connection")
             err.status = 500
             throw err
+        }
+        else {
+            return { success: true, message: 'project created in db' };
         }
     })
 }

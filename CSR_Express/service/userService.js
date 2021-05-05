@@ -1,5 +1,6 @@
 const logger = require('../loggers/logger');
 const bcrypt = require("bcrypt");
+const CryptoJS = require('crypto-js');
 const userModel = require('../model/userModel');
 
 const userService = {};
@@ -26,6 +27,8 @@ userService.registerUser = (obj) => {
 userService.getUserDetails = (userName) => {
     return userModel.getUserDetails(userName).then(data => {
         if (data) {
+            data.pan=CryptoJS.AES.decrypt(data.pan,"Secret123PaN").toString(CryptoJS.enc.Utf8)
+            data.contact[0].number=CryptoJS.AES.decrypt((data.contact[0].number),"Secret123CoN").toString(CryptoJS.enc.Utf8)
             return data;
         } else {
             let err = new Error("Bad Connection")
@@ -39,6 +42,12 @@ userService.getUserDetails = (userName) => {
 userService.getUnapprovedUserDetails = () => {
     return userModel.getUnapprovedUserDetails().then(data => {
         if (data) {
+            for(let i=0;i<data.length;i++){
+                data[i].pan=CryptoJS.AES.decrypt(data[i].pan,"Secret123PaN").toString(CryptoJS.enc.Utf8)
+                data[i].contact[0].number=CryptoJS.AES.decrypt((data[i].contact[0].number),"Secret123CoN").toString(CryptoJS.enc.Utf8)
+
+            }
+            
             return data;
         } else {
             let err = new Error("Bad Connection")

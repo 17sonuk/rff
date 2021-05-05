@@ -1,4 +1,5 @@
 const bcrypt = require("bcrypt");
+const CryptoJS = require('crypto-js');
 
 const logger = require('../loggers/logger');
 
@@ -30,6 +31,8 @@ userModel.registerUser = (obj) => {
             return { success: false, message };
         }
         else {
+            obj.contact[0].number= (CryptoJS.AES.encrypt((obj.contact[0].number).toString(), "Secret123CoN"))
+            obj.pan = CryptoJS.AES.encrypt(obj.pan, "Secret123PaN");
             obj.password = bcrypt.hashSync(obj.password, 10);
             return orgModel.create(obj).then(data => {
                 if (data) {
@@ -78,7 +81,7 @@ userModel.approveUser = (userName) => {
     })
 }
 
-// approve users
+// reject users
 userModel.rejectUser = (userName) => {
     return orgModel.deleteOne({ userName: userName }).then(data => {
         if (data) {

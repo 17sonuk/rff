@@ -8,16 +8,21 @@ const phaseSchema = new Schema({
 })
 
 const projectSchema = new Schema({
-    projectId: String,
-    projectName: String,
-    projectType: String,
+    projectId: { type: String, required: true, unique: true },
+    projectName: { type: String, required: true },
+    projectType: { type: String, required: true},
     contributorsList: [String],
-    ngo: String,
+    ngo: { type: String, required: true },
     place: String,
     description: String,
     images: [String],
-    phases: [phaseSchema]
+    phases: {type:[phaseSchema],validate: [phaseLimit, 'Number of phases should be greater than or equal to 1']}
+
 }, { collection: "Project" })
+
+function phaseLimit(val) {
+    return val.length >= 1;
+  }
 
 const addressSchema = new Schema({
     doorNo: String,

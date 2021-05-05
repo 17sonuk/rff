@@ -9,6 +9,7 @@ logger.debug('<<<<<<<<<<<<<< project model >>>>>>>>>>>>>>>>>')
 //create a new project
 projectModelObj.createProject = (projectData) => {
     return projectModel.find({ projectId: projectData.projectId }).then(p => {
+        
         if (p.length > 0) {
             return ({ message: 'Project ID already exist.', error: true })
         } else {
