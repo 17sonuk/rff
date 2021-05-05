@@ -66,9 +66,10 @@ func (s *SmartContract) RequestTokens(ctx contractapi.TransactionContextInterfac
 
 	//from,qty,role,txid
 	tokenQty, err := strconv.ParseFloat(args[0], 64)
-	if err != nil {
-		return false, fmt.Errorf("Error converting tokenQty " + err.Error())
+	if err != nil || tokenQty <= 0.0 {
+		return false, fmt.Errorf("Invalid amount!")
 	}
+
 	fromAddress := commonName
 	toAddress := "ca.creditsauthority.csr.com"
 	callerRole := strings.ToLower(args[1])
@@ -84,12 +85,13 @@ func (s *SmartContract) RequestTokens(ctx contractapi.TransactionContextInterfac
 
 	oldTokenRequestAsBytes, _ := ctx.GetStub().GetState(bankTxId)
 	if oldTokenRequestAsBytes != nil {
+		return false, fmt.Errorf("Token request with this ID already exists")
 		//Update existing token with Requested status
-		tokenRequest := TokenRequest{}
-		err = json.Unmarshal(oldTokenRequestAsBytes, &tokenRequest)
-		if tokenRequest.Status != "Rejected" {
-			return false, fmt.Errorf("Token request with this ID already exists with " + tokenRequest.Status + " status")
-		}
+		// tokenRequest := TokenRequest{}
+		// err = json.Unmarshal(oldTokenRequestAsBytes, &tokenRequest)
+		// if tokenRequest.Status != "Rejected" {
+		// 	return false, fmt.Errorf("Token request with this ID already exists with " + tokenRequest.Status + " status")
+		// }
 	}
 
 	newReq := &TokenRequest{
@@ -362,21 +364,23 @@ func (s *SmartContract) TransferTokens(ctx contractapi.TransactionContextInterfa
 
 	//donated amount
 	qty, err := strconv.ParseFloat(args[0], 64)
-	if err != nil {
-		return false, fmt.Errorf("qty is not a number! " + err.Error())
+	if err != nil || qty <= 0.0 {
+		return false, fmt.Errorf("Invalid Amount!")
 	}
+
 	qtyToTransfer := qty
 
 	pId := args[1]
 	fromAddress := commonName
 	phaseNumber, err := strconv.Atoi(args[2])
-	if err != nil {
-		return false, fmt.Errorf("phase number is not a number! " + err.Error())
+	if err != nil || phaseNumber < 0.0 {
+		return false, fmt.Errorf("Invalid phase Number!")
 	}
+
 	reviewMsg := args[3]
 	rating, err := strconv.Atoi(args[4])
-	if err != nil {
-		return false, fmt.Errorf("rating is not an integer! " + err.Error())
+	if err != nil || rating < 0.0 || rating > 5.0 {
+		return false, fmt.Errorf("Invalid rating")
 	}
 	date, err := strconv.Atoi(args[5])
 	if err != nil {

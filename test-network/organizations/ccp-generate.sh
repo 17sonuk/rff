@@ -51,7 +51,7 @@ echo "$(yaml_ccp $ORG $ORGC $P0PORT $CAPORT $PEERPEM $CAPEM)" > organizations/pe
 
 ORG=ngo
 ORGC=Ngo
-P0PORT=10051
+P0PORT=11051
 CAPORT=9054
 PEERPEM=organizations/peerOrganizations/ngo.csr.com/tlsca/tlsca.ngo.csr.com-cert.pem
 CAPEM=organizations/peerOrganizations/ngo.csr.com/ca/ca.ngo.csr.com-cert.pem

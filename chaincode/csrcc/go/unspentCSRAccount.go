@@ -48,10 +48,24 @@ func (s *SmartContract) ReserveFundsForProject(ctx contractapi.TransactionContex
 		return false, fmt.Errorf(err.Error())
 	}
 
+	if len(args) != 5 {
+		return false, fmt.Errorf("Incorrect no. of arguments. Expecting 5")
+	} else if len(args[0]) <= 0 {
+		return false, fmt.Errorf("projectId must be a non-empty string")
+	} else if len(args[1]) <= 0 {
+		return false, fmt.Errorf("qty must be a non-empty string")
+	} else if len(args[2]) <= 0 {
+		return false, fmt.Errorf("date must be a non-empty string")
+	} else if len(args[3]) <= 0 {
+		return false, fmt.Errorf("tx id must be a non-empty string")
+	} else if len(args[4]) <= 0 {
+		return false, fmt.Errorf("validity must be a non-empty string")
+	}
+
 	projectId := strings.ToLower(args[0])
-	qty, _ := strconv.ParseFloat(args[1], 64)
-	if qty <= 0.0 {
-		return false, fmt.Errorf("qty should be a positive no")
+	qty, err := strconv.ParseFloat(args[1], 64)
+	if err != nil || qty <= 0.0 {
+		return false, fmt.Errorf("Invalid amount!")
 	}
 	fromAddress := commonName
 	ngoId := ""
@@ -97,11 +111,11 @@ func (s *SmartContract) ReserveFundsForProject(ctx contractapi.TransactionContex
 	}
 
 	//get normal credit balance of the corpoate
+	balance := 0.0
 	getbalancebytes, _ := ctx.GetStub().GetState(fromAddress)
-	if getbalancebytes == nil {
-		return false, fmt.Errorf("error getting the balance of the Corporate")
+	if getbalancebytes != nil {
+		balance, _ = strconv.ParseFloat(string(getbalancebytes), 64)
 	}
-	balance, _ := strconv.ParseFloat(string(getbalancebytes), 64)
 
 	//compare the quantity required and deduct the necessary credits from normal balance or snapshot balance
 	if (balance + snapshotBalance) < qty {
@@ -264,12 +278,30 @@ func (s *SmartContract) ReleaseFundsForProject(ctx contractapi.TransactionContex
 		return false, fmt.Errorf(err.Error())
 	}
 
+	if len(args) != 7 {
+		return false, fmt.Errorf("Incorrect no. of arguments. Expecting 7")
+	} else if len(args[0]) <= 0 {
+		return false, fmt.Errorf("projectId must be a non-empty string")
+	} else if len(args[1]) <= 0 {
+		return false, fmt.Errorf("qty must be a non-empty string")
+	} else if len(args[2]) <= 0 {
+		return false, fmt.Errorf("date must be a non-empty string")
+	} else if len(args[3]) <= 0 {
+		return false, fmt.Errorf("tx id must be a non-empty string")
+	} else if len(args[4]) <= 0 {
+		return false, fmt.Errorf("rating must be a non-empty string")
+	} else if len(args[5]) <= 0 {
+		return false, fmt.Errorf("reviewMsg must be a non-empty string")
+	} else if len(args[6]) <= 0 {
+		return false, fmt.Errorf("phaseNumber must be a non-empty string")
+	}
+
 	fromAddress := commonName
 	toAddress := ""
 	projectId := strings.ToLower(args[0])
 	qty, err := strconv.ParseFloat(args[1], 64)
-	if err != nil {
-		return false, fmt.Errorf("qty should be numeric.")
+	if err != nil || qty <= 0.0 {
+		return false, fmt.Errorf("Invalid amount!")
 	}
 	date, err := strconv.Atoi(args[2])
 	if err != nil {
@@ -277,13 +309,13 @@ func (s *SmartContract) ReleaseFundsForProject(ctx contractapi.TransactionContex
 	}
 	txId := args[3]
 	rating, err := strconv.Atoi(args[4])
-	if err != nil {
-		return false, fmt.Errorf("rating is incorrect!")
+	if err != nil || rating < 0.0 || rating > 5.0 {
+		return false, fmt.Errorf("Invalid rating!")
 	}
 	reviewMsg := args[5]
 	phaseNumber, err := strconv.Atoi(args[6])
-	if err != nil {
-		return false, fmt.Errorf("phaseNumber should be numeric.")
+	if err != nil || phaseNumber < 0.0 {
+		return false, fmt.Errorf("Invalid phaseNumber!")
 	}
 
 	//if the project exists, populate ngo
@@ -391,11 +423,11 @@ func (s *SmartContract) ReleaseFundsForProject(ctx contractapi.TransactionContex
 		ctx.GetStub().PutState(accountKey, unspentCSRAccountAsBytes)
 
 		// add to NGO balance
+		balance := 0.0
 		getbalancebytes, _ := ctx.GetStub().GetState(toAddress)
-		if getbalancebytes == nil {
-			return false, fmt.Errorf("error getting the balance of the ngo")
+		if getbalancebytes != nil {
+			balance, _ = strconv.ParseFloat(string(getbalancebytes), 64)
 		}
-		balance, _ := strconv.ParseFloat(string(getbalancebytes), 64)
 		addQuantity := balance + qty
 		ctx.GetStub().PutState(toAddress, []byte(fmt.Sprintf("%f", addQuantity)))
 

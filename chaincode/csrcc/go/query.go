@@ -70,8 +70,8 @@ func (s *SmartContract) CommonQueryPagination(ctx contractapi.TransactionContext
 
 	//return type of ParseInt is int64
 	pageSize, err := strconv.ParseInt(args[1], 10, 32)
-	if err != nil {
-		return nil, fmt.Errorf(err.Error())
+	if err != nil || pageSize <= 0 {
+		return nil, fmt.Errorf("Invalid page size!")
 	}
 	bookmark := args[2]
 
@@ -651,7 +651,14 @@ func (s *SmartContract) GetAllCorporates(ctx contractapi.TransactionContextInter
 
 	corporatesBytes, _ := ctx.GetStub().GetState("corporates")
 
+	InfoLogger.Printf("CorporateBytes Length: ", len(string(corporatesBytes)))
+
 	var result []string
+
+	if corporatesBytes == nil || len(string(corporatesBytes)) <= 2 {
+		InfoLogger.Printf("Inside if condition. No corporates.")
+		return nil, nil
+	}
 
 	err := json.Unmarshal(corporatesBytes, &result)
 	if err != nil {

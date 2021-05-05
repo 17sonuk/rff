@@ -130,6 +130,10 @@ func (s *SmartContract) CreateProject(ctx contractapi.TransactionContextInterfac
 		projectObj.Phases[i].PhaseState = "Created"
 		projectObj.Phases[i].OutstandingQty = projectObj.Phases[i].Qty
 		allPhaseCosts += projectObj.Phases[i].Qty
+
+		if projectObj.Phases[i].StartDate >= projectObj.Phases[i].EndDate {
+			return false, fmt.Errorf("end date must be ahead of start date!")
+		}
 		if projectObj.Phases[i].Contributions != nil {
 			return false, fmt.Errorf("No phase contributions expected!")
 		}
@@ -204,8 +208,8 @@ func (s *SmartContract) ValidatePhase(ctx contractapi.TransactionContextInterfac
 
 	projectId := args[0]
 	phaseNumber, err := strconv.Atoi(args[1])
-	if err != nil {
-		return false, fmt.Errorf(err.Error())
+	if err != nil || phaseNumber < 0.0 {
+		return false, fmt.Errorf("Invalid phase number!")
 	}
 	validated, err := strconv.ParseBool(args[2])
 	if err != nil {
@@ -338,8 +342,8 @@ func (s *SmartContract) AddDocumentHash(ctx contractapi.TransactionContextInterf
 
 	projectId := args[0]
 	phaseNumber, err := strconv.Atoi(args[1])
-	if err != nil {
-		return false, fmt.Errorf(err.Error())
+	if err != nil || phaseNumber < 0.0 {
+		return false, fmt.Errorf("Invalid phase number!")
 	}
 	criterion := args[2]
 	docHash := args[3]
@@ -359,6 +363,11 @@ func (s *SmartContract) AddDocumentHash(ctx contractapi.TransactionContextInterf
 	err = json.Unmarshal(projectInBytes, &projectObj)
 	if err != nil {
 		return false, fmt.Errorf("error in unmarshalling: " + err.Error())
+	}
+
+	if projectObj.NGO != commonName {
+		InfoLogger.Printf("Invalid project owner: ", commonName)
+		return false, fmt.Errorf("Invalid project owner")
 	}
 
 	//save the docHash
@@ -426,7 +435,10 @@ func (s *SmartContract) UpdateProject(ctx contractapi.TransactionContextInterfac
 	}
 
 	projectId := strings.ToLower(args[0])
-	phaseNumber, _ := strconv.Atoi(args[1])
+	phaseNumber, err := strconv.Atoi(args[1])
+	if err != nil || phaseNumber < 0.0 {
+		return false, fmt.Errorf("Invalid phase number!")
+	}
 	state := args[2]
 	date, err := strconv.Atoi(args[3])
 	if err != nil {
@@ -446,6 +458,11 @@ func (s *SmartContract) UpdateProject(ctx contractapi.TransactionContextInterfac
 		return false, fmt.Errorf("project is not present")
 	}
 	json.Unmarshal(projectAsBytes, &projectState)
+
+	if projectState.NGO != commonName {
+		InfoLogger.Printf("Invalid project owner: ", commonName)
+		return false, fmt.Errorf("Invalid project owner")
+	}
 
 	//check for the validity of the phase number
 	if phaseNumber >= len(projectState.Phases) {

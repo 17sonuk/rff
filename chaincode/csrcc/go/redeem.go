@@ -10,14 +10,15 @@ import (
 )
 
 type Redeem struct {
-	ObjectType   string  `json:"docType"`
-	From         string  `json:"from"`
-	Qty          float64 `json:"qty"`
-	Status       string  `json:"status"`
-	Date         int     `json:"date"`
-	BankTxId     string  `json:"bankTxId"`
-	ProofDocName string  `json:"proofDocName"`
-	ProofDocHash string  `json:"proofDocHash"`
+	ObjectType        string  `json:"docType"`
+	From              string  `json:"from"`
+	Qty               float64 `json:"qty"`
+	Status            string  `json:"status"`
+	Date              int     `json:"date"`
+	BankTxId          string  `json:"bankTxId"`
+	ProofDocName      string  `json:"proofDocName"`
+	ProofDocHash      string  `json:"proofDocHash"`
+	RejectionComments string  `json:"rejectionComments"`
 }
 
 func (s *SmartContract) RedeemRequest(ctx contractapi.TransactionContextInterface, arg string) (bool, error) {
@@ -43,8 +44,24 @@ func (s *SmartContract) RedeemRequest(ctx contractapi.TransactionContextInterfac
 		return false, fmt.Errorf(err.Error())
 	}
 
+	if len(args) != 4 {
+		return false, fmt.Errorf("Incorrect no. of arguments. Expecting 4")
+	} else if len(args[0]) <= 0 {
+		return false, fmt.Errorf("uuid must be a non-empty string")
+	} else if len(args[1]) <= 0 {
+		return false, fmt.Errorf("qty must be a non-empty string")
+	} else if len(args[2]) <= 0 {
+		return false, fmt.Errorf("date must be a non-empty string")
+	} else if len(args[3]) <= 0 {
+		return false, fmt.Errorf("tx id must be a non-empty string")
+	}
+
 	uuid := args[0]
-	qty, _ := strconv.ParseFloat(args[1], 64)
+	qty, err := strconv.ParseFloat(args[1], 64)
+	if err != nil || qty <= 0.0 {
+		return false, fmt.Errorf("Invalid amount!")
+	}
+
 	date, _ := strconv.Atoi(args[2])
 	txId := args[3]
 	from := commonName
@@ -116,6 +133,22 @@ func (s *SmartContract) ApproveRedeemRequest(ctx contractapi.TransactionContextI
 	err = json.Unmarshal([]byte(arg), &args)
 	if err != nil {
 		return false, fmt.Errorf(err.Error())
+	}
+
+	if len(args) != 6 {
+		return false, fmt.Errorf("Incorrect no. of arguments. Expecting 6")
+	} else if len(args[0]) <= 0 {
+		return false, fmt.Errorf("uuid must be a non-empty string")
+	} else if len(args[1]) <= 0 {
+		return false, fmt.Errorf("bank tx id must be a non-empty string")
+	} else if len(args[2]) <= 0 {
+		return false, fmt.Errorf("date must be a non-empty string")
+	} else if len(args[3]) <= 0 {
+		return false, fmt.Errorf("tx id must be a non-empty string")
+	} else if len(args[4]) <= 0 {
+		return false, fmt.Errorf("doc name must be a non-empty string")
+	} else if len(args[5]) <= 0 {
+		return false, fmt.Errorf("doc hash be a non-empty string")
 	}
 
 	uuid := args[0]
@@ -213,4 +246,99 @@ func (s *SmartContract) GetRedeemRequest(ctx contractapi.TransactionContextInter
 
 	InfoLogger.Printf("*************** getRedeemRequest Successfull ***************")
 	return queryResults, nil
+}
+
+func (s *SmartContract) RejectRedeemRequest(ctx contractapi.TransactionContextInterface, arg string) (bool, error) {
+	InfoLogger.Printf("*************** rejectRedeemRequest Started ***************")
+	InfoLogger.Printf("args received:", arg)
+
+	//getusercontext to populate the required data
+	creator, err := ctx.GetStub().GetCreator()
+	if err != nil {
+		return false, fmt.Errorf("Error getting transaction creator: " + err.Error())
+	}
+	mspId, commonName, _ := getTxCreatorInfo(creator)
+	if mspId != "CreditsAuthorityMSP" {
+		InfoLogger.Printf("only creditsauthority can verify/approve redeem request")
+		return false, fmt.Errorf("only creditsauthority can verify/approve redeem request")
+	}
+	InfoLogger.Printf("current logged in user:", commonName, "with mspId:", mspId)
+
+	var args []string
+
+	err = json.Unmarshal([]byte(arg), &args)
+	if err != nil {
+		return false, fmt.Errorf(err.Error())
+	}
+
+	if len(args) != 4 {
+		return false, fmt.Errorf("Incorrect no. of arguments. Expecting 4")
+	} else if len(args[0]) <= 0 {
+		return false, fmt.Errorf("uuid must be a non-empty string")
+	} else if len(args[1]) <= 0 {
+		return false, fmt.Errorf("rejection comments must be a non-empty string")
+	} else if len(args[2]) <= 0 {
+		return false, fmt.Errorf("date must be a non-empty string")
+	} else if len(args[3]) <= 0 {
+		return false, fmt.Errorf("tx id must be a non-empty string")
+	}
+
+	uuid := args[0]
+	rejectionComments := args[1]
+
+	time, _ := strconv.Atoi(args[2])
+	txId := args[3]
+
+	if len(rejectionComments) == 0 {
+		return false, fmt.Errorf("rejection comments is mandatory!")
+	}
+
+	redeemStateAsBytes, _ := ctx.GetStub().GetState(uuid)
+	if redeemStateAsBytes == nil {
+		InfoLogger.Printf("uuid:", uuid, "is not present")
+		return false, fmt.Errorf("uuid: " + uuid + " is not present")
+	}
+	redeemState := Redeem{}
+	json.Unmarshal(redeemStateAsBytes, &redeemState)
+
+	redeemState.RejectionComments = rejectionComments
+
+	var txType string
+	if redeemState.Status == "Requested" {
+		txType = "RedeemReject"
+		redeemState.Status = "Rejected"
+		redeemStateAsBytes, _ = json.Marshal(redeemState)
+		ctx.GetStub().PutState(uuid, redeemStateAsBytes)
+	} else {
+		return false, fmt.Errorf("invalid redeem status!" + redeemState.Status)
+	}
+
+	//give back the tokens to Ngo
+	getbalancebytes, _ := ctx.GetStub().GetState(redeemState.From)
+	if getbalancebytes == nil {
+		return false, fmt.Errorf("error getting the balance of the ngo")
+	}
+	balance, _ := strconv.ParseFloat(string(getbalancebytes), 64)
+
+	//add the redeem amount to the balance of ngo upon reject
+	updatedBal := balance + redeemState.Qty
+	ctx.GetStub().PutState(redeemState.From, []byte(fmt.Sprintf("%f", updatedBal)))
+
+	//create corresponding transaction
+	from := commonName
+	to := redeemState.From
+	qty := redeemState.Qty
+
+	createTransaction(ctx, from, to, qty, time, txType, uuid, txId, -1)
+
+	eventPayload := "Your redeem request of " + fmt.Sprintf("%0.2f", qty) + " credits is " + redeemState.Status + "."
+	notification := &Notification{TxId: txId, Description: eventPayload, Users: []string{to}}
+	notificationtAsBytes, err := json.Marshal(notification)
+	eventErr := ctx.GetStub().SetEvent("Notification", notificationtAsBytes)
+	if eventErr != nil {
+		return false, fmt.Errorf(fmt.Sprintf("Failed to emit event"))
+	}
+
+	InfoLogger.Printf("*************** rejectRedeemRequest Successful ***************")
+	return true, nil
 }
