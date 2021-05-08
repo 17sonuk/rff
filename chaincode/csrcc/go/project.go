@@ -532,6 +532,7 @@ func (s *SmartContract) UpdateProject(ctx contractapi.TransactionContextInterfac
 		corpsList := make([]string, 0, len(result))
 		for _, value := range result {
 			corpName := value["Record"].(map[string]interface{})["corporate"].(string)
+			InfoLogger.Printf("corpName: ", corpName)
 			corpsList = append(corpsList, corpName)
 		}
 		tmpList = corpsList
@@ -540,6 +541,7 @@ func (s *SmartContract) UpdateProject(ctx contractapi.TransactionContextInterfac
 
 	notification := &Notification{TxId: txId, Description: eventPayload, Users: tmpList}
 	InfoLogger.Printf("notification:", eventPayload)
+	InfoLogger.Printf(strings.Join(tmpList, " "))
 	notificationtAsBytes, err := json.Marshal(notification)
 	ctx.GetStub().SetEvent("Notification", notificationtAsBytes)
 

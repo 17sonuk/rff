@@ -33,7 +33,7 @@ userModel.registerUser = (obj) => {
         else {
             obj.contact[0].number= (CryptoJS.AES.encrypt((obj.contact[0].number).toString(), "Secret123CoN"))
             obj.pan = CryptoJS.AES.encrypt(obj.pan, "Secret123PaN");
-            obj.password = bcrypt.hashSync(obj.password, 10);
+            // obj.password = bcrypt.hashSync(obj.password, 10);
             return orgModel.create(obj).then(data => {
                 if (data) {
                     return { success: true, message: 'user successfully registered...' };
@@ -46,8 +46,8 @@ userModel.registerUser = (obj) => {
 }
 
 // get user details
-userModel.getUserDetails = (userName) => {
-    return orgModel.findOne({ userName: userName }, { _id: 0, date: 0 }).then(data => {
+userModel.getUserDetails = (email) => {
+    return orgModel.findOne({ email: email }, { _id: 0, date: 0 }).then(data => {
         if (data) {
             return data
         } else {
@@ -60,9 +60,9 @@ userModel.getUserDetails = (userName) => {
 userModel.getUnapprovedUserDetails = () => {
     return orgModel.find({ status: 'created' }, { _id: 0 }).then(data => {
         if (data) {
-            for (let i = 0; i < data.length; i++) {
-                data[i]['password'] = undefined;
-            }
+            // for (let i = 0; i < data.length; i++) {
+            //     data[i]['password'] = undefined;
+            // }
             return data
         } else {
             return null

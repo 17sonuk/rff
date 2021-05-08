@@ -8,9 +8,9 @@ const userService = {};
 logger.debug('<<<<<<<<<<<<<< user service >>>>>>>>>>>>>>>>>')
 
 //Onboarding of user
-userService.registerUser = (obj) => {    
+userService.registerUser = (obj) => {
     obj['status'] = 'created';
-    
+
     obj['date'] = new Date().getTime();
     return userModel.registerUser(obj).then(data => {
         if (data) {
@@ -24,11 +24,11 @@ userService.registerUser = (obj) => {
 }
 
 //get user details
-userService.getUserDetails = (userName) => {
-    return userModel.getUserDetails(userName).then(data => {
+userService.getUserDetails = (email) => {
+    return userModel.getUserDetails(email).then(data => {
         if (data) {
-            data.pan=CryptoJS.AES.decrypt(data.pan,"Secret123PaN").toString(CryptoJS.enc.Utf8)
-            data.contact[0].number=CryptoJS.AES.decrypt((data.contact[0].number),"Secret123CoN").toString(CryptoJS.enc.Utf8)
+            data.pan = CryptoJS.AES.decrypt(data.pan, "Secret123PaN").toString(CryptoJS.enc.Utf8)
+            data.contact[0].number = CryptoJS.AES.decrypt((data.contact[0].number), "Secret123CoN").toString(CryptoJS.enc.Utf8)
             return data;
         } else {
             let err = new Error("Bad Connection")
@@ -42,12 +42,12 @@ userService.getUserDetails = (userName) => {
 userService.getUnapprovedUserDetails = () => {
     return userModel.getUnapprovedUserDetails().then(data => {
         if (data) {
-            for(let i=0;i<data.length;i++){
-                data[i].pan=CryptoJS.AES.decrypt(data[i].pan,"Secret123PaN").toString(CryptoJS.enc.Utf8)
-                data[i].contact[0].number=CryptoJS.AES.decrypt((data[i].contact[0].number),"Secret123CoN").toString(CryptoJS.enc.Utf8)
+            for (let i = 0; i < data.length; i++) {
+                data[i].pan = CryptoJS.AES.decrypt(data[i].pan, "Secret123PaN").toString(CryptoJS.enc.Utf8)
+                data[i].contact[0].number = CryptoJS.AES.decrypt((data[i].contact[0].number), "Secret123CoN").toString(CryptoJS.enc.Utf8)
 
             }
-            
+
             return data;
         } else {
             let err = new Error("Bad Connection")
@@ -84,20 +84,21 @@ userService.rejectUser = (userName) => {
 }
 
 //login user
-userService.login = (userName, password) => {
-    return userModel.getUserDetails(userName).then(data => {
+userService.login = (email) => {
+    return userModel.getUserDetails(email).then(data => {
         logger.debug(data);
         if (data) {
             //check password
-            if (password == null || password == undefined || password.length == 0) {
-                return { success: false, message: 'wrong credentials!' };
-            }
+            // if (password == null || password == undefined || password.length == 0) {
+            //     return { success: false, message: 'wrong credentials!' };
+            // }
 
-            const result = bcrypt.compareSync(password, data['password']);
+            // const result = bcrypt.compareSync(password, data['password']);
 
-            if (result == false) {
-                return { success: false, message: 'wrong credentials!' };
-            } else if (data['status'] == 'approved') {
+            // if (result == false) {
+            //     return { success: false, message: 'wrong credentials!' };
+            // } else
+            if (data['status'] == 'approved') {
                 return { success: true, message: 'login successful', userName: data.userName, role: data.role, name: data.name };
             } else {
                 return { success: false, message: 'onboarding not approved' }

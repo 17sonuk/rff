@@ -366,6 +366,7 @@ router.get('/it-report', async function (req, res, next) {
 
             resultObject.corporate = ItList.Record[i].corporateName
             resultObject.panNumber = ItList.Record[i].panNumber
+            resultObject.email = ItList.Record[i].email
             resultObject.totalLiability = ItList.Record[i].totalLiability
 
             queryString = {

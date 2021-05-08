@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	// "strconv"
-	// "strings"
+	"strings"
 
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
@@ -18,6 +18,7 @@ import (
 type Liability struct {
 	ObjectType     string  `json:"objectType"`
 	PanNumber      string  `json:"panNumber"`
+	Email          string  `json:"email"`
 	CorporateName  string  `json:"corporateName"`
 	TotalLiability float64 `json:"totalLiability"`
 }
@@ -33,10 +34,10 @@ func (s *SmartContract) SaveItData(ctx contractapi.TransactionContextInterface, 
 		return false, fmt.Errorf("Error getting transaction creator: " + err.Error())
 	}
 	mspId, commonName, _ := getTxCreatorInfo(creator)
-	// if mspId != "CreditsAuthorityMSP" || commonName != "itdept" {
-	// 	InfoLogger.Printf("only creditsauthority's IT dept can initiate saveItData")
-	// 	return false, fmt.Errorf("only creditsauthority's IT dept can initiate saveItData")
-	// }
+	if mspId != "CreditsAuthorityMSP" || (commonName != "itdept" && !strings.HasPrefix(commonName, "ca")) {
+		InfoLogger.Printf("only creditsauthority's IT dept or CA can initiate saveItData")
+		return false, fmt.Errorf("only creditsauthority's IT dept or CA can initiate saveItData")
+	}
 	InfoLogger.Printf("current logged in user:", commonName, "with mspId:", mspId)
 
 	var args []string
@@ -66,9 +67,9 @@ func (s *SmartContract) SaveItData(ctx contractapi.TransactionContextInterface, 
 		return false, fmt.Errorf("liability details must be a non-empty list!")
 	}
 
-	corporatePanBytes, _ := ctx.GetStub().GetState("corporatePan")
-	corporatePan := make(map[string]string)
-	err = json.Unmarshal(corporatePanBytes, &corporatePan)
+	corporateEmailBytes, _ := ctx.GetStub().GetState("corporateEmail")
+	corporateEmail := make(map[string]string)
+	err = json.Unmarshal(corporateEmailBytes, &corporateEmail)
 
 	for index, _ := range liabilities {
 		liabilities[index].ObjectType = "Liability"
@@ -76,10 +77,10 @@ func (s *SmartContract) SaveItData(ctx contractapi.TransactionContextInterface, 
 			return false, fmt.Errorf("Corporate name is mandatory!")
 		} else if liabilities[index].TotalLiability < 0.0 {
 			return false, fmt.Errorf("Total liability is invalid!")
-		} else if len(liabilities[index].PanNumber) < 1 {
-			return false, fmt.Errorf("Pan Number is mandatory!")
-		} else if len(corporatePan[liabilities[index].PanNumber]) > 0 {
-			liabilities[index].CorporateName = corporatePan[liabilities[index].PanNumber]
+		} else if len(liabilities[index].Email) < 1 {
+			return false, fmt.Errorf("Email is mandatory!")
+		} else if len(corporateEmail[liabilities[index].Email]) > 0 {
+			liabilities[index].CorporateName = corporateEmail[liabilities[index].Email]
 		}
 	}
 

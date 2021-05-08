@@ -24,7 +24,11 @@ const userService = require('../service/userService');
 
 // Custom functions
 const logger = require('../loggers/logger');
+const checkJwt = require('../utils/checkJwt');
 const { fieldErrorMessage, generateError, getMessage } = require('../utils/functions');
+
+// Auth0
+mainRouter.use(checkJwt);
 
 // Authentication
 mainRouter.use((req, res, next) => {
@@ -32,7 +36,7 @@ mainRouter.use((req, res, next) => {
     if (skip.includes(req.originalUrl)) {
         next();
     } else {
-        const authHeader = req.headers.authorization;
+        const authHeader = req.headers.csrtoken;
         if (authHeader) {
             const token = authHeader.split(' ')[1];
             jwt.verify(token, TOKEN_SECRET, (err, decoded) => {
@@ -59,10 +63,11 @@ mainRouter.use((req, res, next) => {
 
 
 mainRouter.use((req, res, next) => {
+
     let roles = ['ngo', 'corporate', 'creditsauthority'];
     //authorization logic
     let authMap = req.authMap;
-    
+
 
     let skip = ['/mongo/user/login', '/mongo/user/onboard', '/users'];
     console.log(req.path);
@@ -75,15 +80,18 @@ mainRouter.use((req, res, next) => {
     if (!roles.includes(req.orgName)) {
         return res.json(getMessage(false, 'Unauthorized User!'));
     }
-    let paths=[
-    "/mongo/project/projects-ngo", 
-    "/mongo/project/create",
-    "/mongo/project/projects-corporate",
-    "/mongo/project/all"]
-    if(req.path.startsWith("/mongo/project")){
-       if(!paths.includes(req.path)){
-           return next();
-       }
+    let paths = [
+        "/mongo/project/projects-ngo",
+        "/mongo/project/create",
+        "/mongo/project/projects-corporate",
+        "/mongo/project/all"]
+    if (req.path.startsWith("/mongo/project")) {
+        if (!paths.includes(req.path)) {
+            return next();
+        }
+    }
+    if (req.path.startsWith('/query/getRecord/') || req.path.startsWith('/mongo/user/notification/')) {
+        return next();
     }
     if (!authMap[req.orgName].has(req.path) && !authMap['common'].has(req.path)) {
         return res.json(getMessage(false, 'Unauthorized User!'));
@@ -95,37 +103,36 @@ mainRouter.use((req, res, next) => {
 
 // Login and Generate JWT Token
 mainRouter.post('/users', async (req, res, next) => {
-    let { userName, password } = req.body;
+    let { email } = req.body;
 
-    logger.debug('End point : /users');
-    logger.debug(`User name : ${userName}`);
+    logger.debug(`email : ${email}`);
 
-    if (!userName) {
-        return res.json(fieldErrorMessage('\'userName\''));
+    if (!email) {
+        return res.json(fieldErrorMessage('\'email\''));
     }
-    if (!password) {
-        return res.json(fieldErrorMessage('\'password\''));
-    }
+    // if (!password) {
+    //     return res.json(fieldErrorMessage('\'password\''));
+    // }
 
     //calling mongo login for password authentication
     let mongoResponse = {};
+    let userName;
     let orgName;
 
-    if (userName.length < 4 && (userName.startsWith('ca') || userName.startsWith('it'))) {
-        if (password === 'test') {
-            mongoResponse = { ...getMessage(false, 'Login successfull!'), role: "CreditsAuthority" };
-            orgName = 'creditsauthority';
-        } else {
-            logger.debug(`Authentication failed for the userName ${userName}`);
-            return res.json(getMessage(false, 'Wrong credentials!'));
-        }
+    let user = email.split("@")[0];
+    console.log(user);
+    if (user.startsWith('ca') || user.startsWith('it')) {
+        mongoResponse = { role: "CreditsAuthority", userName: user };
+        userName = user;
+        orgName = 'creditsauthority';
     } else {
-        mongoResponse = await userService.login(userName, password);
+        mongoResponse = await userService.login(email);
         if (mongoResponse.success === false) {
-            logger.debug(`Authentication failed for the userName ${userName}`);
+            logger.debug(`Authentication failed for the email ${email}`);
             return res.json(getMessage(false, mongoResponse.message));
         } else {
             orgName = mongoResponse.role.toLowerCase();
+            userName = mongoResponse.userName;
         }
     }
 
@@ -142,24 +149,27 @@ mainRouter.post('/users', async (req, res, next) => {
             success: true,
             name: mongoResponse.name,
             role: mongoResponse.role,
-            token: token
+            token: token,
+            userName: mongoResponse.userName
         })
     }
     catch (e) {
-        console.log("------------",e.message, Object.keys(e))
+        console.log("------------", e.message, Object.keys(e))
         if (e.message === `An identity for the user ${userName} already exists in the wallet`) {
             return res.json({
                 success: true,
                 name: mongoResponse.name,
                 role: mongoResponse.role,
-                token: token
+                token: token,
+                userName: mongoResponse.userName
             })
         } else if (e.errors[0]['code'] === 0) {
             return res.json({
                 success: true,
                 name: mongoResponse.name,
                 role: mongoResponse.role,
-                token: token
+                token: token,
+                userName: mongoResponse.userName
             })
         } else {
             generateError(e, next, 401, 'Unauthorized user');

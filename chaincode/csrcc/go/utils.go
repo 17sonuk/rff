@@ -6,6 +6,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/golang/protobuf/proto"
 	// "github.com/hyperledger/fabric/protos/msp"
@@ -66,7 +67,7 @@ func getCorporates(ctx contractapi.TransactionContextInterface) []string {
 	if corporatesBytes != nil {
 		json.Unmarshal(corporatesBytes, &corporates)
 		// if err != nil {
-		// 	return shim.Error(err.Error())
+		// 	return false, fmt.Errorf(err.Error())
 		// }
 	}
 	return corporates
@@ -120,4 +121,64 @@ func getTxCreatorInfo(creator []byte) (string, string, error) {
 		return "", "", err
 	}
 	return creatorSerializedId.Mspid, cert.Subject.CommonName + "." + cert.Issuer.Organization[0], nil
+}
+
+// add a corporate with Email
+func (s *SmartContract) AddCorporateEmail(ctx contractapi.TransactionContextInterface, arg string) (bool, error) {
+	InfoLogger.Printf("*************** AddCorporateEmail Started ***************")
+	InfoLogger.Printf("args received:", arg)
+
+	//getusercontext to populate the required data
+	creator, err := ctx.GetStub().GetCreator()
+	if err != nil {
+		return false, fmt.Errorf("Error getting transaction creator: " + err.Error())
+	}
+
+	mspId, commonName, _ := getTxCreatorInfo(creator)
+	InfoLogger.Printf("current logged in user:", commonName, "with mspId:", mspId)
+
+	if mspId != "CreditsAuthorityMSP" || !strings.HasPrefix(commonName, "ca") {
+		InfoLogger.Printf("only creditsauthority can initiate addCorporateEmail")
+		return false, fmt.Errorf("only creditsauthority can initiate addCorporateEmail")
+	}
+
+	var args []string
+
+	err = json.Unmarshal([]byte(arg), &args)
+	if err != nil {
+		return false, fmt.Errorf(err.Error())
+	}
+
+	if len(args) != 2 {
+		return false, fmt.Errorf("Incorrect number of arguments. Expecting 2")
+	} else if len(args[0]) <= 0 {
+		return false, fmt.Errorf("Email must be non-empty")
+	} else if len(args[1]) <= 0 {
+		return false, fmt.Errorf("corporate name must be non-empty")
+	}
+
+	email := args[0]
+	corpName := args[1]
+
+	// set corporateEmail map
+	corporateEmailBytes, _ := ctx.GetStub().GetState("corporateEmail")
+	corporateEmail := make(map[string]string)
+
+	if corporateEmailBytes != nil {
+		json.Unmarshal(corporateEmailBytes, &corporateEmail)
+	}
+	if len(corporateEmail[email]) > 0 {
+		return false, fmt.Errorf("This email already exists")
+	}
+	corporateEmail[email] = corpName
+
+	corporateEmailBytes, err = json.Marshal(corporateEmail)
+	if err != nil {
+		return false, fmt.Errorf("error in marshalling: " + err.Error())
+	}
+
+	ctx.GetStub().PutState("corporateEmail", corporateEmailBytes)
+
+	InfoLogger.Printf("*************** AddCorporateEmail Successfull ***************")
+	return true, nil
 }

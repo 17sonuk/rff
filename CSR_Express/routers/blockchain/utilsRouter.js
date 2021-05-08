@@ -53,21 +53,21 @@ router.post('/unspent/transfer', async (req, res, next) => {
     }
 });
 
-// Save IT data transaction on chaincode on target peers. (Needs attention)
-router.post('/add-corporate-pan', async (req, res, next) => {
-    logger.debug('==================== INVOKE ADD CORPORATE PAN ON CHAINCODE ==================')
+// Save IT data transaction on chaincode on target peers.
+router.post('/add-corporate-email', async (req, res, next) => {
+    logger.debug('==================== INVOKE ADD CORPORATE EMAIL ON CHAINCODE ==================')
 
     const corporateName = req.body.corporateName
-    const panNumber = req.body.panNumber
+    const email = req.body.email
 
-    const args = [panNumber, corporateName]
+    let args = [email, corporateName]
 
     args = JSON.stringify(args);
     logger.debug('args  : ' + args);
 
     try {
-        await invoke(req.userName, req.orgName, "AddCorporatePan", CHAINCODE_NAME, CHANNEL_NAME, args);
-        return res.json(getMessage(true, 'Successfully invoked AddCorporatePan'));
+        await invoke(req.userName, req.orgName, "AddCorporateEmail", CHAINCODE_NAME, CHANNEL_NAME, args);
+        return res.json(getMessage(true, 'Successfully invoked AddCorporateEmail'));
     }
     catch (e) {
         generateError(e, next)
@@ -129,8 +129,8 @@ router.post('/upload-excel', async (req, res, next) => {
     let rows = XLSX.utils.sheet_to_json(wb.Sheets[sheet]);
     // console.log(rows)
     let temp = Object.keys(rows[0])
-    if (!(temp.includes('panNumber') && temp.includes('corporateName') && temp.includes('totalLiability'))) {
-        return res.json(getMessage(false, 'Column names should be corporateName, panNumber and totalLiability.'))
+    if (!(temp.includes('email') && temp.includes('corporateName') && temp.includes('totalLiability'))) {
+        return res.json(getMessage(false, 'Column names should be corporateName, email and totalLiability.'))
     }
     else {
         saveITData(req, res, next, rows)

@@ -52,7 +52,7 @@ const fileSchema = new Schema({
 const orgSchema = new Schema({
     name: { type: String, required: true },
     userName: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
+    // password: { type: String, required: true },
     role: { type: String, required: true, enum: ['Ngo', 'Corporate'] },
     date: Number,
     status: String,
