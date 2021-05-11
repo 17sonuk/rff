@@ -17,6 +17,7 @@ const tokenRouter = require('./blockchain/tokenRouter');
 const transactionRouter = require('./blockchain/transactionRouter');
 const utilsRouter = require('./blockchain/utilsRouter');
 const pspRouter = require('./payment-gateway/pspRouter');
+const fileMongoRouter = require('./mongo/fileRouter');
 
 // Services
 const registerUser = require('../fabric-sdk/registerUser');
@@ -183,6 +184,7 @@ mainRouter.use('/demo', demoRouter);
 // Mongo Routers
 mainRouter.use('/mongo/project', projectMongoRouter);
 mainRouter.use('/mongo/user', userMongoRouter);
+mainRouter.use('/mongo/file', fileMongoRouter);
 
 // Blockchain Routers
 mainRouter.use('/escrow', escrowRouter);

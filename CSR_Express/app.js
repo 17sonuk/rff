@@ -1,6 +1,7 @@
 'use strict';
 const helmet = require("helmet");
 const authJson = require('./permissions.json');
+const fileUpload = require('express-fileupload') //Alternative of IPFS
 
 const authMap = {
     'common': new Set(authJson.common),
@@ -24,6 +25,7 @@ const logger = require('./loggers/logger');
 
 const app = express();
 app.use(helmet());
+app.use(fileUpload()) //Alternative of IPFS
 
 app.options('*', cors());
 app.use(cors());

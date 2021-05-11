@@ -20,7 +20,9 @@
         "/redeem/request/all",
         "/query/balance",
         "/query/funds-raised-by-ngo",
-        "/project/ngo-project-and-locked-details"
+        "/project/ngo-project-and-locked-details",
+        "/mongo/file/upload",
+        "/mongo/file/getfile"
     ],
     "corporate": [
         "/users",
@@ -42,7 +44,8 @@
         "/query/total-locked-and-validity-of-corporate",
         "/query/amount-parked",
         "/query/balance",
-        "/psp/razorpay"
+        "/psp/razorpay",
+        "/mongo/file/getfile"
     ],
     "creditsauthority": [
         "/mongo/user/approve-user",

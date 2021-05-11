@@ -7,22 +7,24 @@ const phaseSchema = new Schema({
     description: String,
 })
 
+
+
 const projectSchema = new Schema({
     projectId: { type: String, required: true, unique: true },
     projectName: { type: String, required: true },
-    projectType: { type: String, required: true},
+    projectType: { type: String, required: true },
     contributorsList: [String],
     ngo: { type: String, required: true },
     place: String,
     description: String,
     images: [String],
-    phases: {type:[phaseSchema],validate: [phaseLimit, 'Number of phases should be greater than or equal to 1']}
+    phases: { type: [phaseSchema], validate: [phaseLimit, 'Number of phases should be greater than or equal to 1'] }
 
 }, { collection: "Project" })
 
 function phaseLimit(val) {
     return val.length >= 1;
-  }
+}
 
 const addressSchema = new Schema({
     doorNo: String,
@@ -85,9 +87,18 @@ const txDescriptionSchema = new Schema({
     description: String,
 }, { collection: "TxDescription", timestamps: true })
 
+const fileDataSchema = new Schema({
+    fileName: { type: String, required: true },
+    fileHash: { type: String, required: true },
+    fileSize: { type: String, required: true },
+    fileData: { type: String, required: true },
+}, { collection: "File", timestamps: true })
+
+
 module.exports = {
     'notificationModel': models['Notification'] || model('Notification', notificationSchema),
     'orgModel': models['OrganisationProfile'] || model('OrganisationProfile', orgSchema),
     'projectModel': models['Project'] || model('Project', projectSchema),
-    'txDescriptionModel': models['TxDescription'] || model('TxDescription', txDescriptionSchema)
+    'txDescriptionModel': models['TxDescription'] || model('TxDescription', txDescriptionSchema),
+    'fileModel': models['File'] || model('File', fileDataSchema)
 };

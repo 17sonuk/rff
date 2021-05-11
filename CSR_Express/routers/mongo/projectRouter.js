@@ -11,7 +11,7 @@ logger.debug('<<<<<<<<<<<<<< project router >>>>>>>>>>>>>>>>>')
 router.post('/create', (req, res, next) => {
     // return project data object from service
     logger.debug(`router-createProject: ${JSON.stringify(req.body, null, 2)}`);
-
+    
     projectService.createProject(req.body)
         .then((data) => {
             res.json(data)
