@@ -22,7 +22,7 @@
         "/query/funds-raised-by-ngo",
         "/project/ngo-project-and-locked-details",
         "/mongo/file/upload",
-        "/mongo/file/getfile"
+        "/mongo/file/getFile"
     ],
     "corporate": [
         "/users",
@@ -45,7 +45,8 @@
         "/query/amount-parked",
         "/query/balance",
         "/psp/razorpay",
-        "/mongo/file/getfile"
+        "/mongo/file/upload",
+        "/mongo/file/getFile"
     ],
     "creditsauthority": [
         "/mongo/user/approve-user",
@@ -73,6 +74,7 @@
         "/utils/upload-excel",
         "/query/it-report",
         "/psp/razorpay",
-        "/psp/razorpay/payment"
+        "/psp/razorpay/payment",
+        "/mongo/file/getFile"
     ]
 }
