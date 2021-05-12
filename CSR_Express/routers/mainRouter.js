@@ -79,7 +79,9 @@ mainRouter.use((req, res, next) => {
     }
 
     if (!roles.includes(req.orgName)) {
-        return res.json(getMessage(false, 'Unauthorized User!'));
+        let e = new Error('Unauthorized User')
+        e.status = 401
+        generateError(e, next);
     }
     let paths = [
         "/mongo/project/projects-ngo",
@@ -95,7 +97,9 @@ mainRouter.use((req, res, next) => {
         return next();
     }
     if (!authMap[req.orgName].has(req.path) && !authMap['common'].has(req.path)) {
-        return res.json(getMessage(false, 'Unauthorized User!'));
+        let e = new Error('Unauthorized User')
+        e.status = 401
+        generateError(e, next);
     }
 
     logger.debug(`this role is authorized: orgName ${req.orgName}`)

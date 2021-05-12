@@ -24,8 +24,8 @@ userService.registerUser = (obj) => {
 }
 
 //get user details
-userService.getUserDetails = (email) => {
-    return userModel.getUserDetails(email).then(data => {
+userService.getUserDetails = (userName) => {
+    return userModel.getUserDetails(userName).then(data => {
         if (data) {
             data.pan = CryptoJS.AES.decrypt(data.pan, "Secret123PaN").toString(CryptoJS.enc.Utf8)
             data.contact[0].number = CryptoJS.AES.decrypt((data.contact[0].number), "Secret123CoN").toString(CryptoJS.enc.Utf8)

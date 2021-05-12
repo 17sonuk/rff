@@ -46,8 +46,9 @@ userModel.registerUser = (obj) => {
 }
 
 // get user details
-userModel.getUserDetails = (email) => {
-    return orgModel.findOne({ email: email }, { _id: 0, date: 0 }).then(data => {
+userModel.getUserDetails = (userName) => {
+    console.log(userName)
+    return orgModel.findOne({ userName: userName }, { _id: 0, date: 0 }).then(data => {
         if (data) {
             return data
         } else {
