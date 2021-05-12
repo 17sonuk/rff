@@ -100,11 +100,14 @@ async function main(userName, orgName, functionName, chaincodeName, channelName,
     }
 
     // Submit the specified transaction.
-    const result = await contract.submitTransaction(functionName, args);
+    await contract.submitTransaction(functionName, args);
     logger.debug('Transaction has been submitted');
 
     // Disconnect from the gateway.
-    await gateway.disconnect();
+    // await gateway.disconnect();
+
+    // formatted according to sonarqube
+    gateway.disconnect()
 
     //  all done with this listener
     contract.removeContractListener(listener);

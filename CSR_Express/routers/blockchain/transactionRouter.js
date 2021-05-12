@@ -35,7 +35,7 @@ router.get('/parked-by-corporate', async (req, res, next) => {
         queryString["selector"]["txType"]["$in"] = ["TransferToken", "TransferToken_snapshot", "ReleaseFundsFromEscrow"]
     }
 
-    args = JSON.stringify(queryString);
+    let args = JSON.stringify(queryString);
     logger.debug(args);
 
     try {

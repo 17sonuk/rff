@@ -44,12 +44,16 @@ async function main(userName, orgName, functionName, chaincodeName, channelName,
     if (args.length > 0) {
         result = await contract.evaluateTransaction(functionName, args);
     } else {
-        result = await contract.evaluateTransaction(functionName, args);
+        result = await contract.evaluateTransaction(functionName, '');
     }
     logger.debug(`Transaction has been evaluated`);
 
     // Disconnect from the gateway.
-    await gateway.disconnect();
+    // await gateway.disconnect();
+
+    // formatted according to sonarqube
+    gateway.disconnect()
+
     return result;
 }
 

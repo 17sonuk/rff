@@ -22,7 +22,7 @@ router.post('/onboard', (req, res, next) => {
 router.get('/profile', (req, res, next) => {
     logger.debug("router-getUserDetails");
     // if(req.email !== req.query.email){
-        
+
     //     let err= new Error('Unauthorized user!')
     //     err.status=401
     //     return next(err)

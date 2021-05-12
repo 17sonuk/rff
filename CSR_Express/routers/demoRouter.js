@@ -56,7 +56,6 @@ projectRouter.post('/invoke', async (req, res, next) => {
 
 projectRouter.get('/query', async function (req, res, next) {
     let orgName = req.query.orgName;
-    let userName = req.query.userName;
     let fcName = req.query.fcName;
     let ccName = req.query.ccName;
     let channelName = req.query.channelName;

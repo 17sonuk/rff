@@ -82,7 +82,7 @@ async function main(userName, orgName) {
         mspId: mspId,
         type: 'X.509',
     };
-    const walletResponse = await wallet.put(userName, x509Identity);
+    await wallet.put(userName, x509Identity);
     logger.debug(`Successfully registered and enrolled admin user ${userName} and imported it into the wallet`);
 }
 

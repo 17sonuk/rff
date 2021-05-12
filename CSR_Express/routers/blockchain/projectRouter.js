@@ -84,7 +84,7 @@ router.put('/updateVisibleTo', async (req, res, next) => {
 
     //extract parameters from request body.
     const projectId = req.body.projectId;
-    const corporateName = req.body.corporateName;
+    let corporateName = req.body.corporateName;
 
     if (!CHAINCODE_NAME) {
         return res.json(fieldErrorMessage('\'chaincodeName\''));
@@ -417,13 +417,12 @@ router.get('/corporate-project-details', async (req, res, next) => {
 
         logger.debug(`response :  ${message.toString()}`)
 
-        newObject = new Object()
-        newObject = message;
+        let newObject = message;
 
         let result = []
 
         newObject.forEach(e => {
-            returnObject = new Object()
+            let returnObject = new Object()
             returnObject.projectId = e.Key
             returnObject.ngo = splitOrgName(e.Record.ngo)
             returnObject.projectName = e.Record.projectName
@@ -531,10 +530,9 @@ router.get('/locked-details', async (req, res, next) => {
         let message = await query(req.userName, req.orgName, "GetAllCorporates", CHAINCODE_NAME, CHANNEL_NAME, '');
         logger.debug(`response1 :  ${JSON.stringify(message, null, 2)}`)
 
-        corporateList = new Object()
-        corporateList = message
+        let corporateList = message
 
-        result = []
+        let result = []
 
         for (let corporate of corporateList) {
 
@@ -558,9 +556,9 @@ router.get('/locked-details', async (req, res, next) => {
 
 
             message1.forEach(e => {
-                returnObject = new Object()
+                let returnObject = {}
                 returnObject.corporate = splitOrgName(e.Record.corporate)
-                totalsum = 0.0
+                let totalsum = 0.0
                 e.Record.funds.forEach(f => {
                     totalsum += f.qty
                 })
@@ -716,7 +714,7 @@ router.get('/ngo-project-and-locked-details', async (req, res, next) => {
 
         logger.debug(`response :  ${JSON.stringify(message, null, 2)}`)
 
-        response = []
+        let response = []
 
         for (let i = 0; i < message.length; i++) {
 
@@ -769,7 +767,7 @@ router.get('/ngo-project-and-locked-details', async (req, res, next) => {
 
                 if (message[i].Record.phases[j].phaseState != "Complete") {
                     amountCollected += message[i].Record.phases[j].qty - message[i].Record.phases[j].outstandingQty
-                    phase = new Object()
+                    let phase = new Object()
                     phase.phaseNumber = j
                     phase.endDate = message[i].Record.phases[j].endDate
                     phase.qty = message[i].Record.phases[j].qty
