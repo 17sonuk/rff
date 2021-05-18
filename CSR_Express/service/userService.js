@@ -59,15 +59,42 @@ userService.getUnapprovedUserDetails = () => {
 
 //approve user
 userService.approveUser = (userName) => {
-    return userModel.approveUser(userName).then(data => {
-        if (data) {
-            return data;
+    return userModel.approveUser(userName).then(approveResp => {
+        if (approveResp && approveResp['nModified'] == 1) {
+            return userModel.getUserDetails(userName, 'userName').then(userData => {
+                if (userData) {
+                    return userData['role'].toLowerCase();
+                } else {
+                    let err = new Error(`${userName} does not exist in mongo`)
+                    err.status = 500
+                    throw err
+                }
+            })
+        } else if (approveResp && approveResp['n'] == 1) {
+            let err = new Error(`${userName} is already approved`)
+            err.status = 500
+            throw err
         } else {
-            let err = new Error("Bad Connection")
+            let err = new Error(`${userName} does not exist in mongo`)
             err.status = 500
             throw err
         }
     })
+}
+
+//reset user status bcoz register user failed in blockchain, but succeeded in mongo.
+userService.resetUserStatus = (userName) => {
+    return userModel.resetUserStatus(userName)
+        .then(data => {
+            if (data) {
+                return true;
+            } else {
+                let err = new Error("Couldn't reset user status")
+                err.status = 500
+                throw err
+            }
+        })
+        .catch(err => { throw err });
 }
 
 //reject user

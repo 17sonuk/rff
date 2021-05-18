@@ -1,12 +1,11 @@
 require('dotenv').config();
-const { JWT_EXPIRY, TOKEN_SECRET } = process.env;
+const { JWT_EXPIRY, TOKEN_SECRET, CA_EMAIL, IT_EMAIL } = process.env;
 
 const express = require('express');
 var jwt = require('jsonwebtoken');
 const mainRouter = express.Router();
 
 // Routers
-const demoRouter = require('./demoRouter');
 const projectMongoRouter = require('./mongo/projectRouter');
 const userMongoRouter = require('./mongo/userRoute');
 const escrowRouter = require('./blockchain/escrowRouter');
@@ -126,7 +125,7 @@ mainRouter.post('/users', async (req, res, next) => {
 
     let user = email.split("@")[0];
     console.log(user);
-    if (user.startsWith('ca') || user.startsWith('it')) {
+    if (email === CA_EMAIL || email === IT_EMAIL) {
         mongoResponse = { role: "CreditsAuthority", userName: user };
         userName = user;
         orgName = 'creditsauthority';
@@ -149,26 +148,8 @@ mainRouter.post('/users', async (req, res, next) => {
     const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
 
     try {
-        await registerUser(userName, orgName);
-        return res.json({
-            success: true,
-            name: mongoResponse.name,
-            role: mongoResponse.role,
-            token: token,
-            userName: mongoResponse.userName
-        })
-    }
-    catch (e) {
-        console.log("------------", e.message, Object.keys(e))
-        if (e.message === `An identity for the user ${userName} already exists in the wallet`) {
-            return res.json({
-                success: true,
-                name: mongoResponse.name,
-                role: mongoResponse.role,
-                token: token,
-                userName: mongoResponse.userName
-            })
-        } else if (e.errors[0]['code'] === 0) {
+        let walletExists = await registerUser(userName, orgName, true);
+        if (walletExists) {
             return res.json({
                 success: true,
                 name: mongoResponse.name,
@@ -177,13 +158,16 @@ mainRouter.post('/users', async (req, res, next) => {
                 userName: mongoResponse.userName
             })
         } else {
-            generateError(e, next, 401, 'Unauthorized user');
+            let err = new Error('Unauthorized user')
+            err.status = 401;
+            generateError(err, next)
         }
     }
+    catch (e) {
+        console.log("------------", e.message, Object.keys(e))
+        generateError(e, next, 500, 'some error occurred');
+    }
 });
-
-// For testing purpose
-mainRouter.use('/demo', demoRouter);
 
 // Mongo Routers
 mainRouter.use('/mongo/project', projectMongoRouter);

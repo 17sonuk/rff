@@ -84,6 +84,24 @@ userModel.approveUser = (userName) => {
     })
 }
 
+//reset user status bcoz register user failed in blockchain, but succeeded in mongo.
+userModel.resetUserStatus = (userName) => {
+    return orgModel.updateOne({ userName: userName }, { $set: { "status": 'created' } })
+        .then(data => {
+            if (data['nModified'] == 1) {
+                return true;
+            } else {
+                return null;
+            }
+        })
+        .catch(err => {
+            logger.error(err);
+            err = new Error("Connection issue!")
+            err.status = 500
+            throw err;
+        })
+}
+
 // reject users
 userModel.rejectUser = (userName) => {
     return orgModel.deleteOne({ userName: userName }).then(data => {

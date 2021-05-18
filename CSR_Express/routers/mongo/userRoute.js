@@ -2,8 +2,11 @@ const express = require('express');
 const router = express.Router();
 
 const logger = require('../../loggers/logger');
+const { generateError, getMessage } = require('../../utils/functions');
 
 const userService = require('../../service/userService');
+
+const registerUser = require('../../fabric-sdk/registerUser');
 
 logger.debug('<<<<<<<<<<<<<< user router >>>>>>>>>>>>>>>>>')
 
@@ -45,14 +48,28 @@ router.get('/unapproved-users', (req, res, next) => {
 })
 
 //approve user
-router.post('/approve-user', (req, res, next) => {
+router.post('/approve-user', async (req, res, next) => {
     logger.debug(`router-approveUser: ${JSON.stringify(req.body, null, 2)}`);
 
-    userService.approveUser(req.body.userName)
-        .then((data) => {
-            res.json(data)
-        })
-        .catch(err => next(err))
+    try {
+        let orgName = await userService.approveUser(req.body.userName);
+        try {
+            await registerUser(req.body.userName, orgName);
+            return res.json(getMessage(true, "User approved successfully!"));
+        } catch (registerError) {
+            if (registerError.status === 400) {
+                return generateError(registerError, next, 400, `${req.body.userName} is already registered in blockchain`);
+            }
+            try {
+                await userService.resetUserStatus(req.body.userName)
+                return generateError(registerError, next, 500, 'Couldn\'t register user in blockchain!');
+            } catch (resetStatusError) {
+                return generateError(resetStatusError, next);
+            }
+        }
+    } catch (approveErr) {
+        return generateError(approveErr, next);
+    }
 })
 
 //reject user

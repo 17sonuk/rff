@@ -13,7 +13,7 @@ const path = require('path');
 const enrollAdmin = require('./enrollAdmin');
 const logger = require('../loggers/logger');
 
-async function main(userName, orgName) {
+async function main(userName, orgName, checkWallet = false) {
 
     // load the network configuration
     const ccpPath = path.resolve(__dirname, '..', '..', 'test-network', 'organizations', 'peerOrganizations', `${orgName}.csr.com`, `connection-${orgName}.json`);
@@ -30,9 +30,21 @@ async function main(userName, orgName) {
 
     // Check to see if we've already enrolled the user.
     const userIdentity = await wallet.get(userName);
+
+    // To check if user exists in wallet while logging in
+    if (checkWallet) {
+        if (userIdentity) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     if (userIdentity) {
         logger.debug(`An identity for the user ${userName} already exists in the wallet`);
-        throw new Error(`An identity for the user ${userName} already exists in the wallet`);
+        let err = new Error(`An identity for the user ${userName} already exists in the wallet`);
+        err.status = 400;
+        throw err;
     }
 
     // Check to see if we've already enrolled the admin user.
@@ -48,7 +60,9 @@ async function main(userName, orgName) {
             if (e.message === 'An identity for the admin user "admin" already exists in the wallet') {
                 // logger.debug(e.message)
             } else {
-                throw new Error('An identity for the admin user "admin" does not exist in the wallet');
+                let err = new Error('An identity for the admin user "admin" does not exist in the wallet');
+                err.status = 500;
+                throw err;
             }
         }
     }
