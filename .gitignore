@@ -1,3 +1,5 @@
+.vscode
+
 bin/*
 
 chaincode/csrcc/go/vendor
