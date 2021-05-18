@@ -1,5 +1,7 @@
 const express = require('express')
 const router = express.Router()
+var mmm = require('mmmagic')
+Magic = mmm.Magic;
 
 const fileService = require('../../service/fileService');
 const { fieldErrorMessage, generateError } = require('../../utils/functions');
@@ -27,23 +29,29 @@ router.post("/upload", (req, res, next) => {
     }
     let file = { fileName: req.files.uploadedFile.name, fileData: req.files.uploadedFile.data.toString('base64'), fileSize: req.files.uploadedFile.size }
     file["fileHash"] = req.files.uploadedFile.md5
-    if (req.files.uploadedFile.size <= 1048576 && (validFiles.includes(req.files.uploadedFile.mimetype))) {
-        fileService.insertFile(file)
-            .then((data) => {
-                res.json(data)
-            })
-            .catch(err => {
-                if (err['_message']) {
-                    err.status = 400
-                    err.message = err['_message'];
-                }
-                next(err)
-            })
-    }
-    else {
-        let err = new Error("File size limit exceed or Invalid file type")
-        err.status = 400
-        throw err
-    }
+    var magic = new Magic(mmm.MAGIC_MIME_TYPE),
+        buf = Buffer.from(file.fileData, 'base64');
+    magic.detect(buf, function (err, result) {
+        var regEx=/^[\w-]+\.(pdf|xls|xlsx|xlsb|xlsm)$/gi
+        var pattern= regEx.test(req.files.uploadedFile.name)
+        if (pattern && req.files.uploadedFile.size <= 1048576 && (validFiles.includes(req.files.uploadedFile.mimetype)) && req.files.uploadedFile.mimetype == result) {
+            fileService.insertFile(file)
+                .then((data) => {
+                    res.json(data)
+                })
+                .catch(err => {
+                    if (err['_message']) {
+                        err.status = 400
+                        err.message = err['_message'];
+                    }
+                    next(err)
+                })
+        }
+        else {
+            let err = new Error("File size limit exceed or Invalid file type or Corrupted File")
+            err.status = 400
+            generateError(err, next)
+        }
+    })
 })
 module.exports = router;

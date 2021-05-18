@@ -22,6 +22,7 @@
     "https": "^1.0.0",
     "jsonwebtoken": "^8.5.1",
     "jwks-rsa": "^2.0.3",
+    "mmmagic": "^0.5.3",
     "mongoose": "^5.12.5",
     "nanoid": "^3.1.22",
     "razorpay": "^2.0.6",
