@@ -4,7 +4,7 @@ chaincode/csrcc/go/vendor
 
 CSR_Express/node_modules
 CSR_Express/wallet-corporate
-CSR_Express/wallet-credits-authority
+CSR_Express/wallet-creditsauthority
 CSR_Express/wallet-ngo
 CSR_Express/package-lock.json
 
