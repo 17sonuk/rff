@@ -19,6 +19,7 @@
     "fabric-ca-client": "^2.2.5",
     "fabric-network": "^2.2.5",
     "helmet": "^4.6.0",
+    "https": "^1.0.0",
     "jsonwebtoken": "^8.5.1",
     "jwks-rsa": "^2.0.3",
     "mongoose": "^5.12.5",

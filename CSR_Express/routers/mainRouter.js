@@ -8,7 +8,7 @@ const mainRouter = express.Router();
 // Routers
 const demoRouter = require('./demoRouter');
 const projectMongoRouter = require('./mongo/projectRouter');
-const userMongoRouter = require('./mongo/userRouter');
+const userMongoRouter = require('./mongo/userRoute');
 const escrowRouter = require('./blockchain/escrowRouter');
 const projectRouter = require('./blockchain/projectRouter');
 const queryRouter = require('./blockchain/queryRouter');

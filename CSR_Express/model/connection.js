@@ -9,8 +9,9 @@ const dbName = process.env.DB_NAME || 'CSR';
 
 const url = `mongodb://${dbHost}:${dbPort}/${dbName}`;
 const mongooseOptions = {
-    useUnifiedTopology: true,
-    useNewUrlParser: true
+    useCreateIndex: true,
+    useNewUrlParser: true,
+    useUnifiedTopology: true
 }
 
 const connectionToMongo = () => {

@@ -1,3 +1,5 @@
+bin/*
+
 chaincode/csrcc/go/vendor
 
 CSR_Express/node_modules

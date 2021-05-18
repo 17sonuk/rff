@@ -1,4 +1,9 @@
 'use strict';
+const fs = require('fs'); // https
+const https = require('https'); // https
+const certificate = fs.readFileSync('./sslcert/server.crt', 'utf8'); // https
+const privateKey = fs.readFileSync('./sslcert/server.key', 'utf8'); // https
+
 const helmet = require("helmet");
 const authJson = require('./permissions.json');
 const fileUpload = require('express-fileupload') //Alternative of IPFS
@@ -54,6 +59,12 @@ app.use((err, req, res, next) => {
     return res.status(err.status).json(getMessage(false, (err.message)));
 });
 
-app.listen(PORT, () => {
-    logger.info(`Express is running on port ${PORT}`);
-});
+// app.listen(PORT, () => {
+//     logger.info(`Express is running on port ${PORT}`);
+// });
+
+const credentials = { key: privateKey, cert: certificate }; // https
+
+const httpsServer = https.createServer(credentials, app); // https
+
+httpsServer.listen(PORT, () => console.log(`Server running on Port 4200`)); //https

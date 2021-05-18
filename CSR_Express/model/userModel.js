@@ -31,7 +31,7 @@ userModel.registerUser = (obj) => {
             return { success: false, message };
         }
         else {
-            obj.contact[0].number= (CryptoJS.AES.encrypt((obj.contact[0].number).toString(), "Secret123CoN"))
+            obj.contact[0].number = (CryptoJS.AES.encrypt((obj.contact[0].number).toString(), "Secret123CoN"))
             obj.pan = CryptoJS.AES.encrypt(obj.pan, "Secret123PaN");
             // obj.password = bcrypt.hashSync(obj.password, 10);
             return orgModel.create(obj).then(data => {
@@ -45,10 +45,12 @@ userModel.registerUser = (obj) => {
     })
 }
 
-// get user details
-userModel.getUserDetails = (userName) => {
-    console.log(userName)
-    return orgModel.findOne({ userName: userName }, { _id: 0, date: 0 }).then(data => {
+// get user details (we are using this api for login /users and to get profile data /profile)
+// for profile we are sending username and for login we are sending email.
+userModel.getUserDetails = (value, type = 'email') => {
+    let criteria = {}
+    criteria[type] = value;
+    return orgModel.findOne(criteria, { _id: 0, date: 0 }).then(data => {
         if (data) {
             return data
         } else {

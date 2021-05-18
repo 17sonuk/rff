@@ -25,7 +25,7 @@ userService.registerUser = (obj) => {
 
 //get user details
 userService.getUserDetails = (userName) => {
-    return userModel.getUserDetails(userName).then(data => {
+    return userModel.getUserDetails(userName, 'userName').then(data => {
         if (data) {
             data.pan = CryptoJS.AES.decrypt(data.pan, "Secret123PaN").toString(CryptoJS.enc.Utf8)
             data.contact[0].number = CryptoJS.AES.decrypt((data.contact[0].number), "Secret123CoN").toString(CryptoJS.enc.Utf8)
@@ -86,7 +86,6 @@ userService.rejectUser = (userName) => {
 //login user
 userService.login = (email) => {
     return userModel.getUserDetails(email).then(data => {
-        logger.debug(data);
         if (data) {
             //check password
             // if (password == null || password == undefined || password.length == 0) {
