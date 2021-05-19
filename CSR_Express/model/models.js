@@ -57,7 +57,7 @@ const orgSchema = new Schema({
     // password: { type: String, required: true },
     role: { type: String, required: true, enum: ['Ngo', 'Corporate'] },
     date: Number,
-    status: String,
+    status: { type: String, required: true },
     description: String,
     pan: { type: String, required: false },
     email: { type: String, required: true, unique: true },

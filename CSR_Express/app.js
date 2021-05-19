@@ -21,7 +21,7 @@ const { NODE_ENV, PORT, CA_EMAIL, IT_EMAIL } = process.env;
 const cors = require('cors');
 const express = require('express');
 
-const connectionToMongo = require('./model/connection')
+const { connectionToMongo } = require('./model/connection')
 connectionToMongo();
 
 const registerUser = require('./fabric-sdk/registerUser');

@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { connect, connection } = require('mongoose');
+const { connect, disconnect, connection } = require('mongoose');
 
 const logger = require('../loggers/logger');
 
@@ -14,13 +14,36 @@ const mongooseOptions = {
     useUnifiedTopology: true
 }
 
-const connectionToMongo = () => {
-    connect(url, mongooseOptions);
+const connectionToMongo = (db_Name = '') => {
+    connect(url + db_Name, mongooseOptions);
     const db = connection;
     db.on('error', console.error.bind(console, 'connection error:'));
     db.once('open', async function () {
         logger.debug('Mongo connection established');
+        if (db_Name === '_test') {
+            connection.db.dropDatabase();
+            logger.debug('database dropped for tests!')
+        }
     });
 }
 
-module.exports = connectionToMongo;
+function connectToMongo(db_Name = '') {
+    return new Promise((resolve, reject) => {
+        connect(url + db_Name, mongooseOptions)
+            .then((res, err) => {
+                if (err) {
+                    return reject(err);
+                }
+                logger.debug('Mongo connection established.............');
+                logger.debug('Mongo connection established.............');
+                console.log(res.connections);
+                resolve(res);
+            })
+    })
+}
+
+function disconnectMongo() {
+    return disconnect();
+}
+
+module.exports = { connectionToMongo, connectToMongo, disconnectMongo };
