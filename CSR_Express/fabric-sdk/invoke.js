@@ -51,15 +51,14 @@ async function main(userName, orgName, functionName, chaincodeName, channelName,
         // coming from the chaincode ID "events"
         listener = async (event) => {
             // The payload of the chaincode event is the value placed there by the
-            // chaincode. Notice it is a byte data and the application will have
-            // to know how to deserialize.
-            // In this case we know that the chaincode will always place the asset
+            // chaincode. It is a byte data and the application must know how to deserialize.
+            // In this case we know that the chaincode will always place the notification object
             // being worked with as the payload for all events produced.
             const payload = JSON.parse(event.payload.toString());
             console.log(`Contract Event Received: ${event.eventName} - ${JSON.stringify(payload)}`);
             // show the information available with the event
 
-            //TODO: Store the notification details in mongo.
+            //Store the notification details in mongo.
             var notificationObj = payload;
             var tmpNotification = { 'txId': notificationObj.txId, 'seen': false }
 
@@ -74,7 +73,7 @@ async function main(userName, orgName, functionName, chaincodeName, channelName,
                     .catch(err => logger.error(JSON.stringify(err, null, 2)))
             }
 
-            //TODO: save the tx description
+            //save the tx description
             var tmpTxDescription = { 'txId': notificationObj.txId, 'description': notificationObj.description }
             userService.createTxDescription(tmpTxDescription)
                 .then((data) => {
@@ -82,15 +81,7 @@ async function main(userName, orgName, functionName, chaincodeName, channelName,
                 })
                 .catch(err => logger.error(JSON.stringify(err, null, 2)))
 
-
             console.log(`*** Event: ${event.eventName}`);
-            // notice how we have access to the transaction information that produced this chaincode event
-            // const eventTransaction = event.getTransactionEvent();
-            // console.log(`*** transaction: ${eventTransaction.transactionId} status:${eventTransaction.status}`);
-            // showTransactionData(eventTransaction.transactionData);
-            // notice how we have access to the full block that contains this transaction
-            // const eventBlock = eventTransaction.getBlockEvent();
-            // console.log(`*** block: ${eventBlock.blockNumber.toString()}`);
         };
         // now start the client side event service and register the listener
         console.log(`Start contract event stream to peer in ${orgName}`);

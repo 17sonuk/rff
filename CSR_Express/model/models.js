@@ -56,12 +56,12 @@ const orgSchema = new Schema({
     userName: { type: String, required: true, unique: true },
     // password: { type: String, required: true },
     role: { type: String, required: true, enum: ['Ngo', 'Corporate'] },
-    date: Number,
+    date: { type: Number, min: 1 },
     status: { type: String, required: true },
-    description: String,
+    description: { type: String, maxLength: 100 },
     pan: { type: String, required: false },
     email: { type: String, required: true, unique: true },
-    regId: String,
+    regId: { type: String, maxLength: 100 },
     address: addressSchema,
     contact: [contactSchema]
     //file: [fileSchema]

@@ -2,6 +2,7 @@ const logger = require('../loggers/logger');
 const bcrypt = require("bcrypt");
 const CryptoJS = require('crypto-js');
 const userModel = require('../model/userModel');
+const mongoError = require('../model/mongoError')
 
 const userService = {};
 
@@ -125,12 +126,12 @@ userService.login = (email) => {
             //     return { success: false, message: 'wrong credentials!' };
             // } else
             if (data['status'] == 'approved') {
-                return { success: true, message: 'login successful', userName: data.userName, role: data.role, name: data.name };
+                return { success: true, message: 'Login successful', userName: data.userName, role: data.role, name: data.name };
             } else {
-                return { success: false, message: 'onboarding not approved' }
+                return { success: false, message: 'Pending for approval. Please try again later.' }
             }
         } else {
-            return { success: false, message: 'user does not exist' }
+            return { success: false, message: 'User does not exist' }
         }
     });
 }

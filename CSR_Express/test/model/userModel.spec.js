@@ -1,5 +1,5 @@
 const chai = require('chai');
-const { expect } = require('chai'); // Library to clean and easy syntax
+const { expect } = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised)
 //const request = require('supertest'); //library for http agent
@@ -8,7 +8,34 @@ const { connectionToMongo, connectToMongo, disconnectMongo } = require('../../mo
 
 const userModel = require('../../model/userModel');
 
-describe('testing user model', () => {
+const testUser = {
+    name: 'ngo1',
+    description: '',
+    pan: 'PAN123',
+    email: 'info@ngo1.com',
+    regId: 'reg001',
+    address: {
+        doorNo: '',
+        flat: '',
+        street: '',
+        country: '',
+        state: '',
+        district: '',
+        locality: '',
+        pinCode: ''
+    },
+    contact: [
+        {
+            name: 'ngo1-office',
+            number: '9898989898'
+        }
+    ],
+    userName: 'ngo1',
+    role: 'Ngo',
+    status: 'created'
+}
+
+describe('testing user model - approve user', () => {
 
     before((done) => {
 
@@ -32,32 +59,7 @@ describe('testing user model', () => {
     })
 
     it('testing response for registerUser', async () => {
-        const userDetails = {
-            name: 'ngo1',
-            description: '',
-            pan: 'PAN123',
-            email: 'info@ngo1.com',
-            regId: 'reg001',
-            address: {
-                doorNo: '',
-                flat: '',
-                street: '',
-                country: '',
-                state: '',
-                district: '',
-                locality: '',
-                pinCode: ''
-            },
-            contact: [
-                {
-                    name: 'ngo1-office',
-                    number: '9898989898'
-                }
-            ],
-            userName: 'ngo1',
-            role: 'Ngo',
-            status: 'created'
-        }
+        const userDetails = testUser
         const res = await userModel.registerUser(userDetails);
         //here to request
         expect(res).to.be.a('object');
@@ -66,31 +68,7 @@ describe('testing user model', () => {
     });
 
     it('testing if user is already registered in mongo', async () => {
-        let userDetails = {
-            name: 'ngo1',
-            description: '',
-            pan: 'PAN123',
-            email: 'info@ngo1.com',
-            regId: '',
-            address: {
-                doorNo: '',
-                flat: '',
-                street: '',
-                country: '',
-                state: '',
-                district: '',
-                locality: '',
-                pinCode: ''
-            },
-            contact: [
-                {
-                    name: 'ngo1-office',
-                    number: '9898989898'
-                }
-            ],
-            userName: 'ngo1',
-            role: 'Ngo'
-        }
+        let userDetails = testUser;
 
         let res = await userModel.registerUser(userDetails);
         expect(res).to.be.a('object');
@@ -109,31 +87,7 @@ describe('testing user model', () => {
     });
 
     it('testing user registration with empty userName/email in mongo', async () => {
-        let userDetails = {
-            name: 'ngo1',
-            description: '',
-            pan: 'PAN123',
-            email: 'info@ngo1.com',
-            regId: '',
-            address: {
-                doorNo: '',
-                flat: '',
-                street: '',
-                country: '',
-                state: '',
-                district: '',
-                locality: '',
-                pinCode: ''
-            },
-            contact: [
-                {
-                    name: 'ngo1-office',
-                    number: '9898989898'
-                }
-            ],
-            userName: '',
-            role: 'Ngo'
-        }
+        let userDetails = testUser;
 
         let res = await userModel.registerUser(userDetails);
         expect(res).to.be.a('object');
@@ -172,6 +126,163 @@ describe('testing user model', () => {
     it('testing approve user', async () => {
         const res = await userModel.approveUser('ngo1');
         expect(res).to.be.a('object');
-        expect(res[0].status).to.equal('created')
+        expect(res.n).to.equal(1);
+        expect(res.nModified).to.equal(1);
+        expect(res.ok).to.equal(1);
     });
+})
+
+describe('testing user model - reject user', () => {
+
+    before((done) => {
+        connectionToMongo('_test');
+        done();
+    })
+
+    after((done) => {
+        disconnectMongo()
+            .then(() => {
+                console.log('Mongo connection closed.');
+                done()
+            })
+            .catch((err) => done(err))
+    })
+
+    it('testing response for reject user', async () => {
+        const userDetails = testUser;
+
+        await userModel.registerUser(userDetails);
+        const unapprovedUsers = await userModel.getUnapprovedUserDetails();
+
+        const res = await userModel.rejectUser(unapprovedUsers[0].userName);
+        expect(res).to.be.a('object');
+        expect(res.n).to.equal(1);
+        expect(res.deletedCount).to.equal(1);
+        expect(res.ok).to.equal(1);
+    });
+
+    it('testing response for reject user who doesn\'t exist', async () => {
+
+        const res = await userModel.rejectUser("wrong_user");
+        expect(res).to.be.a('object');
+        // console.log(res)
+        expect(res.n).to.equal(0);
+        expect(res.deletedCount).to.equal(0);
+        expect(res.ok).to.equal(1);
+    });
+})
+
+describe('testing user model - notification', () => {
+
+    before((done) => {
+        connectionToMongo('_test');
+        done();
+    })
+
+    after((done) => {
+        disconnectMongo()
+            .then(() => {
+                console.log('Mongo connection closed.');
+                done()
+            })
+            .catch((err) => done(err))
+    })
+
+    let notification = {
+        'txId': 'id-01',
+        'seen': false
+    };
+
+    it('testing response for create notification', async () => {
+
+        notification.username = 'ngo1';
+
+        const res = await userModel.createNotification(notification);
+        expect(res).to.be.a('object');
+        expect(res).to.have.property('_id');
+        expect(res.txId).to.equal('id-01');
+        expect(res.seen).to.equal(false);
+        expect(res.username).to.equal('ngo1');
+
+        notification.username = 'ngo2';
+        const res1 = await userModel.createNotification(notification);
+        expect(res1).to.be.a('object');
+        expect(res1).to.have.property('_id');
+        expect(res1.txId).to.equal('id-01');
+        expect(res1.seen).to.equal(false);
+        expect(res1.username).to.equal('ngo2');
+    });
+
+    it('testing response for create tx description', async () => {
+        let txDescription = {
+            'txId': notification.txId,
+            'description': 'test description'
+        }
+
+        const res = await userModel.createTxDescription(txDescription);
+        expect(res).to.be.a('object');
+        expect(res).to.have.property('_id');
+        expect(res.txId).to.equal('id-01');
+        expect(res.description).to.equal(txDescription.description);
+    });
+
+    it('testing response for get notifications', async () => {
+
+        const res = await userModel.getNotifications('ngo1', false);
+        expect(res).to.be.a('array');
+        expect(res).to.have.lengthOf(1);
+
+        const res1 = await userModel.getNotifications('ngo2', false);
+        expect(res1).to.be.a('array');
+        expect(res1).to.have.lengthOf(1);
+    });
+
+    it('testing response for get notifications of non-existing user', async () => {
+
+        const res = await userModel.getNotifications('wrong_user', false);
+        expect(res).to.be.a('array');
+        expect(res).to.have.lengthOf(0);
+    });
+
+    it('testing response for get notifications description', async () => {
+
+        const res = await userModel.getNotificationDescription(notification.txId);
+        expect(res).to.be.a('object');
+        expect(res.txId).to.equal(notification.txId);
+    });
+
+    it('testing response for update notification', async () => {
+
+        const res = await userModel.updateNotification('ngo1', notification.txId);
+        expect(res).to.be.a('object');
+        expect(res.n).to.equal(1);
+        expect(res.nModified).to.equal(1);
+        expect(res.ok).to.equal(1);
+
+        const res1 = await userModel.getNotifications('ngo1', false);
+        expect(res1).to.be.a('array');
+        expect(res1).to.have.lengthOf(0);
+    });
+})
+
+describe('testing user model - db unavailability', () => {
+
+    it('testing response for db unavailability for all functions', async () => {
+        const userDetails = testUser;
+
+        const res = await userModel.registerUser(userDetails);
+
+        expect(res).to.be.a('object');
+        expect(res.success).to.equal(false);
+    });
+
+    // it('testing response for reject user who doesn\'t exist', async () => {
+
+    //     const res = await userModel.rejectUser("wrong_user");
+    //     expect(res).to.be.a('object');
+    //     // console.log(res)
+    //     expect(res.n).to.equal(0);
+    //     expect(res.deletedCount).to.equal(0);
+    //     expect(res.ok).to.equal(1);
+    // });
 })

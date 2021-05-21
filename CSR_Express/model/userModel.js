@@ -1,6 +1,7 @@
-const bcrypt = require("bcrypt");
+// const bcrypt = require("bcrypt");
 const CryptoJS = require('crypto-js');
 
+const mongoError = require('./mongoError')
 const logger = require('../loggers/logger');
 
 const { notificationModel, orgModel, txDescriptionModel } = require('./models')
@@ -9,13 +10,65 @@ const userModel = {}
 
 logger.debug('<<<<<<<<<<<<<< user model >>>>>>>>>>>>>>>>>')
 
+// create
+userModel.create = async (obj) => {
+    try {
+        return await orgModel.create(obj)
+    }
+    catch (e) {
+        throw e
+    }
+}
+
+// find
+userModel.find = async (filter, projection = {}) => {
+    try {
+        return await orgModel.find(filter, projection)
+    }
+    catch (e) {
+        throw e
+    }
+}
+
+// findOne
+userModel.findOne = async (filter, projection = {}) => {
+    try {
+        return await orgModel.findOne(filter, projection)
+    }
+    catch (e) {
+        throw e
+    }
+}
+
+// updateOne
+userModel.updateOne = async (filter, set) => {
+    try {
+        return await orgModel.updateOne(filter, set)
+    }
+    catch (e) {
+        throw e
+    }
+}
+
+// deleteOne
+userModel.deleteOne = async (filter) => {
+    try {
+        return await orgModel.deleteOne(filter)
+    }
+    catch (e) {
+        throw e
+    }
+}
+
+
 // onboarding of user
-userModel.registerUser = (obj) => {
+userModel.registerUser = async (obj) => {
     let criteria = [{ userName: obj.userName }, { email: obj.email }]
     if (obj.regId) {
         criteria.push({ regId: obj.regId });
     }
-    return orgModel.find({ $or: criteria }).then(user => {
+    try {
+        let user = await orgModel.find({ $or: criteria })
         if (user.length > 0) {
             let message = 'duplicate fields - ';
             if (user[0].email == obj.email) {
@@ -29,20 +82,26 @@ userModel.registerUser = (obj) => {
             }
             message = message.slice(0, -2);
             return { success: false, message };
-        }
-        else {
+        } else {
             obj.contact[0].number = (CryptoJS.AES.encrypt((obj.contact[0].number).toString(), "Secret123CoN"))
             obj.pan = CryptoJS.AES.encrypt(obj.pan, "Secret123PaN");
             // obj.password = bcrypt.hashSync(obj.password, 10);
-            return orgModel.create(obj).then(data => {
-                if (data) {
+            try {
+                let result = await orgModel.create(obj)
+                if (result) {
                     return { success: true, message: 'user successfully registered...' };
                 } else {
                     return null
                 }
-            })
+            } catch (createError) {
+                // console.log(createError.errors)
+                // console.log(createError._message)
+                return mongoError(createError)
+            }
         }
-    })
+    } catch (findError) {
+        return mongoError(findError)
+    }
 }
 
 // get user details (we are using this api for login /users and to get profile data /profile)
