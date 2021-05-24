@@ -2,7 +2,6 @@ const chai = require('chai');
 const { expect } = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised)
-//const request = require('supertest'); //library for http agent
 
 const { connectionToMongo, connectToMongo, disconnectMongo } = require('../../model/connection')
 
