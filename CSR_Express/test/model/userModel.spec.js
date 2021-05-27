@@ -148,7 +148,11 @@ describe('testing user model - reject user', () => {
     })
 
     it('testing response for reject user', async () => {
-        const userDetails = testUser;
+        let userDetails = testUser;
+        userDetails.userName = 'newNgo';
+        userDetails.email = 'newNgo@gmail.com';
+	console.log('PAN: ' + userDetails.pan)
+	userDetails.regId = undefined;
 
         await userModel.registerUser(userDetails);
         const unapprovedUsers = await userModel.getUnapprovedUserDetails();
