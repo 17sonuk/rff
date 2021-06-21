@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { JWT_EXPIRY, TOKEN_SECRET, CA_EMAIL, IT_EMAIL } = process.env;
+const { JWT_EXPIRY, TOKEN_SECRET, CA_EMAIL, IT_EMAIL, GUEST_EMAIL } = process.env;
 
 const express = require('express');
 var jwt = require('jsonwebtoken');
@@ -27,16 +27,19 @@ const logger = require('../loggers/logger');
 const checkJwt = require('../utils/checkJwt');
 const { fieldErrorMessage, generateError, getMessage } = require('../utils/functions');
 
-// Auth0
-mainRouter.use(checkJwt);
-
 // Authentication
 mainRouter.use((req, res, next) => {
-    let skip = ['/mongo/user/login', '/mongo/user/onboard', '/users']
+    let skip = ['/users']
     if (skip.includes(req.originalUrl)) {
         next();
     } else {
-        const authHeader = req.headers.csrtoken;
+        let authHeader = '';
+        if (req.originalUrl === '/mongo/user/onboard') {
+            if (!req.headers.csrtoken) {
+                return next();
+            }
+        }
+        authHeader = req.headers.csrtoken;
         if (authHeader) {
             const token = authHeader.split(' ')[1];
             jwt.verify(token, TOKEN_SECRET, (err, decoded) => {
@@ -61,6 +64,8 @@ mainRouter.use((req, res, next) => {
     }
 });
 
+// Auth0
+//mainRouter.use(checkJwt);
 
 mainRouter.use((req, res, next) => {
 
@@ -68,25 +73,44 @@ mainRouter.use((req, res, next) => {
     //authorization logic
     let authMap = req.authMap;
 
+    let e = new Error('Unauthorized User')
+    e.status = 401
 
-    let skip = ['/mongo/user/login', '/mongo/user/onboard', '/users'];
-    console.log(req.path);
-    console.log(req.orgName);
-    console.log(req.params)
+    if (req.path === '/mongo/user/onboard' && req.body['role'] === 'Ngo' && (req.userName !== 'ca' || req.orgName !== 'creditsauthority')) {
+        generateError(e, next);
+    }
+
+    let skip = ['/mongo/user/onboard', '/users'];
     if (skip.includes(req.path)) {
         return next();
     }
 
     if (!roles.includes(req.orgName)) {
-        let e = new Error('Unauthorized User')
-        e.status = 401
         generateError(e, next);
     }
+
+    let guestForbiddenpaths = [
+        "/mongo/project/projects-ngo",
+        "/mongo/project/create",
+        "/mongo/project/projects-corporate",
+    ]
+
+    if (req.userName === 'guest') {
+        console.log('is guest')
+        if (authMap[req.userName].has(req.path) || req.path.startsWith("/mongo/project/all") || req.path.startsWith("/query/getRecord") || (req.path.startsWith("/mongo/project") && !guestForbiddenpaths.includes('/mongo/project'))) {
+            return next();
+        } else {
+            //console.log(authMap[req.userName].has(req.path))
+            return generateError(e, next);
+        }
+    }
+
     let paths = [
         "/mongo/project/projects-ngo",
         "/mongo/project/create",
         "/mongo/project/projects-corporate",
-        "/mongo/project/all"]
+        "/mongo/project/all"
+    ]
     if (req.path.startsWith("/mongo/project")) {
         if (!paths.includes(req.path)) {
             return next();
@@ -96,8 +120,6 @@ mainRouter.use((req, res, next) => {
         return next();
     }
     if (!authMap[req.orgName].has(req.path) && !authMap['common'].has(req.path)) {
-        let e = new Error('Unauthorized User')
-        e.status = 401
         generateError(e, next);
     }
 
@@ -114,9 +136,6 @@ mainRouter.post('/users', async (req, res, next) => {
     if (!email) {
         return res.json(fieldErrorMessage('\'email\''));
     }
-    // if (!password) {
-    //     return res.json(fieldErrorMessage('\'password\''));
-    // }
 
     //calling mongo login for password authentication
     let mongoResponse = {};
@@ -125,7 +144,11 @@ mainRouter.post('/users', async (req, res, next) => {
 
     let user = email.split("@")[0];
     console.log(user);
-    if (email === CA_EMAIL || email === IT_EMAIL) {
+    if (email === GUEST_EMAIL) {
+        mongoResponse = { role: "Corporate", userName: user };
+        userName = user;
+        orgName = 'corporate';
+    } else if (email === CA_EMAIL || email === IT_EMAIL) {
         mongoResponse = { role: "CreditsAuthority", userName: user };
         userName = user;
         orgName = 'creditsauthority';
@@ -150,13 +173,17 @@ mainRouter.post('/users', async (req, res, next) => {
     try {
         let walletExists = await registerUser(userName, orgName, true);
         if (walletExists) {
-            return res.json({
+            let finalResponse = {
                 success: true,
-                name: mongoResponse.name,
+                name: 'Guest',
                 role: mongoResponse.role,
                 token: token,
                 userName: mongoResponse.userName
-            })
+            }
+            if (userName !== 'guest') {
+                finalResponse['name'] = mongoResponse.name;
+            }
+            return res.json(finalResponse);
         } else {
             let err = new Error('Unauthorized user')
             err.status = 401;

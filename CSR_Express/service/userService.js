@@ -9,14 +9,24 @@ const userService = {};
 logger.debug('<<<<<<<<<<<<<< user service >>>>>>>>>>>>>>>>>')
 
 //Onboarding of user
+// mandatory fields
+// institute donor: contact first name, contact last name, orgname, username, email
+// individual donor: first name, last name, username, email
 userService.registerUser = (obj) => {
-    obj['status'] = 'created';
 
-    obj['date'] = new Date().getTime();
+    if ((obj['role'] === 'Corporate' && obj['subRole'] === 'Individual') || obj['role'] === 'Ngo') {
+        obj['status'] = 'approved';
+    } else {
+        obj['status'] = 'created';
+    }
+
+    //obj['date'] = new Date().getTime();
     return userModel.registerUser(obj).then(data => {
         if (data) {
+            console.log('use added!!!!')
             return data;
         } else {
+            console.log('user add failed!!!')
             let err = new Error("Bad Connection")
             err.status = 500
             throw err
@@ -28,8 +38,8 @@ userService.registerUser = (obj) => {
 userService.getUserDetails = (userName) => {
     return userModel.getUserDetails(userName, 'userName').then(data => {
         if (data) {
-            data.pan = CryptoJS.AES.decrypt(data.pan, "Secret123PaN").toString(CryptoJS.enc.Utf8)
-            data.contact[0].number = CryptoJS.AES.decrypt((data.contact[0].number), "Secret123CoN").toString(CryptoJS.enc.Utf8)
+            // data.pan = CryptoJS.AES.decrypt(data.pan, "Secret123PaN").toString(CryptoJS.enc.Utf8)
+            // data.contact[0].number = CryptoJS.AES.decrypt((data.contact[0].number), "Secret123CoN").toString(CryptoJS.enc.Utf8)
             return data;
         } else {
             let err = new Error("Bad Connection")
@@ -43,11 +53,11 @@ userService.getUserDetails = (userName) => {
 userService.getUnapprovedUserDetails = () => {
     return userModel.getUnapprovedUserDetails().then(data => {
         if (data) {
-            for (let i = 0; i < data.length; i++) {
-                data[i].pan = CryptoJS.AES.decrypt(data[i].pan, "Secret123PaN").toString(CryptoJS.enc.Utf8)
-                data[i].contact[0].number = CryptoJS.AES.decrypt((data[i].contact[0].number), "Secret123CoN").toString(CryptoJS.enc.Utf8)
+            // for (let i = 0; i < data.length; i++) {
+            //     data[i].pan = CryptoJS.AES.decrypt(data[i].pan, "Secret123PaN").toString(CryptoJS.enc.Utf8)
+            //     data[i].contact[0].number = CryptoJS.AES.decrypt((data[i].contact[0].number), "Secret123CoN").toString(CryptoJS.enc.Utf8)
 
-            }
+            // }
 
             return data;
         } else {
@@ -126,7 +136,19 @@ userService.login = (email) => {
             //     return { success: false, message: 'wrong credentials!' };
             // } else
             if (data['status'] == 'approved') {
-                return { success: true, message: 'Login successful', userName: data.userName, role: data.role, name: data.name };
+                let finalResponse = {
+                    'success': true,
+                    'message': 'Login successful',
+                    'userName': data.userName,
+                    'role': data.role,
+                    'name': ''
+                };
+                if ((data['role'] === 'Corporate' && data['subRole'] === 'Institution') || data['role'] === 'Ngo') {
+                    finalResponse['name'] = data.orgName;
+                } else {
+                    finalResponse['name'] = data.firstName + " " + data.lastName;
+                }
+                return finalResponse;
             } else {
                 return { success: false, message: 'Pending for approval. Please try again later.' }
             }

@@ -64,9 +64,9 @@ userModel.deleteOne = async (filter) => {
 // onboarding of user
 userModel.registerUser = async (obj) => {
     let criteria = [{ userName: obj.userName }, { email: obj.email }]
-    if (obj.regId) {
-        criteria.push({ regId: obj.regId });
-    }
+    // if (obj.regId) {
+    //     criteria.push({ regId: obj.regId });
+    // }
     try {
         let user = await orgModel.find({ $or: criteria })
         if (user.length > 0) {
@@ -77,16 +77,17 @@ userModel.registerUser = async (obj) => {
             if (user[0].userName == obj.userName) {
                 message += 'userName, ';
             }
-            if (obj.regId && user[0].regId == obj.regId) {
-                message += 'regId, ';
-            }
+            // if (obj.regId && user[0].regId == obj.regId) {
+            //     message += 'regId, ';
+            // }
             message = message.slice(0, -2);
             return { success: false, message };
         } else {
-            obj.contact[0].number = (CryptoJS.AES.encrypt((obj.contact[0].number).toString(), "Secret123CoN"))
-            obj.pan = CryptoJS.AES.encrypt(obj.pan, "Secret123PaN");
+            //obj.phone.phoneNumber = (CryptoJS.AES.encrypt((obj.phone.phoneNumber).toString(), "Secret123CoN"))
+            // obj.pan = CryptoJS.AES.encrypt(obj.pan, "Secret123PaN");
             // obj.password = bcrypt.hashSync(obj.password, 10);
             try {
+                console.log('mongo user')
                 let result = await orgModel.create(obj)
                 if (result) {
                     return { success: true, message: 'user successfully registered...' };

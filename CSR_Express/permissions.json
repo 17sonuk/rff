@@ -76,5 +76,12 @@
         "/psp/razorpay",
         "/psp/razorpay/payment",
         "/mongo/file/getFile"
+    ],
+    "guest": [
+        "/mongo/file/getFile",
+        "/mongo/project/all",
+        "/project/all",
+        "/token/transfer",
+        "/query/getRecord"
     ]
 }

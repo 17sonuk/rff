@@ -11,11 +11,29 @@ const registerUser = require('../../fabric-sdk/registerUser');
 logger.debug('<<<<<<<<<<<<<< user router >>>>>>>>>>>>>>>>>')
 
 //Onboarding of user
-router.post('/onboard', (req, res, next) => {
+router.post('/onboard', async (req, res, next) => {
     logger.debug(`router-onboarding: ${JSON.stringify(req.body, null, 2)}`);
 
     userService.registerUser(req.body)
-        .then((data) => {
+        .then(async (data) => {
+            if ((req.body['role'] === 'Corporate' && req.body['subRole'] === 'Individual') || req.body['role'] === 'Ngo') {
+                try {
+                    await registerUser(req.body.userName, req.body['role'].toLowerCase());
+                    return res.json(getMessage(true, "User onboarded successfully!"));
+                } catch (registerError) {
+                    if (registerError.status === 400) {
+                        return generateError(registerError, next, 400, `${req.body.userName} is already registered in blockchain`);
+                    }
+                    try {
+                        await userService.resetUserStatus(req.body.userName)
+                        return generateError(registerError, next, 500, 'Couldn\'t register user in blockchain!');
+                    } catch (resetStatusError) {
+                        return generateError(resetStatusError, next);
+                    }
+                }
+            }
+            console.log('user route data::::: ')
+            console.log(data)
             res.json(data)
         })
         .catch(err => next(err))

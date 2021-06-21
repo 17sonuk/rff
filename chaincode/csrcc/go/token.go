@@ -10,21 +10,19 @@ import (
 )
 
 type TokenRequest struct {
-	ObjectType   string  `json:"docType"`
-	From         string  `json:"from"`
-	Qty          float64 `json:"qty"`
-	Role         string  `json:"role"`
-	Status       string  `json:"status"` //Requested,Assigned,Rejected
-	BankTxId     string  `json:"bankTxId"`
-	Date         int     `json:"date"`
-	Comments     string  `json:"comments"`
-	ProofDocName string  `json:"proofDocName"`
-	ProofDocHash string  `json:"proofDocHash"`
+	ObjectType string  `json:"docType"`
+	From       string  `json:"from"`
+	Qty        float64 `json:"qty"`
+	Status     string  `json:"status"` //Requested,Assigned,Rejected
+	Date       int     `json:"date"`
+	Comments   string  `json:"comments"`
+	PaymentId  string  `json:"paymentId"`
 }
 
-// CreateCar adds a new car to the world state with given details
+//Corporate = Donor
+//CreditsAuthority = Rainforest
 func (s *SmartContract) RequestTokens(ctx contractapi.TransactionContextInterface, arg string) (bool, error) {
-	InfoLogger.Printf("*************** requestTokens Started ***************")
+	InfoLogger.Printf("*************** RequestTokens Started ***************")
 	InfoLogger.Printf("args received:", arg)
 
 	//getusercontext to populate the required data
@@ -46,21 +44,17 @@ func (s *SmartContract) RequestTokens(ctx contractapi.TransactionContextInterfac
 		return false, fmt.Errorf(err.Error())
 	}
 
-	if len(args) != 7 {
-		return false, fmt.Errorf("Incorrect no. of arguments. Expecting 7")
+	if len(args) != 6 {
+		return false, fmt.Errorf("Incorrect no. of arguments. Expecting 6")
 	} else if len(args[0]) <= 0 {
 		return false, fmt.Errorf("Qty must be a non-empty string")
 	} else if len(args[1]) <= 0 {
-		return false, fmt.Errorf("role must be a non-empty string")
+		return false, fmt.Errorf("payment id must be a non-empty string")
 	} else if len(args[2]) <= 0 {
-		return false, fmt.Errorf("bank tx id must be a non-empty string")
-	} else if len(args[3]) <= 0 {
-		return false, fmt.Errorf("doc name must be a non-empty string")
+		return false, fmt.Errorf("payment status must be a non-empty string")
 	} else if len(args[4]) <= 0 {
-		return false, fmt.Errorf("doc hash must be a non-empty string")
-	} else if len(args[5]) <= 0 {
 		return false, fmt.Errorf("date must be a non-empty string")
-	} else if len(args[6]) <= 0 {
+	} else if len(args[5]) <= 0 {
 		return false, fmt.Errorf("txid must be a non-empty string")
 	}
 
@@ -72,77 +66,87 @@ func (s *SmartContract) RequestTokens(ctx contractapi.TransactionContextInterfac
 
 	fromAddress := commonName
 	toAddress := "ca.creditsauthority.csr.com"
-	callerRole := strings.ToLower(args[1])
-	bankTxId := args[2]
-	proofDocName := args[3]
-	proofDocHash := args[4]
-	date, err := strconv.Atoi(args[5])
+	bankTxId := args[1]
+	paymentStatus := args[2]
+	comments := args[3]
+	date, err := strconv.Atoi(args[4])
 	if err != nil {
 		return false, fmt.Errorf("Error converting date " + err.Error())
 	}
-	txId := args[6]
-	tokenRequestAsBytes := []byte{}
+	txId := args[5]
 
 	oldTokenRequestAsBytes, _ := ctx.GetStub().GetState(bankTxId)
 	if oldTokenRequestAsBytes != nil {
-		return false, fmt.Errorf("Token request with this ID already exists")
-		//Update existing token with Requested status
-		// tokenRequest := TokenRequest{}
-		// err = json.Unmarshal(oldTokenRequestAsBytes, &tokenRequest)
-		// if tokenRequest.Status != "Rejected" {
-		// 	return false, fmt.Errorf("Token request with this ID already exists with " + tokenRequest.Status + " status")
-		// }
+		return false, fmt.Errorf("Fund request with this ID already exists")
 	}
 
 	newReq := &TokenRequest{
-		ObjectType:   "TokenRequest",
-		From:         fromAddress,
-		Qty:          tokenQty,
-		Role:         callerRole,
-		Status:       "Requested",
-		Date:         date,
-		BankTxId:     bankTxId,
-		ProofDocName: proofDocName,
-		ProofDocHash: proofDocHash,
+		ObjectType: "TokenRequest",
+		From:       fromAddress,
+		Qty:        tokenQty,
+		Status:     "Requested",
+		Date:       date,
+		PaymentId:  bankTxId,
+		Comments:   comments,
 	}
-	tokenRequestAsBytes, err = json.Marshal(newReq)
 
-	//save the request to ledger, key is args[4] i.e. bankTxId
+	if paymentStatus == "COMPLETED" {
+		//give the funds directly
+		newReq.Status = "Assigned"
+	}
+
+	tokenRequestAsBytes, err := json.Marshal(newReq)
+	//save the token request to ledger, key is bankTxId
 	ctx.GetStub().PutState(bankTxId, tokenRequestAsBytes)
 
 	//Save Corporates if not already saved
 	//TODO: See if this can be filled and updated at registration time instead of on every token request
-	if callerRole == "corporate.csr.com" {
+	corporates := getCorporates(ctx)
 
-		corporates := getCorporates(ctx)
+	if len(corporates) == 0 || !contains(corporates, fromAddress) {
+		corporates = append(corporates, fromAddress)
+		corporatesInBytes, _ := json.Marshal(corporates)
+		ctx.GetStub().PutState("corporates", corporatesInBytes)
+	}
 
-		if len(corporates) == 0 || !contains(corporates, fromAddress) {
-			corporates = append(corporates, fromAddress)
-			corporatesInBytes, _ := json.Marshal(corporates)
-			ctx.GetStub().PutState("corporates", corporatesInBytes)
+	txType := "TokenRequest"
+	if paymentStatus == "COMPLETED" {
+		txType = "AssignToken"
+		//credit the funds to the donor's wallet
+		tokenBalanceAsBytes, _ := ctx.GetStub().GetState(commonName)
+		if tokenBalanceAsBytes == nil {
+			ctx.GetStub().PutState(commonName, []byte(fmt.Sprintf("%0.2f", tokenQty)))
+		} else {
+			balance, _ := strconv.ParseFloat(string(tokenBalanceAsBytes), 64)
+			ctx.GetStub().PutState(commonName, []byte(fmt.Sprintf("%0.2f", balance+tokenQty)))
 		}
 	}
 
-	err = createTransaction(ctx, fromAddress, toAddress, tokenQty, date, "TokenRequest", bankTxId, txId, -1)
+	//save a transaction
+	err = createTransaction(ctx, fromAddress, toAddress, tokenQty, date, txType, bankTxId, txId, -1)
 	if err != nil {
 		return false, fmt.Errorf("Failed to add a Tx: " + err.Error())
 	}
 
-	splitName := strings.SplitN(commonName, ".", -1)
-	eventPayload := splitName[0] + " has requested " + fmt.Sprintf("%0.2f", tokenQty) + " credits."
-	notification := &Notification{TxId: txId, Description: eventPayload, Users: []string{toAddress}}
-	notificationtAsBytes, err := json.Marshal(notification)
-	eventErr := ctx.GetStub().SetEvent("Notification", notificationtAsBytes)
-	if eventErr != nil {
-		return false, fmt.Errorf(fmt.Sprintf("Failed to emit event"))
+	//emit chaincode event for notification
+	if paymentStatus == "PENDING" {
+		splitName := strings.SplitN(commonName, ".", -1)
+		eventPayload := splitName[0] + " has requested " + fmt.Sprintf("%0.2f", tokenQty) + " credits."
+		notification := &Notification{TxId: txId, Description: eventPayload, Users: []string{toAddress}}
+		notificationtAsBytes, _ := json.Marshal(notification)
+		eventErr := ctx.GetStub().SetEvent("Notification", notificationtAsBytes)
+		if eventErr != nil {
+			return false, fmt.Errorf(fmt.Sprintf("Failed to emit event"))
+		}
 	}
 
+	InfoLogger.Printf("*************** RequestTokens Successfull ***************")
 	return true, nil
 }
 
-//CA assigns tokens to the corporates/citizens
+//CA assigns tokens to the corporate
 func (s *SmartContract) AssignTokens(ctx contractapi.TransactionContextInterface, arg string) (bool, error) {
-	InfoLogger.Printf("*************** assignTokens Started ***************")
+	InfoLogger.Printf("*************** AssignTokens Started ***************")
 	InfoLogger.Printf("args received:", arg)
 
 	//getusercontext to populate the required data
@@ -193,14 +197,12 @@ func (s *SmartContract) AssignTokens(ctx contractapi.TransactionContextInterface
 	}
 
 	//validity check so that approved TokenRequest are not served twice and rejected TokenRequest is not assigned
-	if tokenRequest.Status == "Assigned" {
-		InfoLogger.Printf("TokenRequest with id:", bankTxId, "is already approved")
-		return false, fmt.Errorf("TokenRequest with id: " + bankTxId + " is already approved")
-	} else if tokenRequest.Status == "Rejected" {
-		InfoLogger.Printf("Rejected TokenRequest cannot be Assigned")
-		return false, fmt.Errorf("Rejected TokenRequest cannot be Assigned")
+	if tokenRequest.Status != "Requested" {
+		InfoLogger.Printf("TokenRequest with id:", bankTxId, "is already "+tokenRequest.Status)
+		return false, fmt.Errorf("TokenRequest with id: " + bankTxId + " is already " + tokenRequest.Status)
 	}
 
+	//credit funds in donor's wallet
 	tokenBalanceAsBytes, _ := ctx.GetStub().GetState(tokenRequest.From)
 	if tokenBalanceAsBytes == nil {
 		ctx.GetStub().PutState(tokenRequest.From, []byte(fmt.Sprintf("%0.2f", tokenRequest.Qty)))
@@ -209,6 +211,7 @@ func (s *SmartContract) AssignTokens(ctx contractapi.TransactionContextInterface
 		ctx.GetStub().PutState(tokenRequest.From, []byte(fmt.Sprintf("%0.2f", balance+tokenRequest.Qty)))
 	}
 
+	//update the status of token request
 	tokenRequest.Status = "Assigned"
 	tokenReqBytes, err := json.Marshal(tokenRequest)
 	if err != nil {
@@ -216,13 +219,13 @@ func (s *SmartContract) AssignTokens(ctx contractapi.TransactionContextInterface
 	}
 	ctx.GetStub().PutState(bankTxId, tokenReqBytes)
 
-	//TODO: verify the CSR address
+	//save a transaction
 	err = createTransaction(ctx, "ca.creditsauthority.csr.com", tokenRequest.From, tokenRequest.Qty, date, "AssignToken", bankTxId, txId, -1)
 	if err != nil {
 		return false, fmt.Errorf("Failed to add a Tx: " + err.Error())
 	}
 
-	eventPayload := "You are assigned  " + fmt.Sprintf("%0.2f", tokenRequest.Qty) + " credits."
+	eventPayload := "You are assigned " + fmt.Sprintf("%0.2f", tokenRequest.Qty) + " funds."
 	notification := &Notification{TxId: txId, Description: eventPayload, Users: []string{tokenRequest.From}}
 	notificationtAsBytes, err := json.Marshal(notification)
 	eventErr := ctx.GetStub().SetEvent("Notification", notificationtAsBytes)
@@ -230,14 +233,13 @@ func (s *SmartContract) AssignTokens(ctx contractapi.TransactionContextInterface
 		return false, fmt.Errorf(fmt.Sprintf("Failed to emit event"))
 	}
 
-	InfoLogger.Printf("*************** assignTokens Successfull ***************")
-
+	InfoLogger.Printf("*************** AssignTokens Successfull ***************")
 	return true, nil
 }
 
 //reject the token request
 func (s *SmartContract) RejectTokens(ctx contractapi.TransactionContextInterface, arg string) (bool, error) {
-	InfoLogger.Printf("*************** rejectTokens Started ***************")
+	InfoLogger.Printf("*************** RejectTokens Started ***************")
 	InfoLogger.Printf("args received:", arg)
 
 	creator, err := ctx.GetStub().GetCreator()
@@ -297,13 +299,13 @@ func (s *SmartContract) RejectTokens(ctx contractapi.TransactionContextInterface
 	tokenRequestAsBytes, _ = json.Marshal(tokenRequest)
 	ctx.GetStub().PutState(bankTxId, tokenRequestAsBytes)
 
-	err = createTransaction(ctx, "Admin@creditsauthority.csr.com", tokenRequest.From, tokenRequest.Qty, date, "TokenReject", bankTxId, txId, -1)
+	err = createTransaction(ctx, "ca.creditsauthority.csr.com", tokenRequest.From, tokenRequest.Qty, date, "TokenReject", bankTxId, txId, -1)
 	if err != nil {
 		return false, fmt.Errorf("Failed to add a Tx: " + err.Error())
 	}
 
 	splitName := strings.SplitN(commonName, ".", -1)
-	eventPayload := splitName[0] + " has rejected your request of " + fmt.Sprintf("%0.2f", tokenRequest.Qty) + " credits."
+	eventPayload := splitName[0] + " has rejected your request of " + fmt.Sprintf("%0.2f", tokenRequest.Qty) + " funds."
 	notification := &Notification{TxId: txId, Description: eventPayload, Users: []string{tokenRequest.From}}
 	notificationtAsBytes, err := json.Marshal(notification)
 	eventErr := ctx.GetStub().SetEvent("Notification", notificationtAsBytes)
@@ -311,7 +313,7 @@ func (s *SmartContract) RejectTokens(ctx contractapi.TransactionContextInterface
 		return false, fmt.Errorf(fmt.Sprintf("Failed to emit event"))
 	}
 
-	InfoLogger.Printf("*************** rejectTokens Successfull ***************")
+	InfoLogger.Printf("*************** RejectTokens Successfull ***************")
 	return true, nil
 }
 
@@ -377,6 +379,7 @@ func (s *SmartContract) TransferTokens(ctx contractapi.TransactionContextInterfa
 		return false, fmt.Errorf("Invalid phase Number!")
 	}
 
+	//Note: use reviewMsg as Notes
 	reviewMsg := args[3]
 	rating, err := strconv.Atoi(args[4])
 	if err != nil || rating < 0.0 || rating > 5.0 {

@@ -20,7 +20,7 @@ const checkJwt = jwt({
     algorithms: ["RS256"],
 }).unless((req) => {
     let skip = ['/mongo/user/login', '/mongo/user/onboard', '/users']
-    return skip.includes(req.originalUrl)
+    return skip.includes(req.originalUrl) || req.userName === 'guest'
 })
 
 module.exports = checkJwt;

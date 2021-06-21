@@ -13,16 +13,15 @@ type Redeem struct {
 	ObjectType        string  `json:"docType"`
 	From              string  `json:"from"`
 	Qty               float64 `json:"qty"`
-	Status            string  `json:"status"`
+	Status            string  `json:"status"` //Requested, Approved, Rejected
 	Date              int     `json:"date"`
-	BankTxId          string  `json:"bankTxId"`
-	ProofDocName      string  `json:"proofDocName"`
-	ProofDocHash      string  `json:"proofDocHash"`
+	PaymentId         string  `json:"paymentId"`
+	ReceiverId        string  `json:"receiverId"`
 	RejectionComments string  `json:"rejectionComments"`
 }
 
 func (s *SmartContract) RedeemRequest(ctx contractapi.TransactionContextInterface, arg string) (bool, error) {
-	InfoLogger.Printf("*************** redeemRequest Started ***************")
+	InfoLogger.Printf("*************** RedeemRequest Started ***************")
 	InfoLogger.Printf("args received:", arg)
 
 	//getusercontext to populate the required data
@@ -44,39 +43,39 @@ func (s *SmartContract) RedeemRequest(ctx contractapi.TransactionContextInterfac
 		return false, fmt.Errorf(err.Error())
 	}
 
-	if len(args) != 4 {
-		return false, fmt.Errorf("Incorrect no. of arguments. Expecting 4")
+	if len(args) != 5 {
+		return false, fmt.Errorf("Incorrect no. of arguments. Expecting 5")
 	} else if len(args[0]) <= 0 {
-		return false, fmt.Errorf("uuid must be a non-empty string")
+		return false, fmt.Errorf("redeem id must be a non-empty string")
 	} else if len(args[1]) <= 0 {
-		return false, fmt.Errorf("qty must be a non-empty string")
+		return false, fmt.Errorf("amount must be a non-empty string")
 	} else if len(args[2]) <= 0 {
-		return false, fmt.Errorf("date must be a non-empty string")
+		return false, fmt.Errorf("receiverId must be a non-empty string")
 	} else if len(args[3]) <= 0 {
+		return false, fmt.Errorf("date must be a non-empty string")
+	} else if len(args[4]) <= 0 {
 		return false, fmt.Errorf("tx id must be a non-empty string")
 	}
 
-	uuid := args[0]
+	redeemId := args[0]
 	qty, err := strconv.ParseFloat(args[1], 64)
 	if err != nil || qty <= 0.0 {
 		return false, fmt.Errorf("Invalid amount!")
 	}
-
-	date, _ := strconv.Atoi(args[2])
-	txId := args[3]
+	receiverId := args[2]
+	date, _ := strconv.Atoi(args[3])
+	txId := args[4]
 	from := commonName
 	to := "ca.creditsauthority.csr.com"
-	status := "Requested"
-	bankTxId := ""
 
-	//check if the uuid incoming is already used
-	getUuidAsBytes, _ := ctx.GetStub().GetState(uuid)
+	//check if the redeemId incoming is already used
+	getUuidAsBytes, _ := ctx.GetStub().GetState(redeemId)
 	if getUuidAsBytes != nil {
-		InfoLogger.Printf("This uuid is already used")
-		return false, fmt.Errorf("This uuid is already used")
+		InfoLogger.Printf("This redeem id is already used")
+		return false, fmt.Errorf("This redeem id is already used")
 	}
 
-	//chech if the qty requesting is less than or equal to his balance
+	//check if the qty requesting is less than or equal to his balance
 	getbalancebytes, _ := ctx.GetStub().GetState(from)
 	if getbalancebytes == nil {
 		return false, fmt.Errorf("error getting the balance of the ngo")
@@ -84,23 +83,30 @@ func (s *SmartContract) RedeemRequest(ctx contractapi.TransactionContextInterfac
 	balance, _ := strconv.ParseFloat(string(getbalancebytes), 64)
 	if balance < qty {
 		InfoLogger.Printf("Maximum amount to redeem is:", balance, "but requested amount is:", qty)
-		return false, fmt.Errorf("redeemed amount cannot be more than the balance")
+		return false, fmt.Errorf("redeem amount cannot be more than the balance")
 	}
 
-	//reduce the equavalent amount from the balance of ngo upon requesting
+	//reduce the equivalent amount from the balance of ngo
 	remainingQty := balance - qty
 	ctx.GetStub().PutState(from, []byte(fmt.Sprintf("%f", remainingQty)))
 
 	//create redeem state
-	newReq := &Redeem{ObjectType: "Redeem", From: from, Qty: qty, Status: status, BankTxId: bankTxId, Date: date}
+	newReq := &Redeem{
+		ObjectType: "Redeem",
+		From:       from,
+		Qty:        qty,
+		Status:     "Requested",
+		Date:       date,
+		ReceiverId: receiverId,
+	}
 	redeemReqAsBytes, _ := json.Marshal(newReq)
-	ctx.GetStub().PutState(uuid, redeemReqAsBytes)
+	ctx.GetStub().PutState(redeemId, redeemReqAsBytes)
 
 	//create corresponding transaction
-	createTransaction(ctx, from, to, qty, date, "RequestRedeem", uuid, txId, -1)
+	createTransaction(ctx, from, to, qty, date, "RequestRedeem", redeemId, txId, -1)
 
 	splitName := strings.SplitN(commonName, ".", -1)
-	eventPayload := splitName[0] + " has requested " + fmt.Sprintf("%0.2f", qty) + " credits to redeem."
+	eventPayload := splitName[0] + " has requested " + fmt.Sprintf("%0.2f", qty) + " funds to redeem."
 	notification := &Notification{TxId: txId, Description: eventPayload, Users: []string{to}}
 	notificationtAsBytes, err := json.Marshal(notification)
 	eventErr := ctx.GetStub().SetEvent("Notification", notificationtAsBytes)
@@ -108,12 +114,12 @@ func (s *SmartContract) RedeemRequest(ctx contractapi.TransactionContextInterfac
 		return false, fmt.Errorf(fmt.Sprintf("Failed to emit event"))
 	}
 
-	InfoLogger.Printf("*************** redeemRequest Successful ***************")
+	InfoLogger.Printf("*************** RedeemRequest Successful ***************")
 	return true, nil
 }
 
 func (s *SmartContract) ApproveRedeemRequest(ctx contractapi.TransactionContextInterface, arg string) (bool, error) {
-	InfoLogger.Printf("*************** approveRedeemRequest Started ***************")
+	InfoLogger.Printf("*************** ApproveRedeemRequest Started ***************")
 	InfoLogger.Printf("args received:", arg)
 
 	//getusercontext to populate the required data
@@ -135,63 +141,52 @@ func (s *SmartContract) ApproveRedeemRequest(ctx contractapi.TransactionContextI
 		return false, fmt.Errorf(err.Error())
 	}
 
-	if len(args) != 6 {
-		return false, fmt.Errorf("Incorrect no. of arguments. Expecting 6")
+	if len(args) != 4 {
+		return false, fmt.Errorf("Incorrect no. of arguments. Expecting 4")
 	} else if len(args[0]) <= 0 {
-		return false, fmt.Errorf("uuid must be a non-empty string")
+		return false, fmt.Errorf("redeem id must be a non-empty string")
 	} else if len(args[1]) <= 0 {
-		return false, fmt.Errorf("bank tx id must be a non-empty string")
+		return false, fmt.Errorf("payment id must be a non-empty string")
 	} else if len(args[2]) <= 0 {
 		return false, fmt.Errorf("date must be a non-empty string")
 	} else if len(args[3]) <= 0 {
 		return false, fmt.Errorf("tx id must be a non-empty string")
-	} else if len(args[4]) <= 0 {
-		return false, fmt.Errorf("doc name must be a non-empty string")
-	} else if len(args[5]) <= 0 {
-		return false, fmt.Errorf("doc hash be a non-empty string")
 	}
 
-	uuid := args[0]
-	bankTxId := args[1]
-	proofDocName := args[4]
-	proofDocHash := args[5]
-
+	redeemId := args[0]
+	paymentId := args[1]
 	time, _ := strconv.Atoi(args[2])
 	txId := args[3]
 
 	//write a selector query to check in chouch so that the same transaction id is not used
-	queryString := fmt.Sprintf("{\"selector\":{\"docType\":\"Redeem\",\"bankTxId\":\"%s\"}}", bankTxId)
+	queryString := fmt.Sprintf("{\"selector\":{\"docType\":\"Redeem\",\"paymentId\":\"%s\"}}", paymentId)
 	queryResults, err := GetQueryResultForQueryString(ctx, queryString)
 	if err != nil {
 		return false, fmt.Errorf(err.Error())
 	}
 	if len(queryResults) > 2 {
-		InfoLogger.Printf("Transaction id:", bankTxId, "is already used")
-		return false, fmt.Errorf("Transaction id: " + bankTxId + " is already used")
+		InfoLogger.Printf("Transaction id:", paymentId, "is already used")
+		return false, fmt.Errorf("Transaction id: " + paymentId + " is already used")
 	}
 
-	redeemStateAsBytes, _ := ctx.GetStub().GetState(uuid)
+	redeemStateAsBytes, _ := ctx.GetStub().GetState(redeemId)
 	if redeemStateAsBytes == nil {
-		InfoLogger.Printf("uuid:", uuid, "is not present")
-		return false, fmt.Errorf("uuid: " + uuid + " is not present")
+		InfoLogger.Printf("redeem request:", redeemId, "is not present")
+		return false, fmt.Errorf("redeem request: " + redeemId + " is not present")
 	}
 	redeemState := Redeem{}
 	json.Unmarshal(redeemStateAsBytes, &redeemState)
 
-	//already approved redeeState cannnot be approved again
+	//already approved redeem request can't be approved again
 	if redeemState.Status == "Approved" {
-		return false, fmt.Errorf("Following redeemRequest is already been approved and served with fiat curency")
+		return false, fmt.Errorf("this redeem request is already approved")
 	} else if redeemState.Status == "Requested" {
-
-		//change the status from requested to Approved , and add BankTxId
+		//change the status from requested to Approved, and add PaymentId
 		redeemState.Status = "Approved"
-		redeemState.BankTxId = bankTxId
-		redeemState.ProofDocName = proofDocName
-		redeemState.ProofDocHash = proofDocHash
+		redeemState.PaymentId = paymentId
 
-		//update RedeemState
 		redeemStateAsBytes, _ = json.Marshal(redeemState)
-		ctx.GetStub().PutState(uuid, redeemStateAsBytes)
+		ctx.GetStub().PutState(redeemId, redeemStateAsBytes)
 	} else {
 		return false, fmt.Errorf("Invalid redeem status")
 	}
@@ -201,9 +196,9 @@ func (s *SmartContract) ApproveRedeemRequest(ctx contractapi.TransactionContextI
 	to := redeemState.From
 	qty := redeemState.Qty
 
-	createTransaction(ctx, from, to, qty, time, "ApproveRedeemRequest", uuid, txId, -1)
+	createTransaction(ctx, from, to, qty, time, "ApproveRedeemRequest", redeemId, txId, -1)
 
-	eventPayload := "Your redeem request of " + fmt.Sprintf("%0.2f", qty) + " credits is approved."
+	eventPayload := "Your redeem request of " + fmt.Sprintf("%0.2f", qty) + " funds is approved."
 	notification := &Notification{TxId: txId, Description: eventPayload, Users: []string{to}}
 	notificationtAsBytes, err := json.Marshal(notification)
 	eventErr := ctx.GetStub().SetEvent("Notification", notificationtAsBytes)
@@ -211,7 +206,7 @@ func (s *SmartContract) ApproveRedeemRequest(ctx contractapi.TransactionContextI
 		return false, fmt.Errorf(fmt.Sprintf("Failed to emit event"))
 	}
 
-	InfoLogger.Printf("*************** approveRedeemRequest Successful ***************")
+	InfoLogger.Printf("*************** ApproveRedeemRequest Successful ***************")
 	return true, nil
 }
 
@@ -252,7 +247,6 @@ func (s *SmartContract) RejectRedeemRequest(ctx contractapi.TransactionContextIn
 	InfoLogger.Printf("*************** rejectRedeemRequest Started ***************")
 	InfoLogger.Printf("args received:", arg)
 
-	//getusercontext to populate the required data
 	creator, err := ctx.GetStub().GetCreator()
 	if err != nil {
 		return false, fmt.Errorf("Error getting transaction creator: " + err.Error())
@@ -274,7 +268,7 @@ func (s *SmartContract) RejectRedeemRequest(ctx contractapi.TransactionContextIn
 	if len(args) != 4 {
 		return false, fmt.Errorf("Incorrect no. of arguments. Expecting 4")
 	} else if len(args[0]) <= 0 {
-		return false, fmt.Errorf("uuid must be a non-empty string")
+		return false, fmt.Errorf("redeem id must be a non-empty string")
 	} else if len(args[1]) <= 0 {
 		return false, fmt.Errorf("rejection comments must be a non-empty string")
 	} else if len(args[2]) <= 0 {
@@ -283,9 +277,8 @@ func (s *SmartContract) RejectRedeemRequest(ctx contractapi.TransactionContextIn
 		return false, fmt.Errorf("tx id must be a non-empty string")
 	}
 
-	uuid := args[0]
+	redeemId := args[0]
 	rejectionComments := args[1]
-
 	time, _ := strconv.Atoi(args[2])
 	txId := args[3]
 
@@ -293,10 +286,10 @@ func (s *SmartContract) RejectRedeemRequest(ctx contractapi.TransactionContextIn
 		return false, fmt.Errorf("rejection comments is mandatory!")
 	}
 
-	redeemStateAsBytes, _ := ctx.GetStub().GetState(uuid)
+	redeemStateAsBytes, _ := ctx.GetStub().GetState(redeemId)
 	if redeemStateAsBytes == nil {
-		InfoLogger.Printf("uuid:", uuid, "is not present")
-		return false, fmt.Errorf("uuid: " + uuid + " is not present")
+		InfoLogger.Printf("redeem request with id:", redeemId, " not found")
+		return false, fmt.Errorf("redeem request: " + redeemId + " not found")
 	}
 	redeemState := Redeem{}
 	json.Unmarshal(redeemStateAsBytes, &redeemState)
@@ -308,7 +301,7 @@ func (s *SmartContract) RejectRedeemRequest(ctx contractapi.TransactionContextIn
 		txType = "RedeemReject"
 		redeemState.Status = "Rejected"
 		redeemStateAsBytes, _ = json.Marshal(redeemState)
-		ctx.GetStub().PutState(uuid, redeemStateAsBytes)
+		ctx.GetStub().PutState(redeemId, redeemStateAsBytes)
 	} else {
 		return false, fmt.Errorf("invalid redeem status!" + redeemState.Status)
 	}
@@ -324,12 +317,12 @@ func (s *SmartContract) RejectRedeemRequest(ctx contractapi.TransactionContextIn
 	updatedBal := balance + redeemState.Qty
 	ctx.GetStub().PutState(redeemState.From, []byte(fmt.Sprintf("%f", updatedBal)))
 
-	//create corresponding transaction
+	//create a transaction
 	from := commonName
 	to := redeemState.From
 	qty := redeemState.Qty
 
-	createTransaction(ctx, from, to, qty, time, txType, uuid, txId, -1)
+	createTransaction(ctx, from, to, qty, time, txType, redeemId, txId, -1)
 
 	eventPayload := "Your redeem request of " + fmt.Sprintf("%0.2f", qty) + " credits is " + redeemState.Status + "."
 	notification := &Notification{TxId: txId, Description: eventPayload, Users: []string{to}}

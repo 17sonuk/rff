@@ -24,6 +24,7 @@ type CommonResponsePaginated struct {
 	Bookmark     string           `json:"Bookmark"`
 }
 
+// Mango query: {"selector": {"type": "FundRequest"}}, PageSize: 10, Bookmark: 'sfdrr4wereaf'
 func (s *SmartContract) CommonQuery(ctx contractapi.TransactionContextInterface, queryString string) ([]CommonResponse, error) {
 
 	InfoLogger.Printf("- common query queryString: ", queryString)

@@ -6,7 +6,7 @@ const { v4: uuid } = require('uuid');
 
 const logger = require('../../loggers/logger');
 const projectService = require('../../service/projectService');
-const { fieldErrorMessage, generateError, getMessage, splitOrgName } = require('../../utils/functions');
+const { fieldErrorMessage, generateError, getMessage, splitOrgName, paypalAuth0AccessToken } = require('../../utils/functions');
 
 const invoke = require('../../fabric-sdk/invoke');
 const query = require('../../fabric-sdk/query');
@@ -15,39 +15,46 @@ const query = require('../../fabric-sdk/query');
 router.post('/request', async (req, res, next) => {
     logger.debug('==================== INVOKE REQUEST TOKEN ON CHAINCODE ==================');
 
-    //extract parameters from request body.
+    //extract fields from request body.
     const amount = req.body.amount.toString();
-    const bankTxId = req.body.bankTxId;
-    const proofDocName = req.body.proofDocName;
-    const proofDocHash = req.body.proofDocHash;
+    const paymentId = req.body.paymentId;
+    const paymentStatus = req.body.paymentStatus;
+    const comments = !req.body.comments ? "" : req.body.comments;
 
     if (!CHAINCODE_NAME) {
         return res.json(fieldErrorMessage('\'chaincodeName\''));
-    } else if (!CHANNEL_NAME) {
+    }
+    if (!CHANNEL_NAME) {
         return res.json(fieldErrorMessage('\'channelName\''));
-    } else if (!amount) {
+    }
+    if (!amount) {
         return res.json(fieldErrorMessage('\'amount\''));
-    } else if (!bankTxId) {
-        return res.json(fieldErrorMessage('\'bankTxId\''));
-    } else if (!proofDocName) {
-        return res.json(fieldErrorMessage('\'proofDocName\''));
-    } else if (!proofDocHash) {
-        return res.json(fieldErrorMessage('\'proofDocHash\''));
+    }
+    if (!paymentId) {
+        return res.json(fieldErrorMessage('\'paymentId\''));
+    }
+    if (!paymentStatus) {
+        return res.json(fieldErrorMessage('\'paymentStatus\''));
     }
 
-    let args = [amount, "corporate.csr.com", bankTxId, proofDocName, proofDocHash];
-
-    //add current UTC date(in epoch milliseconds) to args
-    args.push(Date.now().toString());
-    args.push(uuid().toString());
+    let args = [amount, paymentId, paymentStatus, comments, Date.now().toString(), uuid().toString()];
+    //added current UTC date(in epoch milliseconds) to args
     args = JSON.stringify(args);
     logger.debug('args  : ' + args);
 
     try {
-        await invoke(req.userName, req.orgName, "RequestTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
-        return res.json(getMessage(true, 'Successfully invoked RequestTokens'));
-    }
-    catch (e) {
+        if (paymentStatus === 'COMPLETED') {
+            await invoke(req.userName, req.orgName, "RequestTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
+            return res.json(getMessage(true, 'Successfully credited funds'));
+        } else if (paymentStatus === 'PENDING') {
+            await invoke(req.userName, req.orgName, "RequestTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
+            return res.json(getMessage(true, 'Request is pending with Rainforest US. Please wait to receive funds in your wallet.'));
+        } else {
+            let error = new Error('Some error occured!');
+            error.status = 500;
+            throw error
+        }
+    } catch (e) {
         generateError(e, next);
     }
 });
@@ -56,29 +63,27 @@ router.post('/request', async (req, res, next) => {
 router.post('/assign', async (req, res, next) => {
     logger.debug('==================== INVOKE ASSIGN TOKEN ON CHAINCODE ==================');
 
-    //extract parameters from request body.
-    const bankTxId = req.body.bankTxId;
+    const paymentId = req.body.paymentId;
 
     if (!CHAINCODE_NAME) {
         return res.json(fieldErrorMessage('\'chaincodeName\''));
-    } else if (!CHANNEL_NAME) {
+    }
+    if (!CHANNEL_NAME) {
         return res.json(fieldErrorMessage('\'channelName\''));
-    } else if (!bankTxId) {
-        return res.json(fieldErrorMessage('\'bankTxId\''));
+    }
+    if (!paymentId) {
+        return res.json(fieldErrorMessage('\'paymentId\''));
     }
 
-    let args = [bankTxId]
-    //add current UTC date(in epoch milliseconds) to args
-    args.push(Date.now().toString());
-    args.push(uuid().toString());
+    let args = [paymentId, Date.now().toString(), uuid().toString()]
+    //added current UTC date(in epoch milliseconds) to args
     args = JSON.stringify(args);
     logger.debug('args  : ' + args);
 
     try {
         await invoke(req.userName, req.orgName, "AssignTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
         return res.json(getMessage(true, 'Successfully invoked AssignTokens'));
-    }
-    catch (e) {
+    } catch (e) {
         generateError(e, next);
     }
 });
@@ -88,25 +93,21 @@ router.post('/reject', async (req, res, next) => {
     logger.debug('==================== INVOKE rejectTokens TOKEN ON CHAINCODE ==================');
 
     //extract parameters from request body.
-    const bankTxId = req.body.bankTxId;
+    const paymentId = req.body.paymentId;
     const comment = req.body.comment;
 
     if (!CHAINCODE_NAME) {
         return res.json(fieldErrorMessage('\'chaincodeName\''));
     } else if (!CHANNEL_NAME) {
         return res.json(fieldErrorMessage('\'channelName\''));
-    } else if (!bankTxId) {
-        return res.json(fieldErrorMessage('\'bankTxId\''));
+    } else if (!paymentId) {
+        return res.json(fieldErrorMessage('\'paymentId\''));
     } else if (!comment) {
         return res.json(fieldErrorMessage('\'comment\''));
     }
 
-    let args = [bankTxId]
-    args.push(comment)
-
-    //add current UTC date(in epoch milliseconds) to args
-    args.push(Date.now().toString());
-    args.push(uuid().toString());
+    let args = [paymentId, comment, Date.now().toString(), uuid().toString()]
+    //added current UTC date(in epoch milliseconds) to args
     args = JSON.stringify(args);
     logger.debug('args  : ' + args);
 
@@ -234,7 +235,7 @@ router.get('/all-requests', async (req, res, next) => {
             message['Results'] = message['Results'].map(elem => {
                 elem['Record'] = JSON.parse(elem['Record'])
                 elem['Record']['from'] = splitOrgName(elem['Record']['from'])
-                elem['Record']['role'] = splitOrgName(elem['Record']['role'])
+                //elem['Record']['role'] = splitOrgName(elem['Record']['role'])
                 return elem['Record']
             })
 

@@ -15,23 +15,25 @@ router.post('/request', async (req, res, next) => {
     logger.debug('==================== INVOKE REDEEM TOKEN ON CHAINCODE ==================');
 
     //extract parameters from request body.
-    const qty = req.body.qty;
-    if (!qty) {
-        return res.json(fieldErrorMessage('\'quantity\''));
+    const amount = req.body.amount;
+    const receiverId = req.body.receiverId;
+
+    if (!amount) {
+        return res.json(fieldErrorMessage('\'amount\''));
+    }
+    if (!receiverId) {
+        return res.json(fieldErrorMessage('\'receiverId\''));
     }
 
-    let args = [uuid().toString(), qty, Date.now().toString(), uuid().toString()]
-    //add current UTC date(in epoch milliseconds) to args
-    // args.push(Date.now().toString());
-    // args.push(uuid().toString());
+    let args = [uuid().toString(), amount, receiverId, Date.now().toString(), uuid().toString()]
+    //added current UTC date(in epoch milliseconds) to args
     args = JSON.stringify(args);
     logger.debug('args  : ' + args);
 
     try {
         await invoke(req.userName, req.orgName, "RedeemRequest", CHAINCODE_NAME, CHANNEL_NAME, args);
         return res.json(getMessage(true, 'Successfully invoked RedeemRequest'));
-    }
-    catch (e) {
+    } catch (e) {
         generateError(e, next);
     }
 });
@@ -41,24 +43,24 @@ router.post('/approve', async (req, res, next) => {
     logger.debug('==================== INVOKE REDEEM TOKEN ON CHAINCODE ==================');
 
     //extract parameters from request body.
-    const uid = req.body.id;
-    const bankTxId = req.body.bankTxId;
-    const proofDocName = req.body.proofDocName;
-    const proofDocHash = req.body.proofDocHash;
+    const redeemId = req.body.redeemId;
+    const paymentId = req.body.paymentId;
 
-    if (!uid) {
-        return res.json(fieldErrorMessage('\'uid\''));
+    if (!redeemId) {
+        return res.json(fieldErrorMessage('\'redeemId\''));
+    }
+    if (!paymentId) {
+        return res.json(fieldErrorMessage('\'paymentId\''));
     }
 
-    let args = [uid, bankTxId, Date.now().toString(), uuid().toString(), proofDocName, proofDocHash]
+    let args = [redeemId, paymentId, Date.now().toString(), uuid().toString()]
     args = JSON.stringify(args);
     logger.debug('args  : ' + args);
 
     try {
         await invoke(req.userName, req.orgName, "ApproveRedeemRequest", CHAINCODE_NAME, CHANNEL_NAME, args);
         return res.json(getMessage(true, 'Successfully invoked ApproveRedeemRequest'));
-    }
-    catch (e) {
+    } catch (e) {
         generateError(e, next);
     }
 });
@@ -67,17 +69,17 @@ router.post('/approve', async (req, res, next) => {
 router.post('/reject', async (req, res, next) => {
     logger.debug('==================== INVOKE REJECT REDEEM REQUEST ON CHAINCODE ==================');
 
-    //extract parameters from request body.
-    var uid = req.body.id;
+    var redeemId = req.body.redeemId;
     let rejectionComments = req.body.rejectionComments;
 
-    if (!uid) {
-        return res.json(fieldErrorMessage('\'uid\''));
-    } else if (!rejectionComments) {
+    if (!redeemId) {
+        return res.json(fieldErrorMessage('\'redeemId\''));
+    }
+    if (!rejectionComments) {
         return res.json(fieldErrorMessage('\'rejectionComments\''));
     }
 
-    let args = [uid, rejectionComments, Date.now().toString(), uuid().toString()]
+    let args = [redeemId, rejectionComments, Date.now().toString(), uuid().toString()]
     args = JSON.stringify(args);
     logger.debug('args  : ' + args);
 
