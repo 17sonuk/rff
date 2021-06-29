@@ -7,31 +7,59 @@ const { connectionToMongo, connectToMongo, disconnectMongo } = require('../../mo
 
 const userModel = require('../../model/userModel');
 
+// const testUser = {
+//     name: 'ngo1',
+//     description: '',
+//     pan: 'PAN123',
+//     email: 'info@ngo1.com',
+//     regId: 'reg001',
+//     address: {
+//         doorNo: '',
+//         flat: '',
+//         street: '',
+//         country: '',
+//         state: '',
+//         district: '',
+//         locality: '',
+//         pinCode: ''
+//     },
+//     contact: [
+//         {
+//             name: 'ngo1-office',
+//             number: '9898989898'
+//         }
+//     ],
+//     userName: 'ngo1',
+//     role: 'Ngo',
+//     status: 'created'
+// }
+
 const testUser = {
-    name: 'ngo1',
-    description: '',
-    pan: 'PAN123',
-    email: 'info@ngo1.com',
-    regId: 'reg001',
-    address: {
-        doorNo: '',
-        flat: '',
-        street: '',
-        country: '',
-        state: '',
-        district: '',
-        locality: '',
-        pinCode: ''
-    },
-    contact: [
-        {
-            name: 'ngo1-office',
-            number: '9898989898'
-        }
-    ],
+    firstName: 'Charles',
+    lastName: 'Mack',
+    orgName: 'Corp',
     userName: 'ngo1',
-    role: 'Ngo',
-    status: 'created'
+    email: 'info@corporate.com',
+    role: 'Corporate',
+    subRole: 'Institution',
+    status: 'created',
+    description: '',
+    website: '',
+    address: {
+        addressLine1: '',
+        addressLine2: '',
+        city: '',
+        state: '',
+        zipCode: '',
+        country: ''
+    },
+    phone:[
+        {
+            countryCode: '+91',
+            phoneNumber: '9765457'
+        }
+    ]
+   
 }
 
 describe('testing user model - approve user', () => {
@@ -106,7 +134,8 @@ describe('testing user model - approve user', () => {
     });
 
     it('testing response for getUserDetails', async () => {
-        const res = await userModel.getUserDetails('info@ngo1.com');
+        const res = await userModel.getUserDetails('info@corporate.com');
+
         expect(res).to.be.a('object');
     });
 
@@ -151,8 +180,7 @@ describe('testing user model - reject user', () => {
         let userDetails = testUser;
         userDetails.userName = 'newNgo';
         userDetails.email = 'newNgo@gmail.com';
-	console.log('PAN: ' + userDetails.pan)
-	userDetails.regId = undefined;
+	    userDetails.regId = undefined;
 
         await userModel.registerUser(userDetails);
         const unapprovedUsers = await userModel.getUnapprovedUserDetails();
@@ -168,7 +196,6 @@ describe('testing user model - reject user', () => {
 
         const res = await userModel.rejectUser("wrong_user");
         expect(res).to.be.a('object');
-        // console.log(res)
         expect(res.n).to.equal(0);
         expect(res.deletedCount).to.equal(0);
         expect(res.ok).to.equal(1);
@@ -278,7 +305,7 @@ describe('testing user model - db unavailability', () => {
         expect(res).to.be.a('object');
         expect(res.success).to.equal(false);
     });
-
+})
     // it('testing response for reject user who doesn\'t exist', async () => {
 
     //     const res = await userModel.rejectUser("wrong_user");
@@ -288,4 +315,3 @@ describe('testing user model - db unavailability', () => {
     //     expect(res.deletedCount).to.equal(0);
     //     expect(res.ok).to.equal(1);
     // });
-})
