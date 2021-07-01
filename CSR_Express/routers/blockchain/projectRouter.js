@@ -116,8 +116,8 @@ router.post('/validate-phase', async (req, res, next) => {
     //extract parameters from request body.
     const projectId = req.body.projectId;
     const phaseNumber = req.body.phaseNumber;
-    const validated = req.body.validated;
-    const rejectionComment = req.body.rejectionComment;
+    const isValid = req.body.isValid;
+    const comments = req.body.comments;
 
     if (!CHAINCODE_NAME) {
         return res.json(fieldErrorMessage('\'chaincodeName\''));
@@ -127,11 +127,14 @@ router.post('/validate-phase', async (req, res, next) => {
         return res.json(fieldErrorMessage('\'projectId\''));
     } else if (!phaseNumber) {
         return res.json(fieldErrorMessage('\'phaseNumber\''));
-    } else if (!validated) {
-        return res.json(fieldErrorMessage('\'validated\''));
+    } else if (!isValid) {
+        return res.json(fieldErrorMessage('\'isValid\''));
+    }
+    if (isValid === 'false' && !comments) {
+        return res.json(fieldErrorMessage('\'comments\''));
     }
 
-    let args = [projectId, phaseNumber, validated, rejectionComment, Date.now().toString(), uuid().toString()]
+    let args = [projectId, phaseNumber, isValid, comments, Date.now().toString(), uuid().toString()]
     args = JSON.stringify(args);
     logger.debug('args  : ' + args);
 

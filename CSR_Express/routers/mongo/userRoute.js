@@ -11,7 +11,7 @@ const registerUser = require('../../fabric-sdk/registerUser');
 logger.debug('<<<<<<<<<<<<<< user router >>>>>>>>>>>>>>>>>')
 
 //Onboarding of user
-router.post('/onboard', async (req, res, next) => {
+router.post('/onboard', (req, res, next) => {
     logger.debug(`router-onboarding: ${JSON.stringify(req.body, null, 2)}`);
 
     userService.registerUser(req.body)
@@ -36,12 +36,26 @@ router.post('/onboard', async (req, res, next) => {
             console.log(data)
             res.json(data)
         })
+        .catch(err => {
+            console.log('user adding router error.............................')
+            return generateError(err, next);
+            // next(err)
+        })
+})
+
+// get username validity
+router.post('/checkUserNameValidity', (req, res, next) => {
+    logger.debug("router-checkUserNameValidity");
+    userService.checkUserNameValidty(req.body.userName)
+        .then((data) => {
+            res.json(data)
+        })
         .catch(err => next(err))
 })
 
 //get user details
 router.get('/profile', (req, res, next) => {
-    logger.debug("router-getUserDetails");
+    logger.debug("router-profile");
     // if(req.email !== req.query.email){
     //     let err= new Error('Unauthorized user!')
     //     err.status=401
@@ -50,6 +64,16 @@ router.get('/profile', (req, res, next) => {
     userService.getUserDetails(req.userName)
         .then((data) => {
             res.json(data)
+        })
+        .catch(err => next(err))
+})
+
+// get user redeem account
+router.get('/redeemAccount', (req, res, next) => {
+    logger.debug("router-redeemAccount");
+    userService.getUserRedeemAccount(req.userName, req.query.type)
+        .then((data) => {
+            res.json(data || false)
         })
         .catch(err => next(err))
 })

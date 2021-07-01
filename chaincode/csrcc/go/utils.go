@@ -1,17 +1,18 @@
 package main
 
 import (
-	"crypto/x509"
+	//"crypto/x509"
+	"encoding/base64"
 	"encoding/json"
-	"encoding/pem"
-	"errors"
+
+	//"encoding/pem"
+
 	"fmt"
 	"strings"
 
-	"github.com/golang/protobuf/proto"
-	// "github.com/hyperledger/fabric/protos/msp"
+	//"github.com/golang/protobuf/proto"
 
-	"github.com/hyperledger/fabric-protos-go/msp"
+	//"github.com/hyperledger/fabric-protos-go/msp"
 
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
@@ -25,6 +26,7 @@ type Transaction struct {
 	TxType      string  `json:"txType"`
 	ObjRef      string  `json:"objRef"`
 	PhaseNumber int     `json:"phaseNumber"`
+	Notes       string  `json:"notes"`
 }
 
 type Notification struct {
@@ -98,29 +100,61 @@ func createTransaction(ctx contractapi.TransactionContextInterface, fromAddress 
 }
 
 //get loggedin user info
-func getTxCreatorInfo(creator []byte) (string, string, error) {
+func getTxCreatorInfo(ctx contractapi.TransactionContextInterface, creator []byte) (string, string, error) {
+	var mspMap map[string]string
+	mspMap = make(map[string]string)
+	mspMap["CorporateMSP"] = ".corporate.csr.com"
+	mspMap["NgoMSP"] = ".ngo.csr.com"
+	mspMap["CreditsAuthorityMSP"] = ".creditsauthority.csr.com"
 
-	var certASN1 *pem.Block
-	var cert *x509.Certificate
-	var err error
+	identity := ctx.GetClientIdentity()
 
-	creatorSerializedId := &msp.SerializedIdentity{}
-	err = proto.Unmarshal(creator, creatorSerializedId)
-	if err != nil {
-		fmt.Printf("Error unmarshalling creator identity: " + err.Error())
-		return "", "", err
+	clientId, er1 := identity.GetID() //asdrfdrgrxvxz
+	if er1 == nil {
+		fmt.Println("client id: " + clientId)
+	}
+	clientMSPId, er1 := identity.GetMSPID() //CorporateMSP
+	if er1 == nil {
+		fmt.Println("client msp id: " + clientMSPId)
 	}
 
-	if len(creatorSerializedId.IdBytes) == 0 {
-		return "", "", errors.New("Empty certificate")
+	data, er1 := base64.StdEncoding.DecodeString(clientId)
+	if er1 != nil {
+		fmt.Println("error:", er1)
 	}
-	certASN1, _ = pem.Decode(creatorSerializedId.IdBytes)
-	cert, err = x509.ParseCertificate(certASN1.Bytes)
+	fmt.Println("DATA: " + string(data))
 
-	if err != nil {
-		return "", "", err
-	}
-	return creatorSerializedId.Mspid, cert.Subject.CommonName + "." + cert.Issuer.Organization[0], nil
+	strArr := strings.Split(string(data), "::")
+	fmt.Println(strArr)
+
+	strArr2 := strings.Split(strArr[1], ",")
+	fmt.Println(strArr2)
+
+	strClientName := strings.Split(strArr2[0], "=")[1] //username
+
+	return clientMSPId, strClientName + mspMap[clientMSPId], nil
+
+	// var certASN1 *pem.Block
+	// var cert *x509.Certificate
+	// var err error
+
+	// creatorSerializedId := &msp.SerializedIdentity{}
+	// err = proto.Unmarshal(creator, creatorSerializedId)
+	// if err != nil {
+	// 	fmt.Printf("Error unmarshalling creator identity: " + err.Error())
+	// 	return "", "", err
+	// }
+
+	// if len(creatorSerializedId.IdBytes) == 0 {
+	// 	return "", "", errors.New("Empty certificate")
+	// }
+	// certASN1, _ = pem.Decode(creatorSerializedId.IdBytes)
+	// cert, err = x509.ParseCertificate(certASN1.Bytes)
+
+	// if err != nil {
+	// 	return "", "", err
+	// }
+	// return creatorSerializedId.Mspid, cert.Subject.CommonName + "." + cert.Issuer.Organization[0], nil
 }
 
 // add a corporate with Email
@@ -134,7 +168,7 @@ func (s *SmartContract) AddCorporateEmail(ctx contractapi.TransactionContextInte
 		return false, fmt.Errorf("Error getting transaction creator: " + err.Error())
 	}
 
-	mspId, commonName, _ := getTxCreatorInfo(creator)
+	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
 	InfoLogger.Printf("current logged in user:", commonName, "with mspId:", mspId)
 
 	if mspId != "CreditsAuthorityMSP" || !strings.HasPrefix(commonName, "ca") {

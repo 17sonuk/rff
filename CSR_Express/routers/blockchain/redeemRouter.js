@@ -15,17 +15,46 @@ router.post('/request', async (req, res, next) => {
     logger.debug('==================== INVOKE REDEEM TOKEN ON CHAINCODE ==================');
 
     //extract parameters from request body.
-    const amount = req.body.amount;
-    const receiverId = req.body.receiverId;
+    const qty = req.body.qty;
+    console.log('QTY::::::::::::: ' + qty)
+    const paymentDetails = req.body.paymentDetails
 
-    if (!amount) {
-        return res.json(fieldErrorMessage('\'amount\''));
+    if (!qty) {
+        return res.json(fieldErrorMessage('\'quantity\''));
     }
-    if (!receiverId) {
-        return res.json(fieldErrorMessage('\'receiverId\''));
+    if (!paymentDetails) {
+        return res.json(fieldErrorMessage('\'paymentDetails\''));
+    }
+    const paymentTypes = ['Paypal', 'Cryptocurrency', 'Bank']
+    if (!paymentDetails.paymentType || !paymentTypes.includes(paymentDetails.paymentType)) {
+        return res.json(fieldErrorMessage('\'payment type\''));
     }
 
-    let args = [uuid().toString(), amount, receiverId, Date.now().toString(), uuid().toString()]
+    if (paymentDetails.paymentType === 'Paypal' && !paymentDetails.paypalEmailId) {
+        return res.json(fieldErrorMessage('\'paypal email id of beneficiary\''));
+    }
+    if (paymentDetails.paymentType === 'Cryptocurrency' && !paymentDetails.cryptoAddress) {
+        return res.json(fieldErrorMessage('\'crypto address of beneficiary\''));
+    }
+    if (paymentDetails.paymentType === 'Bank') {
+        if (!paymentDetails.bankDetails)
+            return res.json(fieldErrorMessage('\'bank account details of beneficiary\''));
+        if (paymentDetails.bankDetails.isUSBank === undefined)
+            return res.json(fieldErrorMessage('\'is US bank\''));
+        if (!paymentDetails.bankDetails.bankName)
+            return res.json(fieldErrorMessage('\'bank name\''));
+        if (!paymentDetails.bankDetails.bankAddress)
+            return res.json(fieldErrorMessage('\'bank address\''));
+        if (!paymentDetails.bankDetails.bankAddress.city)
+            return res.json(fieldErrorMessage('\'bank address city\''));
+        if (!paymentDetails.bankDetails.bankAddress.country)
+            return res.json(fieldErrorMessage('\'bank address country\''));
+        if (!paymentDetails.bankDetails.currencyType)
+            return res.json(fieldErrorMessage('\'currency type\''));
+    }
+
+    let args = [uuid().toString(), JSON.stringify(req.body), Date.now().toString(), uuid().toString()]
+    //let args = [uuid().toString(), amount, receiverId, Date.now().toString(), uuid().toString()]
     //added current UTC date(in epoch milliseconds) to args
     args = JSON.stringify(args);
     logger.debug('args  : ' + args);

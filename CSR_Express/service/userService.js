@@ -14,6 +14,53 @@ logger.debug('<<<<<<<<<<<<<< user service >>>>>>>>>>>>>>>>>')
 // individual donor: first name, last name, username, email
 userService.registerUser = (obj) => {
 
+    let err = new Error()
+    err.status = 400
+
+    if (obj.role === 'Corporate') {
+        if (!obj.subRole) {
+            err.message = 'Donor type is missing/invalid!'
+            throw err
+        } else if (this.subRole === 'Institution' && !this.orgName) {
+            err.message = 'Company/Foundation/Fund Name is missing/invalid!'
+            throw err
+        }
+    }
+
+    //ngo validations
+    let errMsg = undefined;
+
+    if (obj['role'] === 'Ngo') {
+        let { addressLine1, addressLine2, city, state, country, zipCode } = obj.address
+        if (!addressLine1 || !addressLine2 || !city || !state || !country || !zipCode) {
+            err.message = 'some address info is missing/invalid!'
+            throw err
+        }
+
+        if (obj.paymentDetails.paymentType === 'Bank' && (!obj.paymentDetails.bankDetails.bankAddress.city || !obj.paymentDetails.bankDetails.bankAddress.country)) {
+            err.message = 'some bank address info is missing/invalid!'
+            throw err
+        }
+
+        if (!obj['paymentDetails']) {
+            errMsg = 'Payment details missing!'
+        }
+        else if (obj['paymentDetails']['paymentType'] === 'Paypal' && !obj['paymentDetails']['paypalEmailId']) {
+            errMsg = 'Paypal email id is missing!'
+        }
+        else if (obj['paymentDetails']['paymentType'] === 'Cryptocurrency' && !obj['paymentDetails']['cryptoAddress']) {
+            errMsg = 'Crypto id is missing'
+        }
+        else if (obj['paymentDetails']['paymentType'] === 'Bank' && !obj['paymentDetails']['bankDetails']) {
+            errMsg = 'Bank details are missing'
+        }
+
+        if (errMsg !== undefined) {
+            err.message = "payment details missing"
+            throw err
+        }
+    }
+
     if ((obj['role'] === 'Corporate' && obj['subRole'] === 'Individual') || obj['role'] === 'Ngo') {
         obj['status'] = 'approved';
     } else {
@@ -25,11 +72,23 @@ userService.registerUser = (obj) => {
         if (data) {
             console.log('use added!!!!')
             return data;
-        } else {
-            console.log('user add failed!!!')
-            let err = new Error("Bad Connection")
+        }
+        console.log('user add failed!!!')
+        err.message = 'Bad Connection'
+        err.status = 500
+        throw err
+    })
+}
+
+//get username validity
+userService.checkUserNameValidty = (userName) => {
+    return userModel.getUserDetails(userName, 'userName').then(data => {
+        if (data) {
+            let err = new Error("User already exists")
             err.status = 500
             throw err
+        } else {
+            return true;
         }
     })
 }
@@ -49,14 +108,36 @@ userService.getUserDetails = (userName) => {
     })
 }
 
-//get user details
+// get user redeem account
+userService.getUserRedeemAccount = (userName, paymentType) => {
+    return userModel.getUserDetails(userName, 'userName').then(data => {
+        if (data) {
+            if (paymentType === 'Paypal') {
+                return data['paymentDetails']['paypalEmailId']
+            } else if (paymentType === 'Cryptocurrency') {
+                return data['paymentDetails']['cryptoAddress']
+            } else if (paymentType === 'Bank') {
+                return data['paymentDetails']['bankDetails']
+            } else {
+                let err = new Error("Invalid payment type")
+                err.status = 500
+                throw err
+            }
+        } else {
+            let err = new Error("Unauthorized user")
+            err.status = 401
+            throw err
+        }
+    })
+}
+
+//get user unapproved users
 userService.getUnapprovedUserDetails = () => {
     return userModel.getUnapprovedUserDetails().then(data => {
         if (data) {
             // for (let i = 0; i < data.length; i++) {
             //     data[i].pan = CryptoJS.AES.decrypt(data[i].pan, "Secret123PaN").toString(CryptoJS.enc.Utf8)
             //     data[i].contact[0].number = CryptoJS.AES.decrypt((data[i].contact[0].number), "Secret123CoN").toString(CryptoJS.enc.Utf8)
-
             // }
 
             return data;

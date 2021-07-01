@@ -33,7 +33,6 @@ const testProject = {
 }
 
 describe('TESTING PROJECT MODEL - CREATE', () => {
-
     before((done) => {
         connectionToMongo('_test');
         done();
@@ -75,7 +74,7 @@ describe('TESTING PROJECT MODEL - CREATE', () => {
 
     it('testing get all projects donated by corp in mongo', async () => {
 
-        const res = await projectModel.getProjectsCorporate('corp1');
+        const res = await projectModel.getProjectsCorporate('corp101');
         expect(res).to.be.a('array');
         expect(res).to.have.lengthOf(0);
     });
@@ -94,7 +93,6 @@ describe('TESTING PROJECT MODEL - CREATE', () => {
     });
 
     it('testing add contributor to project in mongo', async () => {
-
         const res = await projectModel.addContributor('p01', 'corp1');
         expect(res).to.be.a('object');
         expect(res.message).to.equal('Contributor added successfully');

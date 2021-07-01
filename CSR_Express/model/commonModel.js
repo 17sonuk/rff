@@ -1,8 +1,9 @@
-const { orgModel, communityModel } = require('./models');
+const logger = require('../loggers/logger');
+const { orgModel, communityModel, donorModel } = require('./models');
 
 const commonModel = {}
 
-console.log('<<<<<<<<<<<<<< common model >>>>>>>>>>>>>>>>>');
+logger.debug('<<<<<<<<<<<<<< common model >>>>>>>>>>>>>>>>>');
 
 // upload Balance Sheet for corporate
 commonModel.uploadBalanceSheet = (userName, file) => {
@@ -16,7 +17,6 @@ commonModel.uploadBalanceSheet = (userName, file) => {
 }
 
 commonModel.saveCommunities = (communityArr) => {
-
     return communityModel.insertMany(communityArr).then(data => {
         if (data) {
             return data
@@ -27,13 +27,30 @@ commonModel.saveCommunities = (communityArr) => {
 }
 
 commonModel.getCommunities = () => {
+    return communityModel.find().then(data => {
+        return data ? data : null
+    })
+}
 
-    return communityModel.find(communityArr, 'name').then(data => {
-        if (data) {
-            return data
-        } else {
-            return null
+commonModel.saveDonor = async (donor) => {
+    try {
+        let existingDonor = await donorModel.findOne({ email: donor.email })
+        if (existingDonor) {
+            return "Donor already exists!"
         }
+        return donorModel.create(donor).then(data => {
+            return data ? data : null
+        })
+    }
+    catch (err) {
+        logger.error(err)
+        return nil
+    }
+}
+
+commonModel.getDonors = () => {
+    return donorModel.find().then(data => {
+        return data ? data : null
     })
 }
 

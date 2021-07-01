@@ -31,7 +31,7 @@ describe('TESTING PROJECT SERVICE - CREATE PROJECT', () => {
             "projectId": "p01",
             "projectName": "123Gift an education...Make a life!",
             "projectType": "Education",
-            "ngo": "ngo1",
+            "ngo": "ngo501",
             "place": "Mumbai",
             "description": "Mysuru public school provide high quality school education to rural children in India who cannot otherwise access or afford it. The schools adopt a nurturing, holistic approach to education, helping children learn joyfully. 61% of the children get full scholarships while rest pay a subsidized fee. Your donation goes towards critical infrastructure like learning material, classrooms, school bus, etc.",
             "phases": [
@@ -69,7 +69,7 @@ describe('TESTING PROJECT SERVICE - CREATE PROJECT', () => {
             "projectId": "",
             "projectName": "Project_Test",
             "projectType": "Education",
-            "ngo": "ngo1",
+            "ngo": "ngo501",
             "place": "Mumbai",
             "description": "Mysuru public school provide high quality school education to rural children in India who cannot otherwise access or afford it. The schools adopt a nurturing, holistic approach to education, helping children learn joyfully. 61% of the children get full scholarships while rest pay a subsidized fee. Your donation goes towards critical infrastructure like learning material, classrooms, school bus, etc.",
             "phases": [
@@ -91,7 +91,6 @@ describe('TESTING PROJECT SERVICE - CREATE PROJECT', () => {
         try{
         const response = await projectService.createProject(errorTestProject);
         //here to request
-        console.log("Response:",response);
         expect(response).to.be.a('object');
         expect(response.success).to.equal(true);
         }catch(err){
@@ -100,7 +99,7 @@ describe('TESTING PROJECT SERVICE - CREATE PROJECT', () => {
     })
 
     it('testing response for getProjectforNgo', async () => {  
-        const res = await projectService.getProjectsNGO('ngo1');
+        const res = await projectService.getProjectsNGO('ngo501');
         expect(res).to.be.a('array');
         expect(res).to.have.lengthOf(1);        
     })

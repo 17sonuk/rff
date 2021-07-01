@@ -6,7 +6,8 @@ const { v4: uuid } = require('uuid');
 
 const logger = require('../../loggers/logger');
 const projectService = require('../../service/projectService');
-const { fieldErrorMessage, generateError, getMessage, splitOrgName, paypalAuth0AccessToken } = require('../../utils/functions');
+const commonService = require('../../service/commonService');
+const { fieldErrorMessage, generateError, getMessage, splitOrgName } = require('../../utils/functions');
 
 const invoke = require('../../fabric-sdk/invoke');
 const query = require('../../fabric-sdk/query');
@@ -128,27 +129,36 @@ router.post('/transfer', async (req, res, next) => {
     const amount = req.body.amount.toString();
     const projectId = req.body.projectId;
     const phaseNumber = req.body.phaseNumber.toString();
-    const reviewMsg = req.body.reviewMsg;
-    const rating = req.body.rating.toString();
+    let notes = req.body.notes ? req.body.notes : "";
+    const donorDetails = req.body.donorDetails;
 
-    if (!CHAINCODE_NAME) {
+    if (!CHAINCODE_NAME)
         return res.json(fieldErrorMessage('\'chaincodeName\''));
-    } else if (!CHANNEL_NAME) {
+    if (!CHANNEL_NAME)
         return res.json(fieldErrorMessage('\'channelName\''));
-    } else if (!amount) {
+    if (!amount)
         return res.json(fieldErrorMessage('\'amount\''));
-    } else if (!projectId) {
+    if (!projectId)
         return res.json(fieldErrorMessage('\'projectId\''));
-    } else if (!phaseNumber) {
+    if (!phaseNumber)
         return res.json(fieldErrorMessage('\'phaseNumber\''));
-    } else if (!reviewMsg) {
-        return res.json(fieldErrorMessage('\'reviewMsg\''));
-    } else if (!rating) {
-        return res.json(fieldErrorMessage('\'rating\''));
+    if (!donorDetails)
+        return res.json(fieldErrorMessage('\'donorDetails\''));
+    if (req.userName !== 'guest') {
+        if (!donorDetails.email)
+            return res.json(fieldErrorMessage('\'donor email id\''));
+        if (!donorDetails.name)
+            return res.json(fieldErrorMessage('\'donor name\''));
+    }
+    if (req.userName === 'guest' && !donorDetails.paymentId) {
+        return res.json(fieldErrorMessage('\'paymentId\''));
+    }
+    if (req.userName === 'guest') {
+        notes = donorDetails.email + " " + "PaymentId - " + donorDetails.paymentId + " " + notes
     }
 
-    let args = [amount, projectId, phaseNumber, reviewMsg, rating, Date.now().toString(), uuid().toString(), uuid().toString()]
-    args = JSON.stringify(args);
+    logger.debug(notes)
+    let args = JSON.stringify([amount, projectId, phaseNumber, notes, Date.now().toString(), uuid().toString()]);
     logger.debug('args  : ' + args);
 
     try {
@@ -162,8 +172,19 @@ router.post('/transfer', async (req, res, next) => {
                 return res.json(getMessage(true, "Transferred succesfully"))
             })
             .catch(err => {
-                generateError(e, next, 500, 'Failed to add contributor in mongo');
+                generateError(err, next, 500, 'Failed to add contributor in mongo');
             });
+
+        if (donorDetails.email) {
+            commonService.saveDonor(donorDetails)
+                .then((data) => {
+                    logger.debug('saved donor details')
+                    logger.debug(data)
+                })
+                .catch(err => {
+                    generateError(err, next, 500, 'Failed to save donor details');
+                })
+        }
     }
     catch (e) {
         generateError(e, next);

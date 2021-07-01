@@ -4,11 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "node ./index.js",
     "test": "nyc mocha test/**/*.js --timeout 30000 --exit"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "aws-sdk": "^2.937.0",
     "axios": "^0.21.1",
     "bcrypt": "^5.0.1",
     "compression": "^1.7.4",

@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 
@@ -22,20 +23,22 @@ type TokenRequest struct {
 //Corporate = Donor
 //CreditsAuthority = Rainforest
 func (s *SmartContract) RequestTokens(ctx contractapi.TransactionContextInterface, arg string) (bool, error) {
-	InfoLogger.Printf("*************** RequestTokens Started ***************")
-	InfoLogger.Printf("args received:", arg)
+	// InfoLogger.Printf("*************** RequestTokens Started ***************")
+	// InfoLogger.Printf("args received:", arg)
 
 	//getusercontext to populate the required data
 	creator, err := ctx.GetStub().GetCreator()
+	//fmt.Println("creator value: " + string(creator))
 	if err != nil {
 		return false, fmt.Errorf("Error getting transaction creator: " + err.Error())
 	}
-	mspId, commonName, _ := getTxCreatorInfo(creator)
+	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
+	fmt.Println("client id: " + commonName + " mspID: " + mspId)
 	if mspId != "CorporateMSP" {
-		InfoLogger.Printf("only corporate can initiate requestTokens")
+		// InfoLogger.Printf("only corporate can initiate requestTokens")
 		return false, fmt.Errorf("only corporate can initiate requestTokens")
 	}
-	InfoLogger.Printf("current logged in user:", commonName, "with mspId:", mspId)
+	// InfoLogger.Printf("current logged in user:", commonName, "with mspId:", mspId)
 
 	var args []string
 
@@ -118,14 +121,19 @@ func (s *SmartContract) RequestTokens(ctx contractapi.TransactionContextInterfac
 			ctx.GetStub().PutState(commonName, []byte(fmt.Sprintf("%0.2f", tokenQty)))
 		} else {
 			balance, _ := strconv.ParseFloat(string(tokenBalanceAsBytes), 64)
-			ctx.GetStub().PutState(commonName, []byte(fmt.Sprintf("%0.2f", balance+tokenQty)))
+			ctx.GetStub().PutState(commonName, []byte(fmt.Sprintf("%0.2f", math.Round((balance+tokenQty)*100)/100)))
 		}
-	}
-
-	//save a transaction
-	err = createTransaction(ctx, fromAddress, toAddress, tokenQty, date, txType, bankTxId, txId, -1)
-	if err != nil {
-		return false, fmt.Errorf("Failed to add a Tx: " + err.Error())
+		//save a transaction
+		err = createTransaction(ctx, toAddress, fromAddress, tokenQty, date, txType, bankTxId, txId, -1)
+		if err != nil {
+			return false, fmt.Errorf("Failed to add a Tx: " + err.Error())
+		}
+	} else {
+		//save a transaction
+		err = createTransaction(ctx, fromAddress, toAddress, tokenQty, date, txType, bankTxId, txId, -1)
+		if err != nil {
+			return false, fmt.Errorf("Failed to add a Tx: " + err.Error())
+		}
 	}
 
 	//emit chaincode event for notification
@@ -140,7 +148,7 @@ func (s *SmartContract) RequestTokens(ctx contractapi.TransactionContextInterfac
 		}
 	}
 
-	InfoLogger.Printf("*************** RequestTokens Successfull ***************")
+	// InfoLogger.Printf("*************** RequestTokens Successfull ***************")
 	return true, nil
 }
 
@@ -154,7 +162,7 @@ func (s *SmartContract) AssignTokens(ctx contractapi.TransactionContextInterface
 	if err != nil {
 		return false, fmt.Errorf("Error getting transaction creator: " + err.Error())
 	}
-	mspId, commonName, _ := getTxCreatorInfo(creator)
+	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
 	if mspId != "CreditsAuthorityMSP" {
 		InfoLogger.Printf("only creditsauthority can initiate assignTokens")
 		return false, fmt.Errorf("only creditsauthority can initiate assignTokens")
@@ -208,7 +216,7 @@ func (s *SmartContract) AssignTokens(ctx contractapi.TransactionContextInterface
 		ctx.GetStub().PutState(tokenRequest.From, []byte(fmt.Sprintf("%0.2f", tokenRequest.Qty)))
 	} else {
 		balance, _ := strconv.ParseFloat(string(tokenBalanceAsBytes), 64)
-		ctx.GetStub().PutState(tokenRequest.From, []byte(fmt.Sprintf("%0.2f", balance+tokenRequest.Qty)))
+		ctx.GetStub().PutState(tokenRequest.From, []byte(fmt.Sprintf("%0.2f", math.Round((balance+tokenRequest.Qty)*100)/100)))
 	}
 
 	//update the status of token request
@@ -246,7 +254,7 @@ func (s *SmartContract) RejectTokens(ctx contractapi.TransactionContextInterface
 	if err != nil {
 		return false, fmt.Errorf("Error getting transaction creator: " + err.Error())
 	}
-	mspId, commonName, _ := getTxCreatorInfo(creator)
+	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
 	if mspId != "CreditsAuthorityMSP" {
 		InfoLogger.Printf("only creditsauthority can initiate rejectTokens")
 		return false, fmt.Errorf("only creditsauthority can initiate rejectTokens")
@@ -319,50 +327,43 @@ func (s *SmartContract) RejectTokens(ctx contractapi.TransactionContextInterface
 
 //transfer tokens from corporate to ngo
 func (s *SmartContract) TransferTokens(ctx contractapi.TransactionContextInterface, arg string) (bool, error) {
-	InfoLogger.Printf("*************** transferTokens Started ***************")
-	InfoLogger.Printf("args received:", arg)
+	// InfoLogger.Printf("*************** TransferTokens Started ***************")
+	// InfoLogger.Printf("args received:", arg)
 
-	//getusercontext to populate the required data
 	creator, err := ctx.GetStub().GetCreator()
 	if err != nil {
 		return false, fmt.Errorf("Error getting transaction creator: " + err.Error())
 	}
-	mspId, commonName, _ := getTxCreatorInfo(creator)
+	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
+	// InfoLogger.Printf("current logged in user:", commonName, "with mspId:", mspId)
+
 	if mspId != "CorporateMSP" {
-		InfoLogger.Printf("only corporate can initiate transferTokens")
+		// InfoLogger.Printf("only corporate can initiate transferTokens")
 		return false, fmt.Errorf("only corporate can initiate transferTokens")
 	}
-	InfoLogger.Printf("current logged in user:", commonName, "with mspId:", mspId)
 
 	var args []string
-
 	err = json.Unmarshal([]byte(arg), &args)
 	if err != nil {
 		return false, fmt.Errorf(err.Error())
 	}
 
-	if len(args) != 8 {
-		return false, fmt.Errorf("Incorrect number of arguments. Expecting 8")
+	if len(args) != 6 {
+		return false, fmt.Errorf("Incorrect number of arguments. Expecting 6")
 	} else if len(args[0]) <= 0 {
-		return false, fmt.Errorf("1st argument must be a non-empty string")
+		return false, fmt.Errorf("amount must be a non-empty string")
 	} else if len(args[1]) <= 0 {
-		return false, fmt.Errorf("2nd argument must be a non-empty string")
+		return false, fmt.Errorf("project id must be a non-empty string")
 	} else if len(args[2]) <= 0 {
-		return false, fmt.Errorf("3rd argument must be a non-empty string")
-	} else if len(args[3]) <= 0 {
-		return false, fmt.Errorf("4th argument must be a non-empty string")
+		return false, fmt.Errorf("phase number must be a non-empty string")
 	} else if len(args[4]) <= 0 {
-		return false, fmt.Errorf("5th argument must be a non-empty string")
+		return false, fmt.Errorf("date must be a non-empty string")
 	} else if len(args[5]) <= 0 {
-		return false, fmt.Errorf("6th argument must be a non-empty string")
-	} else if len(args[6]) <= 0 {
-		return false, fmt.Errorf("7th argument must be a non-empty string")
-	} else if len(args[7]) <= 0 {
-		return false, fmt.Errorf("8th argument must be a non-empty string")
+		return false, fmt.Errorf("tx id must be a non-empty string")
 	}
 
-	var flagSnapshot = false
-	var snapshotTokenUsed = 0.0
+	// var flagSnapshot = false
+	// var snapshotTokenUsed = 0.0
 
 	//donated amount
 	qty, err := strconv.ParseFloat(args[0], 64)
@@ -379,20 +380,14 @@ func (s *SmartContract) TransferTokens(ctx contractapi.TransactionContextInterfa
 		return false, fmt.Errorf("Invalid phase Number!")
 	}
 
-	//Note: use reviewMsg as Notes
-	reviewMsg := args[3]
-	rating, err := strconv.Atoi(args[4])
-	if err != nil || rating < 0.0 || rating > 5.0 {
-		return false, fmt.Errorf("Invalid rating")
-	}
-	date, err := strconv.Atoi(args[5])
+	notes := args[3]
+	date, err := strconv.Atoi(args[4])
 	if err != nil {
 		return false, fmt.Errorf("date is not an integer! " + err.Error())
 	}
-	txId1 := args[6]
-	txId2 := args[7]
+	txId1 := args[5]
 
-	//Get existing project
+	//fetch the project
 	projectAsBytes, _ := ctx.GetStub().GetState(pId)
 	if projectAsBytes == nil {
 		return false, fmt.Errorf("No such project exists!")
@@ -402,11 +397,11 @@ func (s *SmartContract) TransferTokens(ctx contractapi.TransactionContextInterfa
 	if err != nil {
 		return false, fmt.Errorf("error in unmarshalling project: " + err.Error())
 	}
-	InfoLogger.Printf("A project found...")
+	// InfoLogger.Printf("A project found...")
 
-	//to be used during actual run.
+	//funds can be transferred only if phase is open or partially funded
 	if projectObj.Phases[phaseNumber].PhaseState == "Open For Funding" || projectObj.Phases[phaseNumber].PhaseState == "Partially Funded" {
-		InfoLogger.Printf("FUNDING IS ALLOWED...")
+		// InfoLogger.Printf("FUNDING IS ALLOWED...")
 		if projectObj.Phases[phaseNumber].OutstandingQty <= qty {
 			qtyToTransfer = projectObj.Phases[phaseNumber].OutstandingQty
 			qty = qtyToTransfer
@@ -418,124 +413,136 @@ func (s *SmartContract) TransferTokens(ctx contractapi.TransactionContextInterfa
 				projectObj.ProjectState = "Partially Funded"
 			}
 		} else {
-			projectObj.Phases[phaseNumber].OutstandingQty -= qty
+			projectObj.Phases[phaseNumber].OutstandingQty = math.Round((projectObj.Phases[phaseNumber].OutstandingQty-qty)*100) / 100
 			projectObj.Phases[phaseNumber].PhaseState = "Partially Funded"
 			projectObj.ProjectState = "Partially Funded"
 		}
 	} else {
-		InfoLogger.Printf("FUNDING NOT ALLOWED...")
+		// InfoLogger.Printf("FUNDING NOT ALLOWED...")
 		return false, fmt.Errorf("Funding is not allowed to this phase!")
 	}
 
 	//update the phase contribution and contributors
 	contributionObj := projectObj.Phases[phaseNumber].Contributions[fromAddress]
-	contributionObj.ReviewMsg = reviewMsg
-	contributionObj.Rating = rating
 	contributionObj.Contributor = fromAddress
-	contributionObj.ContributionQty += qty
+	contributionObj.ContributionQty = math.Round((contributionObj.ContributionQty+qty)*100) / 100
 	projectObj.Phases[phaseNumber].Contributions[fromAddress] = contributionObj
 	projectObj.Contributors[fromAddress] = "exists"
 
 	//save the updated project
-	updatedProjectAsBytes, err := json.Marshal(projectObj)
-	if err != nil {
-		return false, fmt.Errorf("Json convert error " + err.Error())
-	}
+	updatedProjectAsBytes, _ := json.Marshal(projectObj)
 
 	err = ctx.GetStub().PutState(pId, updatedProjectAsBytes)
 	if err != nil {
 		return false, fmt.Errorf("error saving/updating project " + err.Error())
 	}
-	InfoLogger.Printf("PROJECT UPDATED...")
+	// InfoLogger.Printf("PROJECT UPDATED...")
 
-	snapshotExistsBytes, _ := ctx.GetStub().GetState("snapshot_exists")
-	if snapshotExistsBytes == nil {
-		InfoLogger.Printf("SNAPSHOT EXISTS: nil...")
-		return false, fmt.Errorf("Failed to get snapshot Exists: " + err.Error())
-	}
+	if commonName != "guest.corporate.csr.com" {
+		// NOT RELEVANT FOR RAINFOREST
+		// snapshotExistsBytes, _ := ctx.GetStub().GetState("snapshot_exists")
+		// if snapshotExistsBytes == nil {
+		// 	InfoLogger.Printf("SNAPSHOT EXISTS: nil...")
+		// 	return false, fmt.Errorf("Failed to get snapshot_exists: " + err.Error())
+		// }
+		// //check if there is a snapshot (flag = true) and if there are any funds in snapshot
+		// if string(snapshotExistsBytes) == "1" {
+		// 	InfoLogger.Printf("SNAPSHOT = 1...")
+		// 	snapshotKey := fromAddress + "_snapshot"
 
-	//check if there is a snapshot (flag = true) and if there are any funds in snapshot
-	if string(snapshotExistsBytes) == "1" {
-		InfoLogger.Printf("SNAPSHOT = 1...")
-		snapshotKey := fromAddress + "_snapshot"
+		// 	snapshotBalance := 0.0
 
-		snapshotBalance := 0.0
+		// 	//Get the balance in Snapshot for corporate
+		// 	snapShotBalanceInBytes, _ := ctx.GetStub().GetState(snapshotKey)
+		// 	if snapShotBalanceInBytes != nil {
+		// 		snapshotBalance, _ = strconv.ParseFloat(string(snapShotBalanceInBytes), 64)
+		// 		InfoLogger.Printf("SNAPSHOT BALANCE = ", snapshotBalance)
+		// 	}
 
-		//Get the balance in Snapshot for corporate
-		snapShotBalanceInBytes, _ := ctx.GetStub().GetState(snapshotKey)
-		if snapShotBalanceInBytes != nil {
-			snapshotBalance, _ = strconv.ParseFloat(string(snapShotBalanceInBytes), 64)
-			InfoLogger.Printf("SNAPSHOT BALANCE = ", snapshotBalance)
-		}
+		// 	if snapshotBalance > 0.0 {
+		// 		flagSnapshot = true
+		// 		if snapshotBalance >= qty {
+		// 			//use the snapshot funds and then use the current fund
+		// 			balance := fmt.Sprintf("%0.2f", snapshotBalance-qty)
 
-		if snapshotBalance > 0.0 {
-			flagSnapshot = true
-			if snapshotBalance >= qty {
-				//use the snapshot funds and then use the current fund
-				balance := fmt.Sprintf("%0.2f", snapshotBalance-qty)
+		// 			//take account of how much snapshot account is used to create transaction
+		// 			snapshotTokenUsed = qty
+		// 			InfoLogger.Printf("SNAPSHOT IS MORE THAN QTY...", qty)
+		// 			ctx.GetStub().PutState(snapshotKey, []byte(balance))
+		// 			qty = 0.0
+		// 		} else {
+		// 			qty -= snapshotBalance
+		// 			//take account of how much snapshot account is used to create transaction
+		// 			snapshotTokenUsed = snapshotBalance
+		// 			InfoLogger.Printf("SNAPSHOT IS LESS THAN QTY...", snapshotBalance)
+		// 			ctx.GetStub().PutState(snapshotKey, []byte("0.0"))
+		// 		}
+		// 	}
+		// }
 
-				//take account of how much snapshot account is used to create transaction
-				snapshotTokenUsed = qty
-				InfoLogger.Printf("SNAPSHOT IS MORE THAN QTY...", qty)
-				ctx.GetStub().PutState(snapshotKey, []byte(balance))
-				qty = 0.0
+		//if qty is still remaining, use the current account
+		if qty > 0.0 {
+			//reduce token balance from sender
+			// InfoLogger.Printf("QTY LEFT AFTER DEDUCTING SNAPSHOT BALANCE = ", qty)
+			tokenBalanceInBytes, _ := ctx.GetStub().GetState(fromAddress)
+			tokenBalance := 0.0
+			if tokenBalanceInBytes != nil {
+				tokenBalance, _ = strconv.ParseFloat(string(tokenBalanceInBytes), 64)
+			}
+
+			if tokenBalance >= qty {
+				finalQty := fmt.Sprintf("%0.2f", math.Round((tokenBalance-qty)*100)/100)
+				ctx.GetStub().PutState(fromAddress, []byte(finalQty))
 			} else {
-				qty -= snapshotBalance
-
-				//take account of how much snapshot account is used to create transaction
-				snapshotTokenUsed = snapshotBalance
-				InfoLogger.Printf("SNAPSHOT IS LESS THAN QTY...", snapshotBalance)
-				ctx.GetStub().PutState(snapshotKey, []byte("0.0"))
+				// InfoLogger.Printf("INSUFFICIENT BALANCE...")
+				return false, fmt.Errorf("Not enough balance. Available balance: " + fmt.Sprintf("%0.2f", tokenBalance))
 			}
 		}
 	}
 
-	//if qty is still remaining, use the current account
-	if qty > 0.0 {
-		//reduce token balance from sender
-		InfoLogger.Printf("QTY LEFT AFTER DEDUCTING SNAPSHOT BALANCE = ", qty)
-		tokenBalanceInBytes, _ := ctx.GetStub().GetState(fromAddress)
-		if tokenBalanceInBytes == nil {
-			return false, fmt.Errorf("Failed to get token balance to transfer!")
-		}
-		tokenBalance, _ := strconv.ParseFloat(string(tokenBalanceInBytes), 64)
-
-		if tokenBalance >= qty {
-			InfoLogger.Printf("BALANCE IS SUFFICIENT...")
-			finalQty := fmt.Sprintf("%0.2f", tokenBalance-qty)
-			ctx.GetStub().PutState(fromAddress, []byte(finalQty))
-		} else {
-			InfoLogger.Printf("INSUFFICIENT BALANCE...")
-			return false, fmt.Errorf("Not enough balance " + fromAddress + ".Available balance:" + string(tokenBalanceInBytes))
-		}
-	}
-
-	//Add token balance to receiver
+	//Add token balance to receiver's wallet
 	receiverTokenBalanceAsBytes, _ := ctx.GetStub().GetState(projectObj.NGO)
 	receiverTokenBalance := 0.0
 	if receiverTokenBalanceAsBytes != nil {
 		receiverTokenBalance, _ = strconv.ParseFloat(string(receiverTokenBalanceAsBytes), 64)
 	}
 
-	receiverFinalBal := fmt.Sprintf("%0.2f", receiverTokenBalance+qtyToTransfer)
+	receiverFinalBal := fmt.Sprintf("%0.2f", math.Round((receiverTokenBalance+qtyToTransfer)*100)/100)
 	ctx.GetStub().PutState(projectObj.NGO, []byte(receiverFinalBal))
 
-	if qty > 0.0 {
-		err = createTransaction(ctx, fromAddress, projectObj.NGO, qty, date, "TransferToken", pId, txId1, phaseNumber)
-		if err != nil {
-			return false, fmt.Errorf("Failed to add a Tx: " + err.Error())
-		}
+	newTx := &Transaction{
+		ObjectType:  "Transaction",
+		From:        fromAddress,
+		To:          projectObj.NGO,
+		Qty:         qty,
+		TxType:      "TransferToken",
+		Date:        date,
+		ObjRef:      pId,
+		PhaseNumber: phaseNumber,
 	}
 
-	if flagSnapshot == true {
-		err = createTransaction(ctx, fromAddress, projectObj.NGO, snapshotTokenUsed, date, "TransferToken_snapshot", pId, txId2, phaseNumber)
-		if err != nil {
-			return false, fmt.Errorf("Failed to add a Tx: " + err.Error())
-		}
+	if len(notes) > 0 {
+		newTx.Notes = notes
 	}
+
+	txAsBytes, _ := json.Marshal(newTx)
+	//save the tx to ledger, key is txId1
+	ctx.GetStub().PutState(txId1, txAsBytes)
+
+	// not relevant for Rainforest
+	// if qty > 0.0 {
+	// save tx
+	// }
+
+	// if flagSnapshot == true {
+	// 	err = createTransaction(ctx, fromAddress, projectObj.NGO, snapshotTokenUsed, date, "TransferToken_snapshot", pId, txId2, phaseNumber)
+	// 	if err != nil {
+	// 		return false, fmt.Errorf("Failed to add a Tx: " + err.Error())
+	// 	}
+	// }
 
 	splitName := strings.SplitN(commonName, ".", -1)
-	eventPayload := splitName[0] + " has transferred " + fmt.Sprintf("%0.2f", qtyToTransfer) + " credits to your project " + projectObj.ProjectName + "."
+	eventPayload := splitName[0] + " has transferred " + fmt.Sprintf("%0.2f", qtyToTransfer) + " funds to your project " + projectObj.ProjectName + "."
 	notification := &Notification{TxId: txId1, Description: eventPayload, Users: []string{projectObj.NGO}}
 	notificationtAsBytes, err := json.Marshal(notification)
 	eventErr := ctx.GetStub().SetEvent("Notification", notificationtAsBytes)
@@ -543,7 +550,7 @@ func (s *SmartContract) TransferTokens(ctx contractapi.TransactionContextInterfa
 		return false, fmt.Errorf(fmt.Sprintf("Failed to emit event"))
 	}
 
-	InfoLogger.Printf("*************** transferTokens Successfull ***************")
+	// InfoLogger.Printf("*************** TransferTokens Successfull ***************")
 	return true, nil
 }
 
@@ -557,7 +564,7 @@ func (s *SmartContract) SnapshotCurrentCorporateBalances(ctx contractapi.Transac
 	if err != nil {
 		return false, fmt.Errorf("Error getting transaction creator: " + err.Error())
 	}
-	mspId, commonName, _ := getTxCreatorInfo(creator)
+	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
 	if mspId != "CreditsAuthorityMSP" {
 		InfoLogger.Printf("only creditsauthority can initiate snapshotCurrentCorporateBalances")
 		return false, fmt.Errorf("only creditsauthority can initiate snapshotCurrentCorporateBalances")
@@ -603,7 +610,7 @@ func (s *SmartContract) SnapshotCurrentCorporateBalances(ctx contractapi.Transac
 		if tokenBalance > 0.0 {
 			notificationUsers = append(notificationUsers, corporate)
 			balancesExist = true
-			sum += tokenBalance
+			sum = math.Round((sum+tokenBalance)*100) / 100
 			//create a new entry with corporate_snapshot and save his balance or,
 			//add token balance to existing snapshot balance.
 			snapBalance := 0.0
@@ -612,7 +619,7 @@ func (s *SmartContract) SnapshotCurrentCorporateBalances(ctx contractapi.Transac
 				snapBalance, _ = strconv.ParseFloat(string(snapBalanceInBytes), 64)
 			}
 
-			ctx.GetStub().PutState(corporate+"_snapshot", []byte(fmt.Sprintf("%0.2f", snapBalance+tokenBalance)))
+			ctx.GetStub().PutState(corporate+"_snapshot", []byte(fmt.Sprintf("%0.2f", math.Round((snapBalance+tokenBalance)*100)/100)))
 			//reset the original token balance to 0
 			ctx.GetStub().PutState(corporate, []byte("0.0"))
 			objRef += corporate + ":" + fmt.Sprintf("%0.2f", tokenBalance) + ","
@@ -650,7 +657,7 @@ func (s *SmartContract) TransferUnspentTokensToGovt(ctx contractapi.TransactionC
 	if err != nil {
 		return false, fmt.Errorf("Error getting transaction creator: " + err.Error())
 	}
-	mspId, commonName, _ := getTxCreatorInfo(creator)
+	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
 	if mspId != "CreditsAuthorityMSP" {
 		InfoLogger.Printf("only creditsauthority can initiate transferUnspentTokensToGovt")
 		return false, fmt.Errorf("only creditsauthority can initiate transferUnspentTokensToGovt")
@@ -807,7 +814,7 @@ func (s *SmartContract) QueryForAllTokenRequests(ctx contractapi.TransactionCont
 	if err != nil {
 		return nil, fmt.Errorf("Error getting transaction creator: " + err.Error())
 	}
-	mspId, commonName, _ := getTxCreatorInfo(creator)
+	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
 
 	if mspId == "CorporateMSP" {
 		queryString = gqs([]string{"docType", "TokenRequest", "from", commonName})

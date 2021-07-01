@@ -34,7 +34,7 @@ func (s *SmartContract) ReserveFundsForProject(ctx contractapi.TransactionContex
 	if err != nil {
 		return false, fmt.Errorf("Error getting transaction creator: " + err.Error())
 	}
-	mspId, commonName, _ := getTxCreatorInfo(creator)
+	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
 	if mspId != "CorporateMSP" {
 		InfoLogger.Printf("only corporate can initiate ReserveFundsForProject")
 		return false, fmt.Errorf("only corporate can initiate ReserveFundsForProject")
@@ -264,7 +264,7 @@ func (s *SmartContract) ReleaseFundsForProject(ctx contractapi.TransactionContex
 	if err != nil {
 		return false, fmt.Errorf("Error getting transaction creator: " + err.Error())
 	}
-	mspId, commonName, _ := getTxCreatorInfo(creator)
+	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
 	if mspId != "CorporateMSP" {
 		InfoLogger.Printf("only corporate can initiate ReleaseFundsForProject")
 		return false, fmt.Errorf("only corporate can initiate ReleaseFundsForProject")
@@ -312,7 +312,7 @@ func (s *SmartContract) ReleaseFundsForProject(ctx contractapi.TransactionContex
 	if err != nil || rating < 0.0 || rating > 5.0 {
 		return false, fmt.Errorf("Invalid rating!")
 	}
-	reviewMsg := args[5]
+	//reviewMsg := args[5]
 	phaseNumber, err := strconv.Atoi(args[6])
 	if err != nil || phaseNumber < 0.0 {
 		return false, fmt.Errorf("Invalid phaseNumber!")
@@ -351,8 +351,8 @@ func (s *SmartContract) ReleaseFundsForProject(ctx contractapi.TransactionContex
 
 		//update the phase contribution and contributors
 		contributionObj := projectState.Phases[phaseNumber].Contributions[fromAddress]
-		contributionObj.ReviewMsg = reviewMsg
-		contributionObj.Rating = rating
+		// contributionObj.ReviewMsg = reviewMsg
+		// contributionObj.Rating = rating
 		contributionObj.Contributor = fromAddress
 		contributionObj.ContributionQty += qty
 		projectState.Phases[phaseNumber].Contributions[fromAddress] = contributionObj

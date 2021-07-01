@@ -3,13 +3,14 @@
 const { model, models, Schema } = require("mongoose");
 
 const phaseSchema = new Schema({
-    phaseName: { type: String, maxLength: 50 },
+    phaseName: { type: String, maxLength: 200 },
     description: { type: String, maxLength: 200 },
 })
 
+//to store communities on mongo
 const communitySchema = new Schema({
     name: { type: String, maxLength: 50 },
-    description: { type: String, maxLength: 200 },
+    place: { type: String, maxLength: 100 },
 })
 
 const projectSchema = new Schema({
@@ -23,7 +24,6 @@ const projectSchema = new Schema({
     images: { type: [String], validate: [imageLimit, 'max 3 images allowed!'] },
     phases: { type: [phaseSchema], validate: [phaseLimit, 'Number of phases should be greater than or equal to 1'] },
     communities: { type: [String] }
-
 }, { collection: "Project" })
 
 function imageLimit(val) {
@@ -41,17 +41,7 @@ const addressSchema = new Schema({
     state: { type: String, maxLength: 30 },
     zipCode: { type: String, maxLength: 10 },
     country: { type: String, maxLength: 30 }
-
-    // doorNo: { type: String, maxLength: 20 },
-    // flat: { type: String, maxLength: 20 },
-    // district: { type: String, maxLength: 20 },
-    // locality: { type: String, maxLength: 20 }
 })
-
-// const contactSchema = new Schema({
-//     name: { type: String, maxLength: 50 },
-//     number: String
-// })
 
 const fileSchema = new Schema({
     currency: String,
@@ -64,6 +54,30 @@ const fileSchema = new Schema({
 const phoneSchema = new Schema({
     countryCode: { type: String, maxLength: 4 },
     phoneNumber: { type: String, maxLength: 10 }
+})
+
+//ngo bank details
+const bankDetailsSchema = new Schema({
+    isUSBank: { type: Boolean, required: true },
+    taxId: { type: String, required: true, maxLength: 100 },
+    // beneficiaryName: { type: String, required: true, maxLength: 34 },
+    // beneficiaryAddress: { type: String, required: true, maxLength: 35 },
+    bankName: { type: String, required: true, maxLength: 50 },
+    bankAddress: { type: addressSchema, required: true },
+    bankPhone: phoneSchema,
+    currencyType: { type: String, required: true, maxLength: 20 },
+    bankAccountNo: { type: String, maxLength: 100 },
+    ABAorRoutingNo: { type: String, maxLength: 100 },
+    BICSwiftorCHIPSUISSortCode: { type: String, maxLength: 100 },
+    IBANNo: { type: String, maxLength: 100 }
+})
+
+//ngo payment details
+const paymentSchema = new Schema({
+    paymentType: { type: String, enum: ['Paypal', 'Cryptocurrency', 'Bank'], required: true },
+    paypalEmailId: { type: String, maxLength: 50 },
+    cryptoAddress: { type: String, maxLength: 100 },
+    bankDetails: bankDetailsSchema
 })
 
 //to store user data
@@ -79,24 +93,31 @@ const orgSchema = new Schema({
     description: { type: String, maxLength: 200 },
     address: addressSchema,
     website: { type: String, maxLength: 50 },
-    phone: [phoneSchema]
-    // date: { type: Number, min: 1 },
-    //regId: { type: String, maxLength: 100 },
-    //pan: { type: String, required: false },
-    //contact: [contactSchema]
+    phone: [phoneSchema],
+    paymentDetails: paymentSchema
 }, { collection: "OrganisationProfile" })
 
-orgSchema.pre('validate', function (next) {
+// orgSchema.pre('validate', function (next) {
 
-    if (this.role === 'Corporate') {
-        if (!this.subRole) {
-            next(new Error('Donor type is missing/invalid!'));
-        } else if (this.subRole === 'Institution' && !this.orgName) {
-            next(new Error('Company/Foundation/Fund Name is missing/invalid!'));
-        }
-    }
-    next();
-});
+//     if (this.role === 'Corporate') {
+//         if (!this.subRole) {
+//             return next(new Error('Donor type is missing/invalid!'));
+//         } else if (this.subRole === 'Institution' && !this.orgName) {
+//             return next(new Error('Company/Foundation/Fund Name is missing/invalid!'));
+//         }
+//     }
+//     if (this.role === 'Ngo') {
+//         let { addressLine1, addressLine2, city, state, country, zipCode } = this.address
+//         if (!addressLine1 || !addressLine2 || !city || !state || !country || !zipCode) {
+//             return next(new Error('some address info is missing/invalid!'));
+//         }
+
+//         if (this.paymentDetails.paymentType === 'Bank' && (!this.paymentDetails.bankDetails.bankAddress.city || !this.paymentDetails.bankDetails.bankAddress.country)) {
+//             return next(new Error('some bank address info is missing/invalid!'));
+//         }
+//     }
+//     next();
+// });
 
 const notificationSchema = new Schema({
     username: { type: String, required: true, maxLength: 50 },
@@ -119,6 +140,10 @@ const fileDataSchema = new Schema({
     fileData: { type: String, required: true },
 }, { collection: "File", timestamps: true })
 
+const donorSchema = new Schema({
+    email: { type: String, required: true, maxLength: 100 },
+    name: { type: String, maxLength: 100 }
+}, { collection: "Donor", timestamps: true })
 
 module.exports = {
     'notificationModel': models['Notification'] || model('Notification', notificationSchema),
@@ -126,5 +151,6 @@ module.exports = {
     'projectModel': models['Project'] || model('Project', projectSchema),
     'txDescriptionModel': models['TxDescription'] || model('TxDescription', txDescriptionSchema),
     'fileModel': models['File'] || model('File', fileDataSchema),
-    'communityModel': models['Community'] || model('Community', communitySchema)
+    'communityModel': models['Community'] || model('Community', communitySchema),
+    'donorModel': models['Donor'] || model('Donor', donorSchema)
 };

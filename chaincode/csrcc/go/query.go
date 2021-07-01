@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 
@@ -185,21 +186,24 @@ func (s *SmartContract) QueryForTransactionRange(ctx contractapi.TransactionCont
 
 func GetQueryResultForQueryString(ctx contractapi.TransactionContextInterface, queryString string) ([]byte, error) {
 
-	InfoLogger.Printf("- getQueryResultForQueryString queryString:\n%s\n", queryString)
+	//InfoLogger.Printf("- getQueryResultForQueryString queryString:\n%s\n", queryString)
 
 	resultsIterator, err := ctx.GetStub().GetQueryResult(queryString)
+
 	if err != nil {
 		return nil, err
 	}
-	defer resultsIterator.Close()
+	if resultsIterator != nil {
+		defer resultsIterator.Close()
+	}
+	//defer resultsIterator.Close()
 
 	buffer, err := ConstructQueryResponseFromIterator(resultsIterator)
 	if err != nil {
 		return nil, err
 	}
 
-	InfoLogger.Printf("- getQueryResultForQueryString queryResult:\n%s\n", buffer.String())
-
+	//InfoLogger.Printf("- getQueryResultForQueryString queryResult:\n%s\n", buffer.String())
 	return buffer.Bytes(), nil
 }
 
@@ -209,28 +213,32 @@ func ConstructQueryResponseFromIterator(resultsIterator shim.StateQueryIteratorI
 	buffer.WriteString("[")
 
 	bArrayMemberAlreadyWritten := false
-	for resultsIterator.HasNext() {
-		queryResponse, err := resultsIterator.Next()
-		if err != nil {
-			return nil, err
-		}
-		// Add a comma before array members, suppress it for the first array member
-		if bArrayMemberAlreadyWritten == true {
-			buffer.WriteString(",")
-		}
-		buffer.WriteString("{\"Key\":")
-		buffer.WriteString("\"")
-		buffer.WriteString(queryResponse.Key)
-		buffer.WriteString("\"")
 
-		buffer.WriteString(", \"Record\":")
-		// Record is a JSON object, so we write as-is
-		buffer.WriteString(string(queryResponse.Value))
-		buffer.WriteString("}")
-		bArrayMemberAlreadyWritten = true
+	if resultsIterator != nil {
+		for resultsIterator.HasNext() {
+
+			queryResponse, err := resultsIterator.Next()
+			if err != nil {
+				return nil, err
+			}
+			// Add a comma before array members, suppress it for the first array member
+			if bArrayMemberAlreadyWritten == true {
+				buffer.WriteString(",")
+			}
+			buffer.WriteString("{\"Key\":")
+			buffer.WriteString("\"")
+			buffer.WriteString(queryResponse.Key)
+			buffer.WriteString("\"")
+
+			buffer.WriteString(", \"Record\":")
+			// Record is a JSON object, so we write as-is
+			buffer.WriteString(string(queryResponse.Value))
+			buffer.WriteString("}")
+			bArrayMemberAlreadyWritten = true
+		}
 	}
-	buffer.WriteString("]")
 
+	buffer.WriteString("]")
 	return &buffer, nil
 }
 
@@ -396,7 +404,7 @@ func (s *SmartContract) GetTransaction(ctx contractapi.TransactionContextInterfa
 	if err != nil {
 		return nil, fmt.Errorf("Error getting transaction creator: " + err.Error())
 	}
-	mspId, commonName, _ := getTxCreatorInfo(creator)
+	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
 
 	queryString := gqs([]string{"docType", "Transaction", "from", commonName})
 
@@ -441,7 +449,7 @@ func (s *SmartContract) GetBalance(ctx contractapi.TransactionContextInterface) 
 	if err != nil {
 		return nil, fmt.Errorf("Error getting transaction creator: " + err.Error())
 	}
-	mspId, commonName, _ := getTxCreatorInfo(creator)
+	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
 	InfoLogger.Printf("current logged in user :", commonName, " with mspId :", mspId)
 
 	allBalances := make(map[string]float64)
@@ -503,7 +511,7 @@ func (s *SmartContract) GetProjectTransactions(ctx contractapi.TransactionContex
 	if err != nil {
 		return nil, fmt.Errorf("Error getting transaction creator: " + err.Error())
 	}
-	mspId, commanName, _ := getTxCreatorInfo(creator)
+	mspId, commanName, _ := getTxCreatorInfo(ctx, creator)
 
 	InfoLogger.Printf("current logged in user:", commanName, "with mspId:", mspId)
 	queryString = gqs([]string{"docType", "Transaction", "objRef", args[0]})
@@ -551,7 +559,7 @@ func (s *SmartContract) GetCorporateDetails(ctx contractapi.TransactionContextIn
 		}
 		sum = 0.0
 		for i := 0; i < len(testObj); i++ {
-			sum += testObj[i].Qty
+			sum = math.Round((sum+testObj[i].Qty)*100) / 100
 		}
 
 		args := org
@@ -625,7 +633,7 @@ func (s *SmartContract) GetBalanceCorporate(ctx contractapi.TransactionContextIn
 
 	for _, value := range result {
 		for _, fundObj := range value["Record"].(map[string]interface{})["funds"].([]interface{}) {
-			amount += fundObj.(map[string]interface{})["qty"].(float64)
+			amount = math.Round((amount+fundObj.(map[string]interface{})["qty"].(float64))*100) / 100
 		}
 	}
 

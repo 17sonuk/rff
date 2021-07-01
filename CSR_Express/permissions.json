@@ -2,13 +2,19 @@
     "common": [
         "/mongo/project",
         "/mongo/user/notification",
+        "/mongo/user/checkUserNameValidity",
         "/query/getRecord",
-        "/project/total-project-locked-amount"
+        "/project/total-project-locked-amount",
+        "/country/getCountries",
+        "/country/getStates",
+        "/country/getCities"
     ],
     "ngo": [
+        "/mongo/common/community/all",
         "/users",
         "/mongo/user/onboard",
         "/mongo/user/profile",
+        "/mongo/user/redeemAccount",
         "/mongo/project/projects-ngo",
         "/project/create",
         "/mongo/project/create",
@@ -36,7 +42,6 @@
         "/token/transfer",
         "/escrow/fund/reserve",
         "/escrow/fund/release",
-        "/project/validate-phase",
         "/project/all",
         "/project/total-corporate-ongoing-projects",
         "/project/corporate-project-transactions",
@@ -49,7 +54,10 @@
         "/mongo/file/getFile"
     ],
     "creditsauthority": [
+        "/mongo/common/community",
+        "/mongo/common/community/all",
         "/mongo/user/approve-user",
+        "/mongo/user/reject-user",
         "/mongo/user/unapproved-users",
         "/mongo/project/all",
         "/token/all-requests",
@@ -60,6 +68,7 @@
         "/project/locked-details",
         "/project/corporate-project-transactions",
         "/project/transactions",
+        "/project/validate-phase",
         "/redeem/request/all",
         "/redeem/approve",
         "/redeem/reject",

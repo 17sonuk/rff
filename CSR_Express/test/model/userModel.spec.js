@@ -38,20 +38,20 @@ const testUser = {
     firstName: 'Charles',
     lastName: 'Mack',
     orgName: 'Corp',
-    userName: 'ngo1',
+    userName: 'corp1',
     email: 'info@corporate.com',
     role: 'Corporate',
     subRole: 'Institution',
     status: 'created',
-    description: '',
-    website: '',
+    description: 'desc',
+    website: 'www.example.com',
     address: {
-        addressLine1: '',
-        addressLine2: '',
-        city: '',
+        addressLine1: 'address1',
+        addressLine2: 'address2',
+        city: 'city',
         state: '',
         zipCode: '',
-        country: ''
+        country: 'India'
     },
     phone:[
         {
@@ -59,6 +59,28 @@ const testUser = {
             phoneNumber: '9765457'
         }
     ]
+    // paymentDetails: {
+    //     paymentType: "Paypal",
+    //     paypalEmailId : "corp@paypal.com",
+    //     cryptoAddress: '',
+    //     bankDetails:{
+    //         isUSbank:"No",
+    //         taxId:'P123',
+    //         beneficiaryName:'CP',
+    //         beneficiaryAddress:'address',
+    //         bankName: 'Test',
+    //         bankAddress: 'bankAddress',
+    //         bankPhone:{
+    //             countryCode: '+91',
+    //             phoneNumber: '97654678'
+    //         },
+    //         currencyType:"INR",
+    //         bankAccountNo:'',
+    //         ABAorRoutingNo: '',
+    //         BICSwiftorCHIPSUISSortCode:'',
+    //         IBANNo:''
+    //     }
+    // }
    
 }
 
@@ -88,6 +110,7 @@ describe('testing user model - approve user', () => {
     it('testing response for registerUser', async () => {
         const userDetails = testUser
         const res = await userModel.registerUser(userDetails);
+        console.log("Response",res);
         //here to request
         expect(res).to.be.a('object');
         expect(res.success).to.equal(true);
@@ -101,12 +124,12 @@ describe('testing user model - approve user', () => {
         expect(res).to.be.a('object');
         expect(res.success).to.equal(false);
 
-        userDetails.userName = 'newNgo';
+        userDetails.userName = 'newCorp';
         res = await userModel.registerUser(userDetails);
         expect(res).to.be.a('object');
         expect(res.success).to.equal(false);
 
-        userDetails.userName = 'ngo1';
+        userDetails.userName = 'corp1';
         userDetails.email = 'newEmail';
         res = await userModel.registerUser(userDetails);
         expect(res).to.be.a('object');
@@ -120,7 +143,7 @@ describe('testing user model - approve user', () => {
         expect(res).to.be.a('object');
         expect(res.success).to.equal(false);
 
-        userDetails.userName = 'newNgo';
+        userDetails.userName = 'newCorp';
         userDetails.email = '';
         res = await userModel.registerUser(userDetails);
         expect(res).to.be.a('object');
@@ -152,7 +175,7 @@ describe('testing user model - approve user', () => {
     });
 
     it('testing approve user', async () => {
-        const res = await userModel.approveUser('ngo1');
+        const res = await userModel.approveUser('corp1');
         expect(res).to.be.a('object');
         expect(res.n).to.equal(1);
         expect(res.nModified).to.equal(1);
@@ -178,13 +201,12 @@ describe('testing user model - reject user', () => {
 
     it('testing response for reject user', async () => {
         let userDetails = testUser;
-        userDetails.userName = 'newNgo';
-        userDetails.email = 'newNgo@gmail.com';
+        userDetails.userName = 'newCorp';
+        userDetails.email = 'newCorp@gmail.com';
 	    userDetails.regId = undefined;
 
         await userModel.registerUser(userDetails);
         const unapprovedUsers = await userModel.getUnapprovedUserDetails();
-
         const res = await userModel.rejectUser(unapprovedUsers[0].userName);
         expect(res).to.be.a('object');
         expect(res.n).to.equal(1);
@@ -225,22 +247,22 @@ describe('testing user model - notification', () => {
 
     it('testing response for create notification', async () => {
 
-        notification.username = 'ngo1';
+        notification.username = 'corp1';
 
         const res = await userModel.createNotification(notification);
         expect(res).to.be.a('object');
         expect(res).to.have.property('_id');
         expect(res.txId).to.equal('id-01');
         expect(res.seen).to.equal(false);
-        expect(res.username).to.equal('ngo1');
+        expect(res.username).to.equal('corp1');
 
-        notification.username = 'ngo2';
+        notification.username = 'corp2';
         const res1 = await userModel.createNotification(notification);
         expect(res1).to.be.a('object');
         expect(res1).to.have.property('_id');
         expect(res1.txId).to.equal('id-01');
         expect(res1.seen).to.equal(false);
-        expect(res1.username).to.equal('ngo2');
+        expect(res1.username).to.equal('corp2');
     });
 
     it('testing response for create tx description', async () => {
@@ -258,11 +280,11 @@ describe('testing user model - notification', () => {
 
     it('testing response for get notifications', async () => {
 
-        const res = await userModel.getNotifications('ngo1', false);
+        const res = await userModel.getNotifications('corp1', false);
         expect(res).to.be.a('array');
         expect(res).to.have.lengthOf(1);
 
-        const res1 = await userModel.getNotifications('ngo2', false);
+        const res1 = await userModel.getNotifications('corp2', false);
         expect(res1).to.be.a('array');
         expect(res1).to.have.lengthOf(1);
     });
@@ -283,13 +305,13 @@ describe('testing user model - notification', () => {
 
     it('testing response for update notification', async () => {
 
-        const res = await userModel.updateNotification('ngo1', notification.txId);
+        const res = await userModel.updateNotification('corp1', notification.txId);
         expect(res).to.be.a('object');
         expect(res.n).to.equal(1);
         expect(res.nModified).to.equal(1);
         expect(res.ok).to.equal(1);
 
-        const res1 = await userModel.getNotifications('ngo1', false);
+        const res1 = await userModel.getNotifications('corp1', false);
         expect(res1).to.be.a('array');
         expect(res1).to.have.lengthOf(0);
     });

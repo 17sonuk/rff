@@ -6,17 +6,19 @@ var jwt = require('jsonwebtoken');
 const mainRouter = express.Router();
 
 // Routers
-const projectMongoRouter = require('./mongo/projectRouter');
-const userMongoRouter = require('./mongo/userRoute');
 const escrowRouter = require('./blockchain/escrowRouter');
+const countryRouter = require('./country/countryRouter');
+const fileMongoRouter = require('./mongo/fileRouter');
+const commonMongoRouter = require('./mongo/commonRouter');
+const projectMongoRouter = require('./mongo/projectRouter');
 const projectRouter = require('./blockchain/projectRouter');
+const pspRouter = require('./payment-gateway/pspRouter');
 const queryRouter = require('./blockchain/queryRouter');
 const redeemRouter = require('./blockchain/redeemRouter');
 const tokenRouter = require('./blockchain/tokenRouter');
 const transactionRouter = require('./blockchain/transactionRouter');
+const userMongoRouter = require('./mongo/userRoute');
 const utilsRouter = require('./blockchain/utilsRouter');
-const pspRouter = require('./payment-gateway/pspRouter');
-const fileMongoRouter = require('./mongo/fileRouter');
 
 // Services
 const registerUser = require('../fabric-sdk/registerUser');
@@ -34,7 +36,7 @@ mainRouter.use((req, res, next) => {
         next();
     } else {
         let authHeader = '';
-        if (req.originalUrl === '/mongo/user/onboard') {
+        if (req.originalUrl === '/mongo/user/onboard' || req.originalUrl === '/mongo/user/checkUserNameValidity') {
             if (!req.headers.csrtoken) {
                 return next();
             }
@@ -65,7 +67,7 @@ mainRouter.use((req, res, next) => {
 });
 
 // Auth0
-//mainRouter.use(checkJwt);
+// mainRouter.use(checkJwt);
 
 mainRouter.use((req, res, next) => {
 
@@ -80,7 +82,7 @@ mainRouter.use((req, res, next) => {
         generateError(e, next);
     }
 
-    let skip = ['/mongo/user/onboard', '/users'];
+    let skip = ['/mongo/user/onboard', '/mongo/user/checkUserNameValidity', '/users'];
     if (skip.includes(req.path)) {
         return next();
     }
@@ -119,6 +121,7 @@ mainRouter.use((req, res, next) => {
     if (req.path.startsWith('/query/getRecord/') || req.path.startsWith('/mongo/user/notification/')) {
         return next();
     }
+
     if (!authMap[req.orgName].has(req.path) && !authMap['common'].has(req.path)) {
         generateError(e, next);
     }
@@ -196,10 +199,13 @@ mainRouter.post('/users', async (req, res, next) => {
     }
 });
 
+
+
 // Mongo Routers
 mainRouter.use('/mongo/project', projectMongoRouter);
 mainRouter.use('/mongo/user', userMongoRouter);
 mainRouter.use('/mongo/file', fileMongoRouter);
+mainRouter.use('/mongo/common', commonMongoRouter);
 
 // Blockchain Routers
 mainRouter.use('/escrow', escrowRouter);
@@ -210,7 +216,11 @@ mainRouter.use('/token', tokenRouter);
 mainRouter.use('/tx', transactionRouter);
 mainRouter.use('/utils', utilsRouter);
 
-// Payment Gateway Routers
+
+// Country-state-city Router
+mainRouter.use('/country', countryRouter);
+
+// Payment Gateway Router
 mainRouter.use('/psp', pspRouter);
 
 mainRouter.use("*", (req, res, next) => {

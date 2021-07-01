@@ -1,8 +1,6 @@
 'use strict';
 const fs = require('fs'); // https
 const https = require('https'); // https
-const certificate = fs.readFileSync('./sslcert/server.crt', 'utf8'); // https
-const privateKey = fs.readFileSync('./sslcert/server.key', 'utf8'); // https
 
 const helmet = require("helmet");
 const authJson = require('./permissions.json');
@@ -64,10 +62,6 @@ app.use(express.urlencoded({
     extended: false
 }));
 
-app.get('/test', (req, res, next) => {
-    res.send('success!!!!!!!!!!')
-})
-
 app.use((req, res, next) => {
     req.authMap = authMap;
     logger.info(`${req.method} - ${req.ip} - ${req.originalUrl}\n${JSON.stringify(req.body, null, 2)}`);
@@ -97,6 +91,7 @@ registerUser(GUEST_EMAIL.split('@')[0], 'corporate')
 app.use(mainRouter);
 
 app.use((err, req, res, next) => {
+    console.log('some error!!!!!!!!!!!!!!!!!!!!!1')
     res.locals.message = err.message;
     res.locals.error = NODE_ENV === 'development' ? err : {};
 
@@ -111,8 +106,4 @@ app.use((err, req, res, next) => {
 //     logger.info(`Express is running on port ${PORT}`);
 // });
 
-const credentials = { key: privateKey, cert: certificate }; // https
-
-const httpsServer = https.createServer(credentials, app); // https
-
-httpsServer.listen(PORT, () => console.log(`Server running on Port 4200`)); //https
+module.exports = app;

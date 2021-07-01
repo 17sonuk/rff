@@ -2,6 +2,9 @@ const Axios = require('axios').default
 var mmm = require('mmmagic')
 Magic = mmm.Magic;
 
+const AWS = require('aws-sdk');
+
+
 const { fileModel } = require('../model/models')
 
 const fileService = {};
@@ -16,20 +19,55 @@ fileService.insertFile = (file) => {
                 return getUploadFileResponse
             }
             else {
-                return fileModel.create({ fileName: file.fileName, fileData: file.fileData, fileHash: file.fileHash, fileSize: file.fileSize })
-                    .then(data => {
-                        let InsertFileResponse = {
-                            fileName: data.fileName,
-                            fileHash: data.fileHash,
-                            fileSize: data.fileSize
+                // return fileModel.create({ fileName: file.fileName, fileData: file.fileData, fileHash: file.fileHash, fileSize: file.fileSize })
+                //     .then(data => {
+                //         let InsertFileResponse = {
+                //             fileName: data.fileName,
+                //             fileHash: data.fileHash,
+                //             fileSize: data.fileSize
+                //         }
+                //         return InsertFileResponse
+                //     })
+                //     .catch(err => {
+                //         err = new Error("Not able to save the file in DB")
+                //         err.status = 400
+                //         throw err
+                //     })
+
+                const createItemObject = (callback) => {
+                    var base64data = new Buffer(data, 'binary');
+                    const params = {
+                        Bucket: bucketName,
+                        Key: `${fileName}`,
+                        ACL: 'public-read',
+                        Metadata: { id: '0b5e4838-a6a0-4784-98d8-c58a76201957', name: '69a62347-8641-45ba-9924.txt' },
+                        Body: base64data,
+                    };
+                    s3.putObject(params, function (err, data) {
+                        if (err) {
+                            console.log("Error uploading file", err);
+                            callback(err, null)
+                        } else {
+                            console.log("Successfully uploaded fileon S3", data);
+                            callback(null, data)
                         }
-                        return InsertFileResponse
                     })
-                    .catch(err => {
-                        err = new Error("Not able to save the file in DB")
-                        err.status = 400
-                        throw err
+                }
+                exports.upload = (req, res, next) => {
+                    var tmp_path = req.files.file.path;
+                    // console.log("item", req.files.file)
+                    var tmp_path = req.files.file.path;
+                    image = fs.createReadStream(tmp_path);
+                    imageName = req.files.file.name;
+                    async.series([
+                        createMainBucket,
+                        createItemObject
+                    ], (err, result) => {
+                        if (err) return res.send(err)
+                        else return res.json({ message: "Successfully uploaded" })
                     })
+                }
+
             }
         })
         .catch(err => {

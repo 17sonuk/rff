@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 
@@ -31,15 +32,18 @@ type Phase struct {
 	StartDate          int                     `json:"startDate"`
 	EndDate            int                     `json:"endDate"`
 	ValidationCriteria map[string][]Criterion  `json:"validationCriteria"`
+	CAValidation       Validation              `json:"caValidation"`
+}
+
+//for CA validation
+type Validation struct {
+	IsValid  bool   `json:"isValid"`
+	Comments string `json:"comments"`
 }
 
 type Contribution struct {
-	Contributor      string  `json:"donatorAddress"`
-	ContributionQty  float64 `json:"contributionQty"`
-	ReviewMsg        string  `json:"reviewMsg"`
-	Rating           int     `json:"rating"`
-	Validated        bool    `json:"validated"`
-	RejectionComment string  `json:"rejectionComment"`
+	Contributor     string  `json:"donatorAddress"`
+	ContributionQty float64 `json:"contributionQty"`
 }
 
 type Criterion struct {
@@ -50,20 +54,22 @@ type Criterion struct {
 
 //create a new project
 func (s *SmartContract) CreateProject(ctx contractapi.TransactionContextInterface, arg string) (bool, error) {
-	InfoLogger.Printf("*************** createProject Started ***************")
-	InfoLogger.Printf("args received:", arg)
 
-	//getusercontext to populate the required data
+	// InfoLogger.Printf("*************** createProject Started ***************")
+	// InfoLogger.Printf("args received:", arg)
+
 	creator, err := ctx.GetStub().GetCreator()
 	if err != nil {
 		return false, fmt.Errorf("Error getting transaction creator: " + err.Error())
 	}
-	mspId, commonName, _ := getTxCreatorInfo(creator)
+	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
+	fmt.Println("client is: " + commonName)
+
 	if mspId != "NgoMSP" {
-		InfoLogger.Printf("only ngo can initiate createProject")
+		//InfoLogger.Printf("only ngo can initiate createProject")
 		return false, fmt.Errorf("only ngo can initiate createProject")
 	}
-	InfoLogger.Printf("current logged in user:", commonName, "with mspId:", mspId)
+	//InfoLogger.Printf("current logged in user:", commonName, "with mspId:", mspId)
 
 	var args []string
 
@@ -111,13 +117,14 @@ func (s *SmartContract) CreateProject(ctx contractapi.TransactionContextInterfac
 
 	//check if project with same name already exists.
 	queryString := fmt.Sprintf("{\"selector\":{\"docType\":\"Project\", \"projectName\":\"%s\"}}", projectObj.ProjectName)
+
 	queryResults, err := GetQueryResultForQueryString(ctx, queryString)
 	if err != nil {
 		return false, fmt.Errorf(err.Error())
 	} else if len(queryResults) > 2 {
 		return false, fmt.Errorf("A project with the same name already exists!")
 	}
-
+	fmt.Println("project -------------------")
 	//set extra attributes
 	projectObj.NGO = commonName
 	projectObj.ObjectType = "Project"
@@ -129,7 +136,7 @@ func (s *SmartContract) CreateProject(ctx contractapi.TransactionContextInterfac
 	for i := 0; i < len(projectObj.Phases); i++ {
 		projectObj.Phases[i].PhaseState = "Created"
 		projectObj.Phases[i].OutstandingQty = projectObj.Phases[i].Qty
-		allPhaseCosts += projectObj.Phases[i].Qty
+		allPhaseCosts = math.Round((allPhaseCosts+projectObj.Phases[i].Qty)*100) / 100
 
 		if projectObj.Phases[i].StartDate >= projectObj.Phases[i].EndDate {
 			return false, fmt.Errorf("end date must be ahead of start date!")
@@ -164,24 +171,23 @@ func (s *SmartContract) CreateProject(ctx contractapi.TransactionContextInterfac
 		return false, fmt.Errorf("Failed to add a Tx: " + err.Error())
 	}
 
-	InfoLogger.Printf("*************** createProject Successful ***************")
+	//InfoLogger.Printf("*************** createProject Successful ***************")
 	return true, nil
 }
 
-//validate/invalidate a phase
+//validate/reject a phase
 func (s *SmartContract) ValidatePhase(ctx contractapi.TransactionContextInterface, arg string) (bool, error) {
-	InfoLogger.Printf("*************** validatePhase Started ***************")
+	InfoLogger.Printf("*************** ValidatePhase Started ***************")
 	InfoLogger.Printf("args received:", arg)
 
-	//getusercontext to populate the required data
 	creator, err := ctx.GetStub().GetCreator()
 	if err != nil {
 		return false, fmt.Errorf("Error getting transaction creator: " + err.Error())
 	}
-	mspId, commonName, _ := getTxCreatorInfo(creator)
-	if mspId != "CorporateMSP" {
-		InfoLogger.Printf("only corporate can initiate validatePhase")
-		return false, fmt.Errorf("only corporate can initiate validatePhase")
+	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
+	if mspId != "CreditsAuthorityMSP" {
+		InfoLogger.Printf("only creditsauthority can initiate ValidatePhase")
+		return false, fmt.Errorf("only creditsauthority can initiate ValidatePhase")
 	}
 	InfoLogger.Printf("current logged in user:", commonName, "with mspId:", mspId)
 
@@ -215,7 +221,7 @@ func (s *SmartContract) ValidatePhase(ctx contractapi.TransactionContextInterfac
 	if err != nil {
 		return false, fmt.Errorf(err.Error())
 	}
-	rejectionComment := args[3]
+	comments := args[3]
 	date, err := strconv.Atoi(args[4])
 	if err != nil {
 		return false, fmt.Errorf(err.Error())
@@ -235,42 +241,30 @@ func (s *SmartContract) ValidatePhase(ctx contractapi.TransactionContextInterfac
 
 	if !(phaseNumber >= 0 && phaseNumber < len(projectObj.Phases)) {
 		return false, fmt.Errorf("Invalid phase number!")
-	} else if projectObj.Phases[phaseNumber].Contributions[commonName].ContributionQty == 0.0 {
-		return false, fmt.Errorf("Invalid contributor cannot validate the phase!")
-	} else if projectObj.Phases[phaseNumber].PhaseState != "Fully Funded" && projectObj.Phases[phaseNumber].PhaseState != "Seeking Validation" {
-		return false, fmt.Errorf("The phase must be in fully funded state only!")
-	} else if validated == false && len(rejectionComment) == 0 {
-		return false, fmt.Errorf("Rejection comments are mandatory!")
+	} else if projectObj.Phases[phaseNumber].PhaseState != "Seeking Validation" {
+		return false, fmt.Errorf("The phase must be in Seeking Validation state!")
+	} else if !validated && len(comments) == 0 {
+		return false, fmt.Errorf("comments are mandatory!")
 	}
 
-	contributionObj := projectObj.Phases[phaseNumber].Contributions[commonName]
-	contributionObj.Validated = validated
-	contributionObj.RejectionComment = rejectionComment
-	projectObj.Phases[phaseNumber].Contributions[commonName] = contributionObj
-
-	//calculate total qty of validated contributions
-	qtyReceived := 0.0
-	noOfCorporates := 0
-	for _, v := range projectObj.Phases[phaseNumber].Contributions {
-		if v.Validated == true {
-			qtyReceived += v.ContributionQty
-			noOfCorporates += 1
-		}
+	//update the phase with validation details & Validated/Rejected phase state
+	validationObj := Validation{
+		IsValid:  validated,
+		Comments: comments,
 	}
-
-	//if mejority contributions received and mejority no. of contributors have validated, then the phase becomes Validated
-	if (qtyReceived > (projectObj.Phases[phaseNumber].Qty)/2) && (noOfCorporates >= (len(projectObj.Phases[phaseNumber].Contributions)/2)+1) {
+	projectObj.Phases[phaseNumber].CAValidation = validationObj
+	if validated {
 		projectObj.Phases[phaseNumber].PhaseState = "Validated"
 	} else {
-		projectObj.Phases[phaseNumber].PhaseState = "Seeking Validation"
+		projectObj.Phases[phaseNumber].PhaseState = "Fully Funded"
 	}
 
-	newProjAsBytes, err := json.Marshal(projectObj)
+	projectInBytes, err = json.Marshal(projectObj)
 	if err != nil {
 		return false, fmt.Errorf(err.Error())
 	}
 
-	err = ctx.GetStub().PutState(projectId, newProjAsBytes)
+	err = ctx.GetStub().PutState(projectId, projectInBytes)
 	if err != nil {
 		return false, fmt.Errorf(err.Error())
 	}
@@ -280,21 +274,21 @@ func (s *SmartContract) ValidatePhase(ctx contractapi.TransactionContextInterfac
 		return false, fmt.Errorf(err.Error())
 	}
 
-	splitName := strings.SplitN(commonName, ".", -1)
-	eventPayload := "Phase " + strconv.Itoa(phaseNumber+1) + " of project " + projectObj.ProjectName + " has been "
-	if len(rejectionComment) > 1 {
-		eventPayload += "rejected by "
-	} else {
+	//splitName := strings.SplitN(commonName, ".", -1)
+	eventPayload := "Phase " + strconv.Itoa(phaseNumber+1) + " of project '" + projectObj.ProjectName + "' has been "
+	if validated {
 		eventPayload += "validated by "
+	} else {
+		eventPayload += "rejected by "
 	}
-	eventPayload += splitName[0] + "."
+	eventPayload += "Rainforest Foundation US."
 
 	notification := &Notification{TxId: txId, Description: eventPayload, Users: []string{projectObj.NGO}}
 	InfoLogger.Printf("notification:", eventPayload)
 	notificationtAsBytes, err := json.Marshal(notification)
 	ctx.GetStub().SetEvent("Notification", notificationtAsBytes)
 
-	InfoLogger.Printf("*************** validatePhase Successful ***************")
+	InfoLogger.Printf("*************** ValidatePhase Successful ***************")
 	return true, nil
 }
 
@@ -308,7 +302,7 @@ func (s *SmartContract) AddDocumentHash(ctx contractapi.TransactionContextInterf
 	if err != nil {
 		return false, fmt.Errorf("Error getting transaction creator: " + err.Error())
 	}
-	mspId, commonName, _ := getTxCreatorInfo(creator)
+	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
 	if mspId != "NgoMSP" {
 		InfoLogger.Printf("only ngo can initiate addDocumentHash")
 		return false, fmt.Errorf("only ngo can initiate addDocumentHash")
@@ -412,20 +406,20 @@ func (s *SmartContract) AddDocumentHash(ctx contractapi.TransactionContextInterf
 
 //update the project/phase state
 func (s *SmartContract) UpdateProject(ctx contractapi.TransactionContextInterface, arg string) (bool, error) {
-	InfoLogger.Printf("*************** updateProject Started ***************")
-	InfoLogger.Printf("args received:", arg)
+	// InfoLogger.Printf("*************** UpdateProject Started ***************")
+	// InfoLogger.Printf("args received:", arg)
 
 	//getusercontext to populate the required data
 	creator, err := ctx.GetStub().GetCreator()
 	if err != nil {
 		return false, fmt.Errorf("Error getting transaction creator: " + err.Error())
 	}
-	mspId, commonName, _ := getTxCreatorInfo(creator)
+	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
 	if mspId != "NgoMSP" {
-		InfoLogger.Printf("only ngo can initiate ReserveFundsForProject")
-		return false, fmt.Errorf("only ngo can initiate ReserveFundsForProject")
+		// InfoLogger.Printf("only ngo can initiate UpdateProject")
+		return false, fmt.Errorf("only ngo can initiate UpdateProject")
 	}
-	InfoLogger.Printf("current logged in user:", commonName, "with mspId:", mspId)
+	// InfoLogger.Printf("current logged in user:", commonName, "with mspId:", mspId)
 
 	var args []string
 
@@ -454,19 +448,19 @@ func (s *SmartContract) UpdateProject(ctx contractapi.TransactionContextInterfac
 		return false, fmt.Errorf("Error getting project")
 	}
 	if projectAsBytes == nil {
-		InfoLogger.Printf("project with id:", projectId, "not present")
+		// InfoLogger.Printf("project with id:", projectId, "not present")
 		return false, fmt.Errorf("project is not present")
 	}
 	json.Unmarshal(projectAsBytes, &projectState)
 
 	if projectState.NGO != commonName {
-		InfoLogger.Printf("Invalid project owner: ", commonName)
+		// InfoLogger.Printf("Invalid project owner: ", commonName)
 		return false, fmt.Errorf("Invalid project owner")
 	}
 
 	//check for the validity of the phase number
 	if phaseNumber >= len(projectState.Phases) {
-		InfoLogger.Printf("Invalid phase number")
+		// InfoLogger.Printf("Invalid phase number")
 		return false, fmt.Errorf("invalid phase number")
 	}
 
@@ -474,28 +468,36 @@ func (s *SmartContract) UpdateProject(ctx contractapi.TransactionContextInterfac
 		if projectState.Phases[phaseNumber].PhaseState == "Created" {
 			projectState.Phases[phaseNumber].PhaseState = "Open For Funding"
 		} else {
-			InfoLogger.Printf("Only created state can be opened for funding")
+			// InfoLogger.Printf("Only created state can be opened for funding")
 			return false, fmt.Errorf("Only created state can be opened for funding")
 		}
 		if phaseNumber > 0 {
 			if projectState.Phases[phaseNumber-1].PhaseState != "Complete" {
-				InfoLogger.Printf("previous phase is not Complete")
+				// InfoLogger.Printf("previous phase is not Complete")
 				return false, fmt.Errorf("previous phase is not Complete")
 			}
+		}
+	} else if state == "Seeking Validation" {
+		//TODO: check if documents are uploaded for each validation criteria
+		if projectState.Phases[phaseNumber].PhaseState == "Fully Funded" {
+			projectState.Phases[phaseNumber].PhaseState = "Seeking Validation"
+		} else {
+			// InfoLogger.Printf("current phase is not yet fully funded to seek validation")
+			return false, fmt.Errorf("current phase is not yet fully funded to seek validation")
 		}
 	} else if state == "Complete" {
 		if projectState.Phases[phaseNumber].PhaseState == "Validated" {
 			projectState.Phases[phaseNumber].PhaseState = "Complete"
 		} else {
-			InfoLogger.Printf("current phase is not yet validated to be marked complete")
+			// InfoLogger.Printf("current phase is not yet validated to be marked complete")
 			return false, fmt.Errorf("current phase is not yet validated to be marked complete")
 		}
 		if phaseNumber == len(projectState.Phases)-1 {
 			projectState.ProjectState = "Completed"
 		}
 	} else {
-		InfoLogger.Printf("state can be Open For Funding or Complete")
-		return false, fmt.Errorf("state can be Open For Funding or Complete")
+		// InfoLogger.Printf("state can be Open For Funding or Seeking Validation or Complete")
+		return false, fmt.Errorf("state can be Open For Funding or Seeking Validation or Complete")
 	}
 
 	projectAsBytes, _ = json.Marshal(projectState)
@@ -516,42 +518,47 @@ func (s *SmartContract) UpdateProject(ctx contractapi.TransactionContextInterfac
 	splitName := strings.SplitN(commonName, ".", -1)
 	eventPayload := splitName[0] + " has updated the phase " + strconv.Itoa(phaseNumber+1) + " of project " + projectState.ProjectName + "."
 
-	if state == "Open For Funding" {
-		//get all corporates who have locked credits for this project.
-		//notification will be sent to only these corporates.
-		queryString := fmt.Sprintf("{\"selector\":{\"docType\":\"EscrowDetails\", \"project\": \"%s\"}, \"fields\": [\"corporate\"]}", projectId)
-		queryResults, err := GetQueryResultForQueryString(ctx, queryString)
-		if err != nil {
-			return false, fmt.Errorf(err.Error())
-		}
-		InfoLogger.Printf("query result:", string(queryResults))
+	//not relevant for rainforest
+	// if state == "Open For Funding" {
+	// 	//get all corporates who have locked credits for this project.
+	// 	//notification will be sent to only these corporates.
+	// 	queryString := fmt.Sprintf("{\"selector\":{\"docType\":\"EscrowDetails\", \"project\": \"%s\"}, \"fields\": [\"corporate\"]}", projectId)
+	// 	queryResults, err := GetQueryResultForQueryString(ctx, queryString)
+	// 	if err != nil {
+	// 		return false, fmt.Errorf(err.Error())
+	// 	}
+	// 	InfoLogger.Printf("query result:", string(queryResults))
 
-		var result []map[string]interface{}
-		err = json.Unmarshal([]byte(queryResults), &result)
+	// 	var result []map[string]interface{}
+	// 	err = json.Unmarshal([]byte(queryResults), &result)
 
-		corpsList := make([]string, 0, len(result))
-		for _, value := range result {
-			corpName := value["Record"].(map[string]interface{})["corporate"].(string)
-			InfoLogger.Printf("corpName: ", corpName)
-			corpsList = append(corpsList, corpName)
-		}
-		tmpList = corpsList
-		eventPayload = "Phase " + strconv.Itoa(phaseNumber+1) + " of project " + projectState.ProjectName + " is open for funding."
-	}
+	// 	corpsList := make([]string, 0, len(result))
+	// 	for _, value := range result {
+	// 		corpName := value["Record"].(map[string]interface{})["corporate"].(string)
+	// 		InfoLogger.Printf("corpName: ", corpName)
+	// 		corpsList = append(corpsList, corpName)
+	// 	}
+	// 	tmpList = corpsList
+	// 	eventPayload = "Phase " + strconv.Itoa(phaseNumber+1) + " of project " + projectState.ProjectName + " is open for funding."
+	// }
 
 	notification := &Notification{TxId: txId, Description: eventPayload, Users: tmpList}
-	InfoLogger.Printf("notification:", eventPayload)
-	InfoLogger.Printf(strings.Join(tmpList, " "))
+	if state == "Seeking Validation" {
+		notification.Users = []string{"ca.creditsauthority.csr.com"}
+		eventPayload = "Your validation is requested for the phase " + strconv.Itoa(phaseNumber+1) + " of the project '" + projectState.ProjectName + "'"
+	}
+	// InfoLogger.Printf("notification:", eventPayload)
+	// InfoLogger.Printf(strings.Join(tmpList, " "))
 	notificationtAsBytes, err := json.Marshal(notification)
 	ctx.GetStub().SetEvent("Notification", notificationtAsBytes)
 
-	InfoLogger.Printf("*************** updateProject Successful ***************")
+	// InfoLogger.Printf("*************** UpdateProject Successful ***************")
 	return true, nil
 }
 
 //added extra feature
 func (s *SmartContract) UpdateVisibleTo(ctx contractapi.TransactionContextInterface, arg string) (bool, error) {
-	InfoLogger.Printf("*************** updateVisibleTo Started ***************")
+	InfoLogger.Printf("*************** UpdateVisibleTo Started ***************")
 	InfoLogger.Printf("args received:", arg)
 
 	//getusercontext to populate the required data
@@ -559,10 +566,10 @@ func (s *SmartContract) UpdateVisibleTo(ctx contractapi.TransactionContextInterf
 	if err != nil {
 		return false, fmt.Errorf("Error getting transaction creator: " + err.Error())
 	}
-	mspId, commonName, _ := getTxCreatorInfo(creator)
+	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
 	if mspId != "NgoMSP" {
-		InfoLogger.Printf("only ngo can initiate updateVisibleTo")
-		return false, fmt.Errorf("only ngo can initiate updateVisibleTo")
+		InfoLogger.Printf("only ngo can initiate UpdateVisibleTo")
+		return false, fmt.Errorf("only ngo can initiate UpdateVisibleTo")
 	}
 	InfoLogger.Printf("current logged in user:", commonName, "with mspId:", mspId)
 
@@ -643,6 +650,6 @@ func (s *SmartContract) UpdateVisibleTo(ctx contractapi.TransactionContextInterf
 		return false, fmt.Errorf("Failed to add a Tx: " + err.Error())
 	}
 
-	InfoLogger.Printf("*************** updateVisibleTo Successful ***************")
+	InfoLogger.Printf("*************** UpdateVisibleTo Successful ***************")
 	return true, nil
 }
