@@ -177,8 +177,8 @@ func (s *SmartContract) CreateProject(ctx contractapi.TransactionContextInterfac
 
 //validate/reject a phase
 func (s *SmartContract) ValidatePhase(ctx contractapi.TransactionContextInterface, arg string) (bool, error) {
-	InfoLogger.Printf("*************** ValidatePhase Started ***************")
-	InfoLogger.Printf("args received:", arg)
+	// InfoLogger.Printf("*************** ValidatePhase Started ***************")
+	// InfoLogger.Printf("args received:", arg)
 
 	creator, err := ctx.GetStub().GetCreator()
 	if err != nil {
@@ -186,10 +186,10 @@ func (s *SmartContract) ValidatePhase(ctx contractapi.TransactionContextInterfac
 	}
 	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
 	if mspId != "CreditsAuthorityMSP" {
-		InfoLogger.Printf("only creditsauthority can initiate ValidatePhase")
+		// InfoLogger.Printf("only creditsauthority can initiate ValidatePhase")
 		return false, fmt.Errorf("only creditsauthority can initiate ValidatePhase")
 	}
-	InfoLogger.Printf("current logged in user:", commonName, "with mspId:", mspId)
+	// InfoLogger.Printf("current logged in user:", commonName, "with mspId:", mspId)
 
 	var args []string
 
@@ -284,11 +284,11 @@ func (s *SmartContract) ValidatePhase(ctx contractapi.TransactionContextInterfac
 	eventPayload += "Rainforest Foundation US."
 
 	notification := &Notification{TxId: txId, Description: eventPayload, Users: []string{projectObj.NGO}}
-	InfoLogger.Printf("notification:", eventPayload)
+	// InfoLogger.Printf("notification:", eventPayload)
 	notificationtAsBytes, err := json.Marshal(notification)
 	ctx.GetStub().SetEvent("Notification", notificationtAsBytes)
 
-	InfoLogger.Printf("*************** ValidatePhase Successful ***************")
+	// InfoLogger.Printf("*************** ValidatePhase Successful ***************")
 	return true, nil
 }
 

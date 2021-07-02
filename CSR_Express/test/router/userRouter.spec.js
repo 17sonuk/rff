@@ -1,7 +1,7 @@
 const chai = require('chai');
 const { expect } = require('chai');
 const chaiAsPromised = require('chai-as-promised');
-const { exception } = require('node:console');
+// const { exception } = require('node:console');
 const request = require('supertest');
 const userService = require('../../service/userService');
 // const app = require('../../routers/mongo/userRoute')
@@ -43,7 +43,7 @@ describe('USER ROUTER - Testing app post routing', () => {
 
     it('testing onboard API for Ngo when there is no Bearer Token', async function() {
         try{
-         const registerUserStub = sinon.stub(userService, "registerUser").resolves({ success: false });
+        //  const registerUserStub = sinon.stub(userService, "registerUser").resolves({ success: false });
          
          const response = await request(app)
             // .set("Authorization", "Bearer " + token)

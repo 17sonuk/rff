@@ -31,7 +31,7 @@ const { fieldErrorMessage, generateError, getMessage } = require('../utils/funct
 
 // Authentication
 mainRouter.use((req, res, next) => {
-    let skip = ['/users']
+    let skip = ['/users', '/psp/coinbase/chargeStatus']
     if (skip.includes(req.originalUrl)) {
         next();
     } else {
@@ -67,7 +67,7 @@ mainRouter.use((req, res, next) => {
 });
 
 // Auth0
-// mainRouter.use(checkJwt);
+mainRouter.use(checkJwt);
 
 mainRouter.use((req, res, next) => {
 
@@ -82,7 +82,7 @@ mainRouter.use((req, res, next) => {
         generateError(e, next);
     }
 
-    let skip = ['/mongo/user/onboard', '/mongo/user/checkUserNameValidity', '/users'];
+    let skip = ['/mongo/user/onboard', '/mongo/user/checkUserNameValidity', '/users', '/psp/coinbase/chargeStatus'];
     if (skip.includes(req.path)) {
         return next();
     }

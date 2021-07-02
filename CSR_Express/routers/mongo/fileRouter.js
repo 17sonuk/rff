@@ -31,19 +31,19 @@ router.post("/upload", async (req, res, next) => {
 
     let file = {
         fileName: req.files.uploadedFile.name,
-        fileData: req.files.uploadedFile.data.toString('base64'),
+        fileData: req.files.uploadedFile.data,
         fileSize: req.files.uploadedFile.size
     }
     file["fileHash"] = req.files.uploadedFile.md5
 
     try {
-        const isValidFile = await fileService.checkFormat(file.fileName, file.fileData, file.fileSize, req.files.uploadedFile.mimetype);
+        const isValidFile = await fileService.checkFormat(file.fileName, file.fileData.toString('base64'), file.fileSize, req.files.uploadedFile.mimetype);
 
         console.log("is file valid?: ", isValidFile)
 
         if (isValidFile) {
             try {
-                const data = await fileService.insertFile(file);
+                const data = await fileService.insertFile(req.files.uploadedFile, file["fileHash"]);
                 return res.json(data)
             } catch (fileErr) {
                 if (err['_message']) {

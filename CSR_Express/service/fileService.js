@@ -2,99 +2,143 @@ const Axios = require('axios').default
 var mmm = require('mmmagic')
 Magic = mmm.Magic;
 
-const AWS = require('aws-sdk');
+require('dotenv').config();
+const { AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION, AWS_BUCKET_NAME } = process.env;
 
+const AWS = require('aws-sdk');
+AWS.config.update({ region: AWS_REGION });
 
 const { fileModel } = require('../model/models')
 
 const fileService = {};
 
-fileService.insertFile = (file) => {
-    return fileModel.findOne({ fileHash: file.fileHash })
-        .then(data => {
-            if (data) {
-                let getUploadFileResponse = {
-                    fileHash: data.fileHash
-                }
-                return getUploadFileResponse
-            }
-            else {
-                // return fileModel.create({ fileName: file.fileName, fileData: file.fileData, fileHash: file.fileHash, fileSize: file.fileSize })
-                //     .then(data => {
-                //         let InsertFileResponse = {
-                //             fileName: data.fileName,
-                //             fileHash: data.fileHash,
-                //             fileSize: data.fileSize
-                //         }
-                //         return InsertFileResponse
-                //     })
-                //     .catch(err => {
-                //         err = new Error("Not able to save the file in DB")
-                //         err.status = 400
-                //         throw err
-                //     })
+fileService.insertFile = (file, fileHash) => {
+    return new Promise((resolve, reject) => {
 
-                const createItemObject = (callback) => {
-                    var base64data = new Buffer(data, 'binary');
-                    const params = {
-                        Bucket: bucketName,
-                        Key: `${fileName}`,
-                        ACL: 'public-read',
-                        Metadata: { id: '0b5e4838-a6a0-4784-98d8-c58a76201957', name: '69a62347-8641-45ba-9924.txt' },
-                        Body: base64data,
-                    };
-                    s3.putObject(params, function (err, data) {
-                        if (err) {
-                            console.log("Error uploading file", err);
-                            callback(err, null)
-                        } else {
-                            console.log("Successfully uploaded fileon S3", data);
-                            callback(null, data)
-                        }
-                    })
-                }
-                exports.upload = (req, res, next) => {
-                    var tmp_path = req.files.file.path;
-                    // console.log("item", req.files.file)
-                    var tmp_path = req.files.file.path;
-                    image = fs.createReadStream(tmp_path);
-                    imageName = req.files.file.name;
-                    async.series([
-                        createMainBucket,
-                        createItemObject
-                    ], (err, result) => {
-                        if (err) return res.send(err)
-                        else return res.json({ message: "Successfully uploaded" })
-                    })
-                }
+        const s3 = new AWS.S3({
+            accessKeyId: AWS_ACCESS_KEY_ID,
+            secretAccessKey: AWS_SECRET_ACCESS_KEY
+        });
 
+        const fileData = Buffer.from(file.data, 'binary');
+
+        const params = {
+            Bucket: AWS_BUCKET_NAME,
+            Key: fileHash, // File hash/name you want to save as in S3
+            Body: fileData,
+            Metadata: { fileName: file.name, fileSize: `${file.size}` },
+        };
+        //ContentType: file.mimetype, //optional param attibute for S3.
+
+        // Uploading files to the bucket
+        s3.upload(params, function (err, data) {
+            if (err) {
+                console.log(err);
+                reject(err);
             }
-        })
-        .catch(err => {
-            return err
-        })
+            console.log('s3 upload success!!!')
+            console.log(data);
+            let insertFileResponse = {
+                fileName: file.name,
+                fileHash: fileHash,
+                fileSize: file.size
+            }
+            resolve(insertFileResponse)
+        });
+    })
+    // return fileModel.findOne({ fileHash: file.fileHash })
+    //     .then(data => {
+    //         if (data) {
+    //             let getUploadFileResponse = {
+    //                 fileHash: data.fileHash
+    //             }
+    //             return getUploadFileResponse
+    //         }
+    //         else {
+    //             // return fileModel.create({ fileName: file.fileName, fileData: file.fileData, fileHash: file.fileHash, fileSize: file.fileSize })
+    //             //     .then(data => {
+    //             //         let InsertFileResponse = {
+    //             //             fileName: data.fileName,
+    //             //             fileHash: data.fileHash,
+    //             //             fileSize: data.fileSize
+    //             //         }
+    //             //         return InsertFileResponse
+    //             //     })
+    //             //     .catch(err => {
+    //             //         err = new Error("Not able to save the file in DB")
+    //             //         err.status = 400
+    //             //         throw err
+    //             //     })
+
+    //             // exports.upload = (req, res, next) => {
+    //             //     var tmp_path = req.files.file.path;
+    //             //     // console.log("item", req.files.file)
+    //             //     var tmp_path = req.files.file.path;
+    //             //     image = fs.createReadStream(tmp_path);
+    //             //     imageName = req.files.file.name;
+    //             //     async.series([
+    //             //         createMainBucket,
+    //             //         createItemObject
+    //             //     ], (err, result) => {
+    //             //         if (err) return res.send(err)
+    //             //         else return res.json({ message: "Successfully uploaded" })
+    //             //     })
+    //             // }
+
+    //         }
+    //     })
+    //     .catch(err => {
+    //         return err
+    //     })
 }
 
 fileService.getFiles = (fileHash) => {
-    return fileModel.findOne({ fileHash: fileHash })
-        .then(data => {
-            if (data) {
-                let getFileResponse = {
-                    fileName: data.fileName,
-                    fileData: data.fileData
-                }
-                return getFileResponse
+
+    return new Promise((resolve, reject) => {
+
+        const s3 = new AWS.S3({
+            accessKeyId: AWS_ACCESS_KEY_ID,
+            secretAccessKey: AWS_SECRET_ACCESS_KEY
+        });
+
+        const params = {
+            Bucket: AWS_BUCKET_NAME,
+            Key: `${fileHash}`
+        };
+
+        s3.getObject(params, function (err, data) {
+            if (err) {
+                console.log(err, err.stack); // an error occurred
+                reject(err)
             }
-            else {
-                let err = new Error("File does not exist")
-                err.status = 400
-                delete err.stack;
-                return Promise.reject(err)
+
+            let getFileResponse = {
+                fileName: data.Metadata['fileName'],
+                fileData: data['Body'].toString('base64'),
             }
-        })
-        .catch(err => {
-            return Promise.reject(err)
-        })
+            resolve(getFileResponse)
+        });
+    });
+
+    // return fileModel.findOne({ fileHash: fileHash })
+    //     .then(data => {
+    //         if (data) {
+    //             let getFileResponse = {
+    //                 fileName: data.fileName,
+    //                 fileData: data.fileData
+    //             }
+    //             return getFileResponse
+    //         }
+    //         else {
+    //             let err = new Error("File does not exist")
+    //             err.status = 400
+    //             delete err.stack;
+    //             return Promise.reject(err)
+    //         }
+    //     })
+    //     .catch(err => {
+    //         return Promise.reject(err)
+    //     })
 }
 
 fileService.virusScan = (req, res, next) => {
