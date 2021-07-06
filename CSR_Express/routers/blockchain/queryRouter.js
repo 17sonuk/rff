@@ -290,185 +290,187 @@ router.get('/it-report', async function (req, res, next) {
     let result = []
 
     // get all corporates and their gov transferd data in a key value pair
-    let queryString = {
-        "selector": {
-            "docType": "Transaction",
-            "txType": "ClosingYearFundTransfer",
-            "$and": [
-                {
-                    "date": {
-                        "$gt": date1.valueOf()
-                    }
-                },
-                {
-                    "date": {
-                        "$lt": date2.valueOf()
-                    }
-                }
-            ]
-        },
-        "fields": ["objRef"]
-    }
+    // let queryString = {
+    //     "selector": {
+    //         "docType": "Transaction",
+    //         "txType": "ClosingYearFundTransfer",
+    //         "$and": [
+    //             {
+    //                 "date": {
+    //                     "$gt": date1.valueOf()
+    //                 }
+    //             },
+    //             {
+    //                 "date": {
+    //                     "$lt": date2.valueOf()
+    //                 }
+    //             }
+    //         ]
+    //     },
+    //     "fields": ["objRef"]
+    // }
 
-    let m = new Map()
+    // let m = new Map()
 
-    let args = JSON.stringify(queryString)
-    logger.debug(`query string:\n ${args}`);
+    // let args = JSON.stringify(queryString)
+    // logger.debug(`query string:\n ${args}`);
 
     try {
-        let message = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
-        let objref = JSON.parse(message.toString());
+        // let message = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
+        // let objref = JSON.parse(message.toString());
 
-        for (let i = 0; i < objref.length; i++) {
-            objref[i].Record = JSON.parse(objref[i].Record)
-            let mit = objref[i].Record.objRef
+        // for (let i = 0; i < objref.length; i++) {
+        //     objref[i].Record = JSON.parse(objref[i].Record)
+        //     let mit = objref[i].Record.objRef
 
-            let mit1 = mit.split(",")
-            logger.debug(`mit1 ${mit1}`)
+        //     let mit1 = mit.split(",")
+        //     logger.debug(`mit1 ${mit1}`)
 
-            for (let j = 0; j < mit1.length; j++) {
-                let mit2 = mit1[j].split(":")
-                logger.debug(`mit2 ${mit2[0]} ${mit2[2]}`)
-                if (m.get(mit2[0]) == undefined) {
-                    m.set(mit2[0], Number(mit2[2]))
-                } else {
-                    m.set(mit2[0], m.get(mit2[0]) + Number(mit2[2]))
-                }
-            }
-        }
+        //     for (let j = 0; j < mit1.length; j++) {
+        //         let mit2 = mit1[j].split(":")
+        //         logger.debug(`mit2 ${mit2[0]} ${mit2[2]}`)
+        //         if (m.get(mit2[0]) == undefined) {
+        //             m.set(mit2[0], Number(mit2[2]))
+        //         } else {
+        //             m.set(mit2[0], m.get(mit2[0]) + Number(mit2[2]))
+        //         }
+        //     }
+        // }
 
         //get it list added from csr
-        queryString = {
-            "selector": {
-                "_id": year.toString() + "-" + (Number(year) + 1).toString()
-            }
-        }
-        args = JSON.stringify(queryString)
-        logger.debug(`query string:\n ${args}`);
+        // queryString = {
+        //     "selector": {
+        //         "_id": year.toString() + "-" + (Number(year) + 1).toString()
+        //     }
+        // }
+        // args = JSON.stringify(queryString)
+        // logger.debug(`query string:\n ${args}`);
 
-        message = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
+        // message = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
 
-        let ItList = JSON.parse(message.toString())
+        // let ItList = JSON.parse(message.toString())
 
-        if (ItList.length <= 0) {
-            return res.json(getMessage(true, "no record found for the perticular year"));
-        }
+        // if (ItList.length <= 0) {
+        //     return res.json(getMessage(true, "no record found for the perticular year"));
+        // }
 
-        ItList.forEach(elem => {
-            elem['Record'] = JSON.parse(elem['Record'])
-        })
+        // ItList.forEach(elem => {
+        //     elem['Record'] = JSON.parse(elem['Record'])
+        // })
 
-        ItList = ItList[0]
+        // ItList = ItList[0]
 
-        for (let i = 0; i < ItList.Record.length; i++) {
+        corpList = await getCorporateNames();
+
+        console.log('corpList:' + corpList)
+        // for (let i = 0; i < ItList.Record.length; i++) {
+        for (let i = 0; i < corpList.length; i++) {
 
             let resultObject = new Object()
 
-            resultObject.corporate = ItList.Record[i].corporateName
-            resultObject.panNumber = ItList.Record[i].panNumber
-            resultObject.email = ItList.Record[i].email
-            resultObject.totalLiability = ItList.Record[i].totalLiability
+            resultObject.corporate = corpList[i]
+            // resultObject.panNumber = ItList.Record[i].panNumber
+            // resultObject.email = ItList.Record[i].email
+            // resultObject.totalLiability = ItList.Record[i].totalLiability
 
-            queryString = {
+            let queryString = {
                 "selector": {
+                    "docType": "Transaction",
                     "txType": {
                         "$in": [
                             "AssignToken",
-                            "FundsToEscrowAccount",
-                            "TransferToken",
-                            "ReleaseFundsFromEscrow",
-                            "TransferToken_snapshot",
-                            "FundsToEscrowAccount_snapshot"
+                            //"FundsToEscrowAccount",
+                            "TransferToken"
+                            // "ReleaseFundsFromEscrow",
+                            // "TransferToken_snapshot",
+                            // "FundsToEscrowAccount_snapshot"
                         ]
                     },
                     "$or": [
-                        {
-                            "from": ItList.Record[i].corporateName + ".corporate.csr.com"
-                        },
-                        {
-                            "to": ItList.Record[i].corporateName + ".corporate.csr.com"
-                        }
+                        { "from": corpList[i] + ".corporate.csr.com" },
+                        { "to": corpList[i] + ".corporate.csr.com" }
                     ],
                     "$and": [
                         {
-                            "date": {
-                                "$gt": date1.valueOf()
-                            }
+                            "date": { "$gt": date1.valueOf() }
                         },
                         {
-                            "date": {
-                                "$lt": date2.valueOf()
-                            }
+                            "date": { "$lt": date2.valueOf() }
                         }
                     ]
                 }
             }
 
-            args = JSON.stringify(queryString)
+            let args = JSON.stringify(queryString)
             logger.debug(`query string:\n ${args}`);
 
-            message = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
+            let message = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
             let transactionList = JSON.parse(message.toString())
 
-            transactionList.forEach(elem => {
-                elem['Record'] = JSON.parse(elem['Record'])
-            })
+            // transactionList.forEach(elem => {
+            //     elem['Record'] = JSON.parse(elem['Record'])
+            // })
 
             let creditsReceived = 0.0
-            let creditsLocked = 0.0
+            //let creditsLocked = 0.0
             let creditsContributed = 0.0
-            let creditsContributedFromLocked = 0.0
+            //let creditsContributedFromLocked = 0.0
 
             transactionList.forEach(e => {
+                e['Record'] = JSON.parse(e['Record'])
                 logger.debug("tx Record: ", e.Record)
                 if (e.Record.txType == "AssignToken") {
                     creditsReceived += e.Record.qty
                 }
-                else if (e.Record.txType == "FundsToEscrowAccount") {
-                    creditsLocked += e.Record.qty
-                }
+                // else if (e.Record.txType == "FundsToEscrowAccount") {
+                //     creditsLocked += e.Record.qty
+                // }
                 else if (e.Record.txType == "TransferToken") {
                     creditsContributed += e.Record.qty
                 }
-                else if (e.Record.txType == "ReleaseFundsFromEscrow") {
-                    creditsContributedFromLocked += e.Record.qty
-                }
-                else if (e.Record.txType == "TransferToken_snapshot") {
-                    creditsContributed += e.Record.qty
-                }
-                else if (e.Record.txType == "FundsToEscrowAccount_snapshot") {
-                    creditsLocked += e.Record.qty
-                }
+                // else if (e.Record.txType == "ReleaseFundsFromEscrow") {
+                //     creditsContributedFromLocked += e.Record.qty
+                // }
+                // else if (e.Record.txType == "TransferToken_snapshot") {
+                //     creditsContributed += e.Record.qty
+                // }
+                // else if (e.Record.txType == "FundsToEscrowAccount_snapshot") {
+                //     creditsLocked += e.Record.qty
+                // }
             })
 
-            let corNAme = ItList.Record[i].corporateName + ".corporate.csr.com"
-            let liabality = ItList.Record[i].totalLiability - creditsReceived
-            let creditsToGov = m.get(corNAme)
-            if (creditsToGov === undefined) {
-                creditsToGov = 0
-            }
-            logger.debug("creditsToGov: ", creditsToGov)
-            let creditsUnspent = creditsReceived - creditsContributed - creditsLocked - creditsToGov
+            let corNAme = corpList[i] + ".corporate.csr.com"
+            //let liabality = ItList.Record[i].totalLiability - creditsReceived
+            // let creditsToGov = m.get(corNAme)
+            // if (creditsToGov === undefined) {
+            //     creditsToGov = 0
+            // }
+            // logger.debug("creditsToGov: ", creditsToGov)
+            // let creditsUnspent = creditsReceived - creditsContributed - creditsLocked - creditsToGov
+            let creditsUnspent = creditsReceived - creditsContributed
 
             resultObject.creditsReceived = creditsReceived
-            resultObject.creditsLocked = creditsLocked
+            // resultObject.creditsLocked = creditsLocked
             resultObject.creditsContributed = creditsContributed
-            resultObject.creditsContributedFromLocked = creditsContributedFromLocked
+            // resultObject.creditsContributedFromLocked = creditsContributedFromLocked
             resultObject.creditsUnspent = creditsUnspent
-            resultObject.creditsToGov = creditsToGov
+            if (corpList[i] === 'guest') {
+                resultObject.creditsUnspent = 0.0
+            }
+            //resultObject.creditsToGov = creditsToGov
 
-            if (liabality >= 0) {
-                resultObject.pendingLiability = liabality
-            } else {
-                resultObject.pendingLiability = 0
-            }
+            // if (liabality >= 0) {
+            //     resultObject.pendingLiability = liabality
+            // } else {
+            //     resultObject.pendingLiability = 0
+            // }
 
-            if (creditsReceived < ItList.Record[i].totalLiability) {
-                resultObject.compliant = "No"
-            }
-            else {
-                resultObject.compliant = "Yes"
-            }
+            // if (creditsReceived < ItList.Record[i].totalLiability) {
+            //     resultObject.compliant = "No"
+            // }
+            // else {
+            //     resultObject.compliant = "Yes"
+            // }
 
             logger.debug("resultObject", resultObject)
             result.push(resultObject)
@@ -800,6 +802,18 @@ router.get('/corporate-names', async function (req, res, next) {
 
     return res.json(getMessage(true, listOfCorporates));
 });
+
+async function getCorporateNames() {
+    let directoryPath = path.join(__dirname, '..', '..', 'wallet-corporate');
+
+    let filenames = fs.readdirSync(directoryPath);
+    logger.debug("\nCurrent directory filenames:");
+    let listOfCorporates = filenames.filter(function (value, index, arr) {
+        return (value != 'admin.id' && value != 'ca.id');
+    }).map(_ => _ = _.split('.')[0]);
+
+    return listOfCorporates;
+}
 
 //gives all corporate names along with their contribution
 router.get('/corporate-contributions', async function (req, res, next) {

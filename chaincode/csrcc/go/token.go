@@ -154,20 +154,20 @@ func (s *SmartContract) RequestTokens(ctx contractapi.TransactionContextInterfac
 
 //CA assigns tokens to the corporate
 func (s *SmartContract) AssignTokens(ctx contractapi.TransactionContextInterface, arg string) (bool, error) {
-	InfoLogger.Printf("*************** AssignTokens Started ***************")
-	InfoLogger.Printf("args received:", arg)
+	// InfoLogger.Printf("*************** AssignTokens Started ***************")
+	// InfoLogger.Printf("args received:", arg)
 
 	//getusercontext to populate the required data
 	creator, err := ctx.GetStub().GetCreator()
 	if err != nil {
 		return false, fmt.Errorf("Error getting transaction creator: " + err.Error())
 	}
-	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
+	mspId, _, _ := getTxCreatorInfo(ctx, creator)
 	if mspId != "CreditsAuthorityMSP" {
-		InfoLogger.Printf("only creditsauthority can initiate assignTokens")
+		// InfoLogger.Printf("only creditsauthority can initiate assignTokens")
 		return false, fmt.Errorf("only creditsauthority can initiate assignTokens")
 	}
-	InfoLogger.Printf("current logged in user:", commonName, "with mspId:", mspId)
+	// InfoLogger.Printf("current logged in user:", commonName, "with mspId:", mspId)
 
 	var args []string
 
@@ -206,7 +206,7 @@ func (s *SmartContract) AssignTokens(ctx contractapi.TransactionContextInterface
 
 	//validity check so that approved TokenRequest are not served twice and rejected TokenRequest is not assigned
 	if tokenRequest.Status != "Requested" {
-		InfoLogger.Printf("TokenRequest with id:", bankTxId, "is already "+tokenRequest.Status)
+		// InfoLogger.Printf("TokenRequest with id:", bankTxId, "is already "+tokenRequest.Status)
 		return false, fmt.Errorf("TokenRequest with id: " + bankTxId + " is already " + tokenRequest.Status)
 	}
 
@@ -241,14 +241,14 @@ func (s *SmartContract) AssignTokens(ctx contractapi.TransactionContextInterface
 		return false, fmt.Errorf(fmt.Sprintf("Failed to emit event"))
 	}
 
-	InfoLogger.Printf("*************** AssignTokens Successfull ***************")
+	// InfoLogger.Printf("*************** AssignTokens Successfull ***************")
 	return true, nil
 }
 
 //reject the token request
 func (s *SmartContract) RejectTokens(ctx contractapi.TransactionContextInterface, arg string) (bool, error) {
-	InfoLogger.Printf("*************** RejectTokens Started ***************")
-	InfoLogger.Printf("args received:", arg)
+	// InfoLogger.Printf("*************** RejectTokens Started ***************")
+	// InfoLogger.Printf("args received:", arg)
 
 	creator, err := ctx.GetStub().GetCreator()
 	if err != nil {
@@ -256,10 +256,10 @@ func (s *SmartContract) RejectTokens(ctx contractapi.TransactionContextInterface
 	}
 	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
 	if mspId != "CreditsAuthorityMSP" {
-		InfoLogger.Printf("only creditsauthority can initiate rejectTokens")
+		// InfoLogger.Printf("only creditsauthority can initiate rejectTokens")
 		return false, fmt.Errorf("only creditsauthority can initiate rejectTokens")
 	}
-	InfoLogger.Printf("current logged in user:", commonName, "with mspId:", mspId)
+	// InfoLogger.Printf("current logged in user:", commonName, "with mspId:", mspId)
 
 	var args []string
 
@@ -321,7 +321,7 @@ func (s *SmartContract) RejectTokens(ctx contractapi.TransactionContextInterface
 		return false, fmt.Errorf(fmt.Sprintf("Failed to emit event"))
 	}
 
-	InfoLogger.Printf("*************** RejectTokens Successfull ***************")
+	// InfoLogger.Printf("*************** RejectTokens Successfull ***************")
 	return true, nil
 }
 
@@ -487,8 +487,11 @@ func (s *SmartContract) TransferTokens(ctx contractapi.TransactionContextInterfa
 			tokenBalanceInBytes, _ := ctx.GetStub().GetState(fromAddress)
 			tokenBalance := 0.0
 			if tokenBalanceInBytes != nil {
+				fmt.Println(strconv.ParseFloat(string(tokenBalanceInBytes), 64))
 				tokenBalance, _ = strconv.ParseFloat(string(tokenBalanceInBytes), 64)
 			}
+			fmt.Println("test balance")
+			fmt.Println(tokenBalance)
 
 			if tokenBalance >= qty {
 				finalQty := fmt.Sprintf("%0.2f", math.Round((tokenBalance-qty)*100)/100)

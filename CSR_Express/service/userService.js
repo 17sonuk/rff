@@ -56,7 +56,7 @@ userService.registerUser = (obj) => {
         }
 
         if (errMsg !== undefined) {
-            err.message = "payment details missing"
+            err.message = errMsg
             throw err
         }
     }

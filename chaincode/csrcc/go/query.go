@@ -28,7 +28,7 @@ type CommonResponsePaginated struct {
 // Mango query: {"selector": {"type": "FundRequest"}}, PageSize: 10, Bookmark: 'sfdrr4wereaf'
 func (s *SmartContract) CommonQuery(ctx contractapi.TransactionContextInterface, queryString string) ([]CommonResponse, error) {
 
-	InfoLogger.Printf("- common query queryString: ", queryString)
+	// InfoLogger.Printf("- common query queryString: ", queryString)
 
 	resultsIterator, err := ctx.GetStub().GetQueryResult(queryString)
 	if err != nil {
@@ -54,7 +54,7 @@ func (s *SmartContract) CommonQuery(ctx contractapi.TransactionContextInterface,
 
 func (s *SmartContract) CommonQueryPagination(ctx contractapi.TransactionContextInterface, arg string) (*CommonResponsePaginated, error) {
 
-	InfoLogger.Printf("*****************CommonQueryPagination********************")
+	// InfoLogger.Printf("*****************CommonQueryPagination********************")
 
 	var args []string
 
@@ -68,7 +68,7 @@ func (s *SmartContract) CommonQueryPagination(ctx contractapi.TransactionContext
 	}
 
 	queryString := args[0]
-	InfoLogger.Printf("QUERY STRING:", queryString)
+	// InfoLogger.Printf("QUERY STRING:", queryString)
 
 	//return type of ParseInt is int64
 	pageSize, err := strconv.ParseInt(args[1], 10, 32)
@@ -83,7 +83,7 @@ func (s *SmartContract) CommonQueryPagination(ctx contractapi.TransactionContext
 	}
 	defer resultsIterator.Close()
 
-	InfoLogger.Printf("RESPONSE METADATA")
+	// InfoLogger.Printf("RESPONSE METADATA")
 
 	commonResponsePaginated := new(CommonResponsePaginated)
 	commonResponsePaginated.RecordsCount = fmt.Sprintf("%v", responseMetadata.FetchedRecordsCount)
@@ -104,7 +104,7 @@ func (s *SmartContract) CommonQueryPagination(ctx contractapi.TransactionContext
 
 	commonResponsePaginated.Results = results
 
-	InfoLogger.Printf("*****************CommonQueryPagination successful********************")
+	// InfoLogger.Printf("*****************CommonQueryPagination successful********************")
 	return commonResponsePaginated, nil
 }
 
@@ -442,15 +442,15 @@ func (s *SmartContract) QueryByKey(ctx contractapi.TransactionContextInterface, 
 
 ///to get balence of any org
 func (s *SmartContract) GetBalance(ctx contractapi.TransactionContextInterface) ([]byte, error) {
-	InfoLogger.Printf("*************** getBalance Started ***************")
+	// InfoLogger.Printf("*************** getBalance Started ***************")
 
 	//getusercontext to populate the required data
 	creator, err := ctx.GetStub().GetCreator()
 	if err != nil {
 		return nil, fmt.Errorf("Error getting transaction creator: " + err.Error())
 	}
-	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
-	InfoLogger.Printf("current logged in user :", commonName, " with mspId :", mspId)
+	_, commonName, _ := getTxCreatorInfo(ctx, creator)
+	//InfoLogger.Printf("current logged in user :", commonName, " with mspId :", mspId)
 
 	allBalances := make(map[string]float64)
 	amount := 0.0
@@ -464,7 +464,7 @@ func (s *SmartContract) GetBalance(ctx contractapi.TransactionContextInterface) 
 	if err != nil {
 		return nil, fmt.Errorf(err.Error())
 	}
-	InfoLogger.Printf("query result:", string(queryResults))
+	// InfoLogger.Printf("query result:", string(queryResults))
 
 	var result []map[string]interface{}
 	err = json.Unmarshal([]byte(queryResults), &result)
@@ -489,7 +489,7 @@ func (s *SmartContract) GetBalance(ctx contractapi.TransactionContextInterface) 
 
 	balJSON, _ := json.Marshal(allBalances)
 	jsonStr := string(balJSON)
-	InfoLogger.Printf("*************** getBalance Successfull ***************")
+	// InfoLogger.Printf("*************** getBalance Successfull ***************")
 	return []byte(jsonStr), nil
 }
 
@@ -656,16 +656,16 @@ func (s *SmartContract) GetBalanceCorporate(ctx contractapi.TransactionContextIn
 }
 
 func (s *SmartContract) GetAllCorporates(ctx contractapi.TransactionContextInterface) ([]string, error) {
-	InfoLogger.Printf("*************** getAllCorporates Started ***************")
+	// InfoLogger.Printf("*************** getAllCorporates Started ***************")
 
 	corporatesBytes, _ := ctx.GetStub().GetState("corporates")
 
-	InfoLogger.Printf("CorporateBytes Length: ", len(string(corporatesBytes)))
+	// InfoLogger.Printf("CorporateBytes Length: ", len(string(corporatesBytes)))
 
 	var result []string
 
 	if corporatesBytes == nil || len(string(corporatesBytes)) <= 2 {
-		InfoLogger.Printf("Inside if condition. No corporates.")
+		// InfoLogger.Printf("Inside if condition. No corporates.")
 		return nil, nil
 	}
 
@@ -674,6 +674,6 @@ func (s *SmartContract) GetAllCorporates(ctx contractapi.TransactionContextInter
 		return nil, fmt.Errorf(err.Error())
 	}
 
-	InfoLogger.Printf("*************** getAllCorporates Successfull ***************")
+	// InfoLogger.Printf("*************** getAllCorporates Successfull ***************")
 	return result, nil
 }

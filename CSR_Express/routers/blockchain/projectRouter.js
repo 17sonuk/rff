@@ -31,6 +31,7 @@ router.post('/create', async (req, res, next) => {
     }
 
     const projectId = uuid().toString()
+
     let args = [JSON.stringify(req.body), projectId, uuid().toString()];
     args = JSON.stringify(args);
     logger.debug('args  : ' + args);
@@ -79,35 +80,35 @@ router.put('/update', async (req, res, next) => {
 });
 
 //****************************** Project Update Visible To *******************************
-router.put('/updateVisibleTo', async (req, res, next) => {
-    logger.debug('==================== INVOKE UPDATE VISIBLE TO ON CHAINCODE ==================');
+// router.put('/updateVisibleTo', async (req, res, next) => {
+//     logger.debug('==================== INVOKE UPDATE VISIBLE TO ON CHAINCODE ==================');
 
-    //extract parameters from request body.
-    const projectId = req.body.projectId;
-    let corporateName = req.body.corporateName;
+//     //extract parameters from request body.
+//     const projectId = req.body.projectId;
+//     let corporateName = req.body.corporateName;
 
-    if (!CHAINCODE_NAME) {
-        return res.json(fieldErrorMessage('\'chaincodeName\''));
-    } else if (!CHANNEL_NAME) {
-        return res.json(fieldErrorMessage('\'channelName\''));
-    } else if (!projectId) {
-        return res.json(fieldErrorMessage('\'projectId\''));
-    } else if (!corporateName) {
-        corporateName = "all"
-    }
+//     if (!CHAINCODE_NAME) {
+//         return res.json(fieldErrorMessage('\'chaincodeName\''));
+//     } else if (!CHANNEL_NAME) {
+//         return res.json(fieldErrorMessage('\'channelName\''));
+//     } else if (!projectId) {
+//         return res.json(fieldErrorMessage('\'projectId\''));
+//     } else if (!corporateName) {
+//         corporateName = "all"
+//     }
 
-    let args = [projectId, corporateName, Date.now().toString(), uuid().toString()];
-    args = JSON.stringify(args);
-    logger.debug('args  : ' + args);
+//     let args = [projectId, corporateName, Date.now().toString(), uuid().toString()];
+//     args = JSON.stringify(args);
+//     logger.debug('args  : ' + args);
 
-    try {
-        await invoke(req.userName, req.orgName, "UpdateVisibleTo", CHAINCODE_NAME, CHANNEL_NAME, args);
-        return res.json(getMessage(true, 'Successfully invoked UpdateVisibleTo'));
-    }
-    catch (e) {
-        generateError(e, next)
-    }
-});
+//     try {
+//         await invoke(req.userName, req.orgName, "UpdateVisibleTo", CHAINCODE_NAME, CHANNEL_NAME, args);
+//         return res.json(getMessage(true, 'Successfully invoked UpdateVisibleTo'));
+//     }
+//     catch (e) {
+//         generateError(e, next)
+//     }
+// });
 
 //****************************** validate a phase of a project
 router.post('/validate-phase', async (req, res, next) => {
@@ -198,6 +199,8 @@ router.get('/all', async (req, res, next) => {
     const pageSize = req.query.pageSize;
     const bookmark = req.query.bookmark;
     const ngoName = req.query.ngoName;
+    const projectType = req.query.projectType;
+    const place = req.query.place;
 
     logger.debug('orgDLTName : ' + orgDLTName);
     logger.debug('query params : self-' + self + ' ongoing-' + ongoing + ' newRecords-' + newRecords + ' pageSize-' + pageSize + ' bookmark-' + bookmark + ' ngoName-' + ngoName);
@@ -265,6 +268,13 @@ router.get('/all', async (req, res, next) => {
     }
     else {
         queryString["selector"]["projectState"]["$ne"] = ""
+    }
+
+    if (projectType) {
+        queryString["selector"]["projectType"] = projectType;
+    }
+    if (place) {
+        queryString["selector"]["place"] = place;
     }
 
     logger.debug('queryString: ' + JSON.stringify(queryString));

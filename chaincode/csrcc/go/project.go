@@ -14,6 +14,7 @@ type Project struct {
 	ObjectType       string            `json:"docType"`
 	ProjectName      string            `json:"projectName"`
 	ProjectType      string            `json:"projectType"`
+	Place            string            `json:"place"`
 	Phases           []Phase           `json:"phases"`
 	CreationDate     int               `json:"creationDate"`
 	TotalProjectCost float64           `json:"totalProjectCost"`
@@ -294,8 +295,8 @@ func (s *SmartContract) ValidatePhase(ctx contractapi.TransactionContextInterfac
 
 //update the validation criteria to add uploaded document hashes
 func (s *SmartContract) AddDocumentHash(ctx contractapi.TransactionContextInterface, arg string) (bool, error) {
-	InfoLogger.Printf("*************** addDocumentHash Started ***************")
-	InfoLogger.Printf("args received:", arg)
+	// InfoLogger.Printf("*************** addDocumentHash Started ***************")
+	// InfoLogger.Printf("args received:", arg)
 
 	//getusercontext to populate the required data
 	creator, err := ctx.GetStub().GetCreator()
@@ -304,10 +305,10 @@ func (s *SmartContract) AddDocumentHash(ctx contractapi.TransactionContextInterf
 	}
 	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
 	if mspId != "NgoMSP" {
-		InfoLogger.Printf("only ngo can initiate addDocumentHash")
+		// InfoLogger.Printf("only ngo can initiate addDocumentHash")
 		return false, fmt.Errorf("only ngo can initiate addDocumentHash")
 	}
-	InfoLogger.Printf("current logged in user:", commonName, "with mspId:", mspId)
+	// InfoLogger.Printf("current logged in user:", commonName, "with mspId:", mspId)
 
 	var args []string
 
@@ -360,7 +361,7 @@ func (s *SmartContract) AddDocumentHash(ctx contractapi.TransactionContextInterf
 	}
 
 	if projectObj.NGO != commonName {
-		InfoLogger.Printf("Invalid project owner: ", commonName)
+		// InfoLogger.Printf("Invalid project owner: ", commonName)
 		return false, fmt.Errorf("Invalid project owner")
 	}
 
@@ -396,11 +397,11 @@ func (s *SmartContract) AddDocumentHash(ctx contractapi.TransactionContextInterf
 	splitName := strings.SplitN(commonName, ".", -1)
 	eventPayload := splitName[0] + " has uploaded a document to the phase " + strconv.Itoa(phaseNumber+1) + " of a project."
 	notification := &Notification{TxId: txId, Description: eventPayload, Users: tmpList}
-	InfoLogger.Printf("notification:", eventPayload)
+	// InfoLogger.Printf("notification:", eventPayload)
 	notificationtAsBytes, err := json.Marshal(notification)
 	ctx.GetStub().SetEvent("Notification", notificationtAsBytes)
 
-	InfoLogger.Printf("*************** addDocumentHash Successful ***************")
+	// InfoLogger.Printf("*************** addDocumentHash Successful ***************")
 	return true, nil
 }
 
@@ -556,7 +557,7 @@ func (s *SmartContract) UpdateProject(ctx contractapi.TransactionContextInterfac
 	return true, nil
 }
 
-//added extra feature
+//added extra feature - dont test
 func (s *SmartContract) UpdateVisibleTo(ctx contractapi.TransactionContextInterface, arg string) (bool, error) {
 	InfoLogger.Printf("*************** UpdateVisibleTo Started ***************")
 	InfoLogger.Printf("args received:", arg)

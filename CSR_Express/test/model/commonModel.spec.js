@@ -86,6 +86,7 @@ describe('TESTING COMMON MODEL', () => {
     
     it('testing response for getDonors', async () => {
         const res = await commonModel.getDonors();
+        console.log("Response",res);
         expect(res[0].email).to.equal('ngo@ngo.com')
         expect(res[0].name).to.equal('Ngo')
     });
