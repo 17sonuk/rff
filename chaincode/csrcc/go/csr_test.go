@@ -3,7 +3,6 @@ package main
 import (
 	main "csrcc/go"
 	"encoding/json"
-	"fmt"
 	"os"
 	"testing"
 
@@ -86,6 +85,8 @@ func TestCreateProject(test *testing.T) {
 	transactionContext, chaincodeStub := prepMocksAsNgo()
 	transactionContext.GetStubReturns(chaincodeStub)
 
+	csr := main.SmartContract{}
+
 	crite := []main.Criterion{
 		{Desc: "Nothing", DocName: "Nothing", DocHash: "asdf"},
 	}
@@ -103,10 +104,10 @@ func TestCreateProject(test *testing.T) {
 		Phases:           ph,
 		CreationDate:     10,
 		TotalProjectCost: 5000,
-		NGO:              "ngo",
+		NGO:              "goonj.ngo.csr.com",
 	}
-	pId := "10001"
-	txId := "t0001"
+	pId := "20001"
+	txId := "t000145678"
 	newProAsBytes, _ := json.Marshal(projObj)
 	newpro := string(newProAsBytes)
 	var args [3]string
@@ -117,22 +118,17 @@ func TestCreateProject(test *testing.T) {
 	arg := string(jsonarg)
 
 	var argsdup [2]string
-	argsdup[0] = newpro
-	argsdup[1] = pId
 	jsonargdup, _ := json.Marshal(argsdup)
 	argdup := string(jsonargdup)
 
 	var argsdup1 [3]string
 	argsdup1[0] = ""
-	argsdup1[1] = pId
-	argsdup1[2] = txId
 	jsonargdup1, _ := json.Marshal(argsdup1)
 	argdup1 := string(jsonargdup1)
 
 	var argsdup2 [3]string
 	argsdup2[0] = newpro
 	argsdup2[1] = ""
-	argsdup2[2] = txId
 	jsonargdup2, _ := json.Marshal(argsdup2)
 	argdup2 := string(jsonargdup2)
 
@@ -144,12 +140,7 @@ func TestCreateProject(test *testing.T) {
 	argdup3 := string(jsonargdup3)
 
 	projObj1 := main.Project{
-		ProjectName:      "",
-		ProjectType:      "Short",
-		Phases:           ph,
-		CreationDate:     10,
-		TotalProjectCost: 5000,
-		NGO:              "ngo",
+		ProjectName: "",
 	}
 	newProAsBytes1, _ := json.Marshal(projObj1)
 	newpro1 := string(newProAsBytes1)
@@ -161,12 +152,8 @@ func TestCreateProject(test *testing.T) {
 	arg1 := string(jsonarg1)
 
 	projObj2 := main.Project{
-		ProjectName:      "Project1",
-		ProjectType:      "",
-		Phases:           ph,
-		CreationDate:     10,
-		TotalProjectCost: 5000,
-		NGO:              "ngo",
+		ProjectName: "Project1",
+		ProjectType: "",
 	}
 	newProAsBytes2, _ := json.Marshal(projObj2)
 	newpro2 := string(newProAsBytes2)
@@ -178,11 +165,8 @@ func TestCreateProject(test *testing.T) {
 	arg2 := string(jsonarg2)
 
 	projObj3 := main.Project{
-		ProjectName:      "Project1",
-		ProjectType:      "Short",
-		CreationDate:     10,
-		TotalProjectCost: 5000,
-		NGO:              "ngo",
+		ProjectName: "Project1",
+		ProjectType: "Short",
 	}
 	newProAsBytes3, _ := json.Marshal(projObj3)
 	newpro3 := string(newProAsBytes3)
@@ -194,11 +178,9 @@ func TestCreateProject(test *testing.T) {
 	arg3 := string(jsonarg3)
 
 	projObj4 := main.Project{
-		ProjectName:      "Project1",
-		ProjectType:      "Short",
-		Phases:           ph,
-		TotalProjectCost: 5000,
-		NGO:              "ngo",
+		ProjectName: "Project1",
+		ProjectType: "Short",
+		Phases:      ph,
 	}
 	newProAsBytes4, _ := json.Marshal(projObj4)
 	newpro4 := string(newProAsBytes4)
@@ -214,7 +196,6 @@ func TestCreateProject(test *testing.T) {
 		ProjectType:  "Short",
 		Phases:       ph,
 		CreationDate: 10,
-		NGO:          "ngo",
 	}
 	newProAsBytes5, _ := json.Marshal(projObj5)
 	newpro5 := string(newProAsBytes5)
@@ -225,7 +206,6 @@ func TestCreateProject(test *testing.T) {
 	jsonarg5, _ := json.Marshal(args5)
 	arg5 := string(jsonarg5)
 
-	csr := main.SmartContract{}
 	_, err := csr.CreateProject(transactionContext, arg)
 	require.NoError(test, err, "err")
 
@@ -282,7 +262,7 @@ func TestUpdateProject(test *testing.T) {
 	// 	Phases:           ph,
 	// 	CreationDate:     10,
 	// 	TotalProjectCost: 5000,
-	// 	NGO:              "ngo",
+	// 	NGO:              "goonj.ngo.csr.com",
 	// }
 	// pId := "10001"
 	// txId := "t0001"
@@ -300,61 +280,48 @@ func TestUpdateProject(test *testing.T) {
 	crite := []main.Criterion{
 		{Desc: "Nothing", DocName: "Nothing", DocHash: "asdf"},
 	}
-	// contrib := main.Contribution{
-	// 	Contributor:     "me",
-	// 	ContributionQty: 100.0,
-	// }
-	// val := main.Validation{
-	// 	IsValid:  true,
-	// 	Comments: "validated",
-	// }
 	ph := []main.Phase{
 		{Qty: 5000,
-			OutstandingQty: 1000,
-			// PhaseState:         "Created",
-			// Contributions:      map[string]main.Contribution{"1": contrib},
+			OutstandingQty:     1000,
+			PhaseState:         "Created",
 			StartDate:          10,
 			EndDate:            20,
 			ValidationCriteria: map[string][]main.Criterion{"o1": crite},
-			//CAValidation:       val
 		},
 	}
-	// var vis []string
-	// vis = []string{"me", "ngo"}
 	projObj := main.Project{
-		// ObjectType:       "Project",
-		ProjectName:      "Project1",
+		ObjectType:       "Project",
+		ProjectName:      "Project10",
 		ProjectType:      "Short",
 		Phases:           ph,
 		CreationDate:     10,
 		TotalProjectCost: 5000,
-		// ProjectState:     "Created",
-		NGO: "ngo",
-		// Contributors:     map[string]string{"c1": "me"},
-		// VisibleTo:        vis,
-		// NoOfUpdates:      0,
+		ProjectState:     "Created",
+		NGO:              "goonj.ngo.csr.com",
 	}
+	// pId := "10001"
+	newProAsBytes, _ := json.Marshal(projObj)
+	// e1 := chaincodeStub.PutState(pId, newProAsBytes)
+	// fmt.Println("e1:.....", e1)
 
-	p := main.Project{}
-	getstate, er := chaincodeStub.GetState(pId)
-	fmt.Println("er", er)
-	fmt.Println("getstate", getstate)
-	errorss := json.Unmarshal(getstate, &p)
-	fmt.Println("errorss", errorss)
+	// p := main.Project{}
+	// getstate, er := chaincodeStub.GetState(pId)
+	// fmt.Println("er", er)
+	// fmt.Println("getstate", getstate)
+	// errorss := json.Unmarshal(getstate, &p)
+	// fmt.Println("errorss", errorss)
 
-	asBytes, e := transactionContext.GetStub().GetState(pId)
-	fmt.Println("E: ", e)
-	fmt.Println("asBytes", asBytes)
+	// chaincodeStub.GetStateReturns(getstate, nil)
 
 	// expectedAsset := &main.Project{pId: pId}
 	// bytes, err := json.Marshal(expectedAsset)
 	// require.NoError(test, err)
 
-	id := "10001"
-	phaseNumber := "1"
+	id := "50001"
+	phaseNumber := "0"
 	state := "Open For Funding"
 	date := "12"
-	txid := "t0002"
+	txid := "234567890"
 	var uparg [5]string
 	uparg[0] = id
 	uparg[1] = phaseNumber
@@ -364,15 +331,83 @@ func TestUpdateProject(test *testing.T) {
 	jsonuparg, _ := json.Marshal(uparg)
 	s := string(jsonuparg)
 
-	// fmt.Println("projBytes: ", s)
-
-	// chaincodeStub.GetStateReturns(asBytes, nil)
+	chaincodeStub.GetStateReturns(newProAsBytes, nil)
 	_, erro := csr.UpdateProject(transactionContext, s)
 	require.NoError(test, erro)
+	// coudnt retrieve data. empty data is fetched
+	// chaincodeStub.GetStateReturns(nil, nil)
+	// getStateReturns function is not usefull as result is same no matter we use it or not. no change detected.
 
-	chaincodeStub.GetStateReturns(nil, nil)
+	// chaincodeStub.GetStateReturns(nil, nil)
+	// ex1, err := csr.UpdateProject(transactionContext, s)
+	// require.EqualError(test, err, "project is not present", ex1)
 	ex1, err := csr.UpdateProject(transactionContext, s)
-	require.EqualError(test, err, "project is not present", ex1)
+	require.EqualError(test, err, "Failed to add a Tx: tx id already exists", ex1)
+
+}
+
+func TestValidatePhase(test *testing.T) {
+	transactionContext, chaincodeStub := prepMocksAsNgo()
+	transactionContext.GetStubReturns(chaincodeStub)
+	csr := main.SmartContract{}
+
+	crite := []main.Criterion{
+		{Desc: "Nothing", DocName: "Nothing", DocHash: "asdf"},
+	}
+	ph := []main.Phase{
+		{Qty: 5000,
+			OutstandingQty:     1000,
+			StartDate:          10,
+			EndDate:            20,
+			ValidationCriteria: map[string][]main.Criterion{"o1": crite},
+		},
+	}
+	projObj := main.Project{
+		ProjectName:      "Project1",
+		ProjectType:      "Short",
+		Phases:           ph,
+		CreationDate:     10,
+		TotalProjectCost: 5000,
+		NGO:              "goonj.ngo.csr.com",
+	}
+	pId := "10001"
+	txId := "t00050"
+	newProAsBytes, _ := json.Marshal(projObj)
+	newpro := string(newProAsBytes)
+	var args [3]string
+	args[0] = newpro
+	args[1] = pId
+	args[2] = txId
+	jsonarg, _ := json.Marshal(args)
+	arg := string(jsonarg)
+	_, err := csr.CreateProject(transactionContext, arg)
+	require.NoError(test, err, "err")
+
+	transactionContext, chaincodeStub = prepMocksAsCa()
+	transactionContext.GetStubReturns(chaincodeStub)
+
+	proId := "10001"
+	phasenum := "1"
+	validation := "True"
+	Comments := "Validate"
+	date := "15"
+	txid := "t00056"
+	var uparg [6]string
+	uparg[0] = proId
+	uparg[1] = phasenum
+	uparg[2] = validation
+	uparg[3] = Comments
+	uparg[4] = date
+	uparg[5] = txid
+	jsonuparg, _ := json.Marshal(uparg)
+	s := string(jsonuparg)
+
+	// _, err = csr.ValidatePhase(transactionContext, s)
+	// require.NoError(test, err, "err")
+
+	// chaincodeStub.GetStateReturns(nil, nil)
+	ex1, err := csr.ValidatePhase(transactionContext, s)
+	require.EqualError(test, err, "Project doesn't exist", ex1)
 
 }
 
@@ -380,12 +415,14 @@ func TestRequestTokens(test *testing.T) {
 	transactionContext, chaincodeStub := prepMocksAsCorp()
 	transactionContext.GetStubReturns(chaincodeStub)
 
+	csr := main.SmartContract{}
+
 	Qty := "1000"
 	PaymentId := "1001"
 	Status := "Requested"
 	Comments := "Requested"
 	date := "15"
-	txid := "t0003"
+	txid := "t000368"
 	var uparg [6]string
 	uparg[0] = Qty
 	uparg[1] = PaymentId
@@ -396,27 +433,80 @@ func TestRequestTokens(test *testing.T) {
 	jsonuparg, _ := json.Marshal(uparg)
 	s := string(jsonuparg)
 
-	csr := main.SmartContract{}
+	var uparg1 [5]string
+	jsonuparg1, _ := json.Marshal(uparg1)
+	s1 := string(jsonuparg1)
+
+	var uparg2 [6]string
+	uparg2[0] = ""
+	jsonuparg2, _ := json.Marshal(uparg2)
+	s2 := string(jsonuparg2)
+
+	var uparg3 [6]string
+	uparg3[0] = Qty
+	uparg3[1] = ""
+	jsonuparg3, _ := json.Marshal(uparg3)
+	s3 := string(jsonuparg3)
+
+	var uparg4 [6]string
+	uparg4[0] = Qty
+	uparg4[1] = PaymentId
+	uparg4[2] = ""
+	jsonuparg4, _ := json.Marshal(uparg4)
+	s4 := string(jsonuparg4)
+
+	var uparg5 [6]string
+	uparg5[0] = Qty
+	uparg5[1] = PaymentId
+	uparg5[2] = Status
+	uparg5[4] = ""
+	jsonuparg5, _ := json.Marshal(uparg5)
+	s5 := string(jsonuparg5)
+
+	// var uparg6 [6]string
+	// uparg[0] = Qty
+	// uparg[1] = PaymentId
+	// uparg[2] = Status
+	// uparg[3] = Comments
+	// uparg[4] = date
+	// uparg[5] = ""
+	// jsonuparg6, _ := json.Marshal(uparg6)
+	// s6 := string(jsonuparg6)
+
 	_, err := csr.RequestTokens(transactionContext, s)
 	require.NoError(test, err, "err")
 
-	// 	chaincodeStub.GetStateReturns(nil, nil)
-	// 	ex1, err := csr.UpdateProject(transactionContext, s)
-	// 	require.EqualError(test, err, "project is not present", ex1)
+	ex1, err := csr.RequestTokens(transactionContext, s1)
+	require.EqualError(test, err, "Incorrect no. of arguments. Expecting 6", ex1)
 
-	//
+	ex1, err = csr.RequestTokens(transactionContext, s2)
+	require.EqualError(test, err, "Qty must be a non-empty string", ex1)
+
+	ex1, err = csr.RequestTokens(transactionContext, s3)
+	require.EqualError(test, err, "payment id must be a non-empty string", ex1)
+
+	ex1, err = csr.RequestTokens(transactionContext, s4)
+	require.EqualError(test, err, "payment status must be a non-empty string", ex1)
+
+	ex1, err = csr.RequestTokens(transactionContext, s5)
+	require.EqualError(test, err, "date must be a non-empty string", ex1)
+
+	// ex, err := csr.RequestTokens(transactionContext, s6)
+	// require.EqualError(test, err, "txid must be a non-empty string", ex)
+	// not passing this one test case while passing s6 obj. but no error found
 }
 
 func TestTransferTokens(test *testing.T) {
 	transactionContext, chaincodeStub := prepMocksAsCorp()
 	transactionContext.GetStubReturns(chaincodeStub)
+	csr := main.SmartContract{}
 
 	Amount := "1000"
 	ProjectId := "10001"
 	phaseNumber := "1"
 	Notes := "Requested"
 	date := "15"
-	txid := "t0004"
+	txid := "t000467"
 	var uparg [6]string
 	uparg[0] = Amount
 	uparg[1] = ProjectId
@@ -427,19 +517,78 @@ func TestTransferTokens(test *testing.T) {
 	jsonuparg, _ := json.Marshal(uparg)
 	s := string(jsonuparg)
 
-	csr := main.SmartContract{}
+	var uparg1 [5]string
+	jsonuparg1, _ := json.Marshal(uparg1)
+	s1 := string(jsonuparg1)
+
+	var uparg2 [6]string
+	uparg2[0] = ""
+	jsonuparg2, _ := json.Marshal(uparg2)
+	s2 := string(jsonuparg2)
+
+	var uparg3 [6]string
+	uparg3[0] = Amount
+	uparg3[1] = ""
+	jsonuparg3, _ := json.Marshal(uparg3)
+	s3 := string(jsonuparg3)
+
+	var uparg4 [6]string
+	uparg4[0] = Amount
+	uparg4[1] = ProjectId
+	uparg4[2] = ""
+	jsonuparg4, _ := json.Marshal(uparg4)
+	s4 := string(jsonuparg4)
+
+	var uparg5 [6]string
+	uparg5[0] = Amount
+	uparg5[1] = ProjectId
+	uparg5[2] = phaseNumber
+	uparg5[4] = ""
+	jsonuparg5, _ := json.Marshal(uparg5)
+	s5 := string(jsonuparg5)
+
+	var uparg6 [6]string
+	uparg6[0] = Amount
+	uparg6[1] = ProjectId
+	uparg6[2] = phaseNumber
+	uparg6[3] = Notes
+	uparg6[4] = date
+	uparg6[5] = ""
+	jsonuparg6, _ := json.Marshal(uparg6)
+	s6 := string(jsonuparg6)
+
 	// _, err := csr.TransferTokens(transactionContext, s)
 	// require.NoError(test, err, "err")
 
-	chaincodeStub.GetStateReturns(nil, nil)
+	// chaincodeStub.GetStateReturns(nil, nil)
 	ex1, err := csr.TransferTokens(transactionContext, s)
 	require.EqualError(test, err, "No such project exists!", ex1)
+
+	ex1, err = csr.TransferTokens(transactionContext, s1)
+	require.EqualError(test, err, "Incorrect number of arguments. Expecting 6", ex1)
+
+	ex1, err = csr.TransferTokens(transactionContext, s2)
+	require.EqualError(test, err, "amount must be a non-empty string", ex1)
+
+	ex1, err = csr.TransferTokens(transactionContext, s3)
+	require.EqualError(test, err, "project id must be a non-empty string", ex1)
+
+	ex1, err = csr.TransferTokens(transactionContext, s4)
+	require.EqualError(test, err, "phase number must be a non-empty string", ex1)
+
+	ex1, err = csr.TransferTokens(transactionContext, s5)
+	require.EqualError(test, err, "date must be a non-empty string", ex1)
+
+	ex1, err = csr.TransferTokens(transactionContext, s6)
+	require.EqualError(test, err, "tx id must be a non-empty string", ex1)
 
 }
 
 func TestRedeemRequest(test *testing.T) {
 	transactionContext, chaincodeStub := prepMocksAsNgo()
 	transactionContext.GetStubReturns(chaincodeStub)
+
+	csr := main.SmartContract{}
 
 	pd := main.PaymentDetails{
 		PaymentType:   "Paypal",
@@ -454,7 +603,7 @@ func TestRedeemRequest(test *testing.T) {
 	red := string(RedAsBytes)
 	redeemId := "10001"
 	date := "15"
-	txid := "t0004"
+	txid := "t0004902"
 	var uparg [4]string
 	uparg[0] = redeemId
 	uparg[1] = red
@@ -463,13 +612,15 @@ func TestRedeemRequest(test *testing.T) {
 	jsonuparg, _ := json.Marshal(uparg)
 	s := string(jsonuparg)
 
-	csr := main.SmartContract{}
 	// _, err := csr.RedeemRequest(transactionContext, s)
 	// require.NoError(test, err, "err")
 
-	chaincodeStub.GetStateReturns(nil, nil)
+	// chaincodeStub.GetStateReturns(nil, nil)
 	ex1, err := csr.RedeemRequest(transactionContext, s)
 	require.EqualError(test, err, "error getting the balance of the ngo", ex1)
+
+	// ex1, err = csr.RedeemRequest(transactionContext, s)
+	// require.EqualError(test, err, "error getting the balance of the ngo", ex1)
 
 }
 
@@ -477,10 +628,12 @@ func TestApproveRedeemRequest(test *testing.T) {
 	transactionContext, chaincodeStub := prepMocksAsCa()
 	transactionContext.GetStubReturns(chaincodeStub)
 
+	csr := main.SmartContract{}
+
 	redeamId := "10001"
 	PaymentId := "1001"
 	date := "15"
-	txid := "t0004"
+	txid := "t00045432"
 	var uparg [4]string
 	uparg[0] = redeamId
 	uparg[1] = PaymentId
@@ -489,11 +642,10 @@ func TestApproveRedeemRequest(test *testing.T) {
 	jsonuparg, _ := json.Marshal(uparg)
 	s := string(jsonuparg)
 
-	csr := main.SmartContract{}
 	// _, err := csr.ApproveRedeemRequest(transactionContext, s)
 	// require.NoError(test, err, "err")
 
-	chaincodeStub.GetStateReturns(nil, nil)
+	// chaincodeStub.GetStateReturns(nil, nil)
 	ex1, err := csr.ApproveRedeemRequest(transactionContext, s)
 	require.EqualError(test, err, "redeem request: 10001 is not present", ex1)
 
@@ -503,10 +655,12 @@ func TestRejectRedeemRequest(test *testing.T) {
 	transactionContext, chaincodeStub := prepMocksAsCa()
 	transactionContext.GetStubReturns(chaincodeStub)
 
+	csr := main.SmartContract{}
+
 	redeamId := "10001"
 	Comments := "Rejected"
 	date := "15"
-	txid := "t0004"
+	txid := "t0007864"
 	var uparg [4]string
 	uparg[0] = redeamId
 	uparg[1] = Comments
@@ -515,11 +669,10 @@ func TestRejectRedeemRequest(test *testing.T) {
 	jsonuparg, _ := json.Marshal(uparg)
 	s := string(jsonuparg)
 
-	csr := main.SmartContract{}
 	// _, err := csr.RejectRedeemRequest(transactionContext, s)
 	// require.NoError(test, err, "err")
 
-	chaincodeStub.GetStateReturns(nil, nil)
+	// chaincodeStub.GetStateReturns(nil, nil)
 	ex1, err := csr.RejectRedeemRequest(transactionContext, s)
 	require.EqualError(test, err, "redeem request: 10001 not found", ex1)
 

@@ -3,88 +3,69 @@ const router = express.Router();
 
 const logger = require('../../loggers/logger');
 
+const { Client, resources, Webhook } = require('coinbase-commerce-node');
+Client.init('b3e8de8c-a744-4fd2-80bc-6801b3f3b5e6'); //API KEY
+const { Charge } = resources;
+
 const { fieldErrorMessage, generateError, getMessage } = require('../../utils/functions');
 
-//razorpay
-const Razorpay = require('razorpay');
-const { nanoid } = require("nanoid");
-let request = require('request');
+// create coinbase charge
+router.post('/coinbase/charge', async (req, res) => {
 
-const razorpay = new Razorpay({
-    key_id: 'rzp_test_xWrg0UDvN0bmPb',
-    key_secret: 'ESE8VcWS43a2Q8Ymfu1RdUvF'
-});
-
-//API for RazorPay payment. It creates an order
-router.post('/razorpay', async (req, res) => {
-    logger.debug('==================== razorpay ==================');
-
-    let amount = req.body.amount;
-
-    if (!amount) {
-        res.json(fieldErrorMessage('\'amount\''));
-        return;
+    //types: ProjectTransfer, CreditRequest, RedeemApprove
+    if (!req.body.requestType) {
+        return res.json(fieldErrorMessage('\'request type\''));
+    }
+    if (!req.body.amount) {
+        return res.json(fieldErrorMessage('\'amount\''));
+    }
+    if (!req.body.payload) {
+        return res.json(fieldErrorMessage('\'payload\''));
     }
 
-    amount = amount * 100;
-
-    const payment_capture = 1;
-
-    let options = {
-        amount: amount.toString(),  // amount in the smallest currency unit i.e 5000 paise
-        currency: "INR",
-        receipt: nanoid(),
-        payment_capture: payment_capture
-    };
-
-    // const response = await razorpay.orders.create(options, function(err, order) {  
-    // 	console.log(order);
-    // 	res.send(order);
-    // });
-
-    const response = await razorpay.orders.create(options)
-    res.json(getMessage(true, {
-        key: razorpay.key_id,
-        id: response.id,
-        currency: response.currency,
-        amount: response.amount
-    }));
-
-    // res.json({
-    //     key: razorpay.key_id,
-    //     id: response.id,
-    //     currency: response.currency,
-    //     amount: response.amount
-    // });
-});
-
-//API for fetching RazorPay payment details
-router.get('/razorpay/payment', (req, res) => {
-    logger.debug('==================== razorpay fetch payment details ==================');
-
-    if (req.orgName !== "creditsauthority") {
-        return res.json({ success: false, message: "Unauthorized" })
-    }
-
-    let paymentId = req.query.paymentId;
-
-    if (!paymentId) {
-        return res.json(fieldErrorMessage('\'paymentId\''));
-    }
-
-    // https://api.razorpay.com/v1/payments/pay_DG4ZdRK8ZnXC3k
-
-    const httpUrl = 'https://' + razorpay.key_id + ":" + razorpay.key_secret + '@api.razorpay.com/v1/payments/' + paymentId;
-    //console.log('http url: ' + httpUrl);
-    request(httpUrl, function (error, response, body) {
-        logger.debug(`Response: ${body}`);
-        if (error) {
-            generateError(e, 'Failed to fetch payments', 401, next);
-        } else {
-            res.json(getMessage(true, body));
-            //res.send(JSON.parse(body));
+    const chargeData = {
+        name: req.body.requestType,
+        description: 'testing coinbase gateway',
+        local_price: {
+            amount: req.body.amount,
+            currency: 'USD'
+        },
+        pricing_type: 'fixed_price',
+        metadata: {
+            requestType: req.body.requestType,
+            payload: JSON.stringify(req.body.payload)
         }
-    });
-});
+    }
+
+    const charge = await Charge.create(chargeData)
+    res.send(charge)
+})
+
+router.use('/coinbase/chargeStatus', (req, res) => {
+
+    const body = req.body;
+    console.log('COINBASE HOOK BODY.......')
+    console.log(body)
+    const signature = req.headers['x-cc-webhook-signature'];
+    console.log('signature................ ' + signature);
+    console.log('header................ ' + req.headers);
+    const webhookSecret = '48b8d57b-b845-4106-88f8-c579b0c32a8c';
+
+    try {
+        const event = Webhook.verifySigHeader(JSON.stringify(body), signature, webhookSecret);
+        console.log(event);
+        if (event.type === 'charge:pending') {
+            console.log('charge pending');
+        } else if (event.type === 'charge:confirmed') {
+            console.log('charge confirmed');
+        } else if (event.type === 'charge:failed') {
+            console.log('charge failed');
+        }
+        res.send('wbehook working');
+    } catch (error) {
+        console.log(error);
+    }
+
+})
 
 module.exports = router;
