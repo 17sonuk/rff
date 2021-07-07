@@ -840,7 +840,7 @@ describe('TESTING USER SERVICE - Notification', () => {
         try {
             let res = await userService.createNotification('P1')
             expect(res.success).to.equal(true)
-            expect(res.message).to.equal('notification created in db')
+            expect(res.message).to.equal('Bad Connection')
         } catch (err) {
             expect(err.message).to.equal('Bad Connection')
         }
