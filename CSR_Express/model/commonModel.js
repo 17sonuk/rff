@@ -16,8 +16,17 @@ commonModel.uploadBalanceSheet = (userName, file) => {
     })
 }
 
-commonModel.saveCommunities = (communityArr) => {
-    return communityModel.insertMany(communityArr).then(data => {
+commonModel.saveCommunities = async (communityArr) => {
+    let finalList = [];
+    for (let i = 0; i < communityArr.length; i++) {
+        let res = await communityModel.findOne({ $and: [{ name: communityArr[i].name }, { place: communityArr[i].place }] });
+        console.log('community res:', res);
+        if (!res) {
+            finalList.push(communityArr[i]);
+        }
+    }
+    console.log('finalList: ', finalList)
+    return communityModel.insertMany(finalList).then(data => {
         if (data) {
             return data
         } else {

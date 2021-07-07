@@ -509,11 +509,11 @@ let convertToExcel = (jsonData, fileName) => {
 
 //get a report of ngo(credits received, redeemed, lockedFor)
 router.get('/ngo-report', async function (req, res, next) {
-    const year = req.query.year
+    // const year = req.query.year
 
-    if (!year) {
-        return res.json(fieldErrorMessage('\'year\''));
-    }
+    // if (!year) {
+    //     return res.json(fieldErrorMessage('\'year\''));
+    // }
 
     //joining path of directory 
     let directoryPath;
@@ -531,12 +531,12 @@ router.get('/ngo-report', async function (req, res, next) {
         return value != 'admin.id';
     }).map(_ => _ = _.split('.')[0]);
 
-    let temp = Number(year) + 1
-    let thisYear = "April 1, " + year + " 00:00:00"
-    let nextYear = "April 1, " + temp.toString() + " 00:00:00"
+    // let temp = Number(year) + 1
+    // let thisYear = "April 1, " + year + " 00:00:00"
+    // let nextYear = "April 1, " + temp.toString() + " 00:00:00"
 
-    let startDate = new Date(thisYear)
-    let endDate = new Date(nextYear)
+    // let startDate = new Date(thisYear)
+    // let endDate = new Date(nextYear)
 
     let response = {
         "result": []
@@ -546,11 +546,11 @@ router.get('/ngo-report', async function (req, res, next) {
         "selector": {
             "docType": "Transaction",
             "txType": {},
-            "to": "",
-            "date": {
-                "$gt": startDate.valueOf(),
-                "$lt": endDate.valueOf()
-            }
+            "to": ""
+            // "date": {
+            //     "$gt": startDate.valueOf(),
+            //     "$lt": endDate.valueOf()
+            // }
         },
         "fields": ["qty", "from"]
     }
@@ -632,7 +632,6 @@ router.get('/ngo-report', async function (req, res, next) {
     catch (e) {
         generateError(e, next)
     }
-
 });
 
 //get the details of contributions to an ngo in the current financial year
@@ -822,83 +821,87 @@ router.get('/corporate-contributions', async function (req, res, next) {
     // logger.debug(`query string:\n ${args}`);
 
     try {
-        let message = await query(req.userName, req.orgName, 'GetAllCorporates', CHAINCODE_NAME, CHANNEL_NAME, '');
-        if (message.toString() === '') {
-            return res.json(getMessage(true, []));
-        } else {
-            message = JSON.parse(message.toString());
+        //let message = await query(req.userName, req.orgName, 'GetAllCorporates', CHAINCODE_NAME, CHANNEL_NAME, '');
+        // if (message.toString() === '') {
+        //     return res.json(getMessage(true, []));
+        // } else {
+        // message = JSON.parse(message.toString());
 
-            logger.debug(`response1 :  ${JSON.stringify(message, null, 2)}`)
+        // logger.debug(`response1 :  ${JSON.stringify(message, null, 2)}`)
 
-            let corporateList = message
+        // let corporateList = message
 
-            logger.debug(`corporate list: ${corporateList}`)
+        let corporateList = await getCorporateNames()
 
-            let result = []
+        logger.debug(`corporate list: ${corporateList}`)
 
-            for (let corporate of corporateList) {
+        let result = []
 
-                let resultObject = new Object()
+        for (let i = 0; i < corporateList.length; i++) {
+            // for (let corporate of corporateList) {
+            let corporate = corporateList[i] + ".corporate.csr.com"
 
-                resultObject.corporate = corporate
+            let resultObject = new Object()
 
-                //get amount assigned to corporate
-                let queryString = {
-                    "selector": {
-                        "docType": "Transaction",
-                        "txType": "AssignToken",
-                        "to": corporate
-                    },
-                    "fields": ["qty"]
-                }
+            resultObject.corporate = corporate
 
-                let args = JSON.stringify(queryString);
-                logger.debug(`query string:\n ${args}`);
-
-                let message2 = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
-                message2 = JSON.parse(message2.toString());
-
-                message2.forEach(elem => {
-                    elem['Record'] = JSON.parse(elem['Record'])
-                })
-
-                logger.debug(`response2 :  ${JSON.stringify(message2, null, 2)}`)
-
-                let totalAssign = 0.0
-                for (let assign of message2) {
-                    totalAssign += assign.Record.qty
-                }
-                resultObject.assignedValue = totalAssign
-
-                //get balance of corporate
-                let message3 = await query(req.userName, req.orgName, 'GetBalanceCorporate', CHAINCODE_NAME, CHANNEL_NAME, corporate);
-                message3 = JSON.parse(message3.toString());
-
-                logger.debug(`response3 :  ${JSON.stringify(message3, null, 2)}`)
-
-                resultObject.balance = message3.balance
-                resultObject.escrowBalance = message3.escrowBalance
-                resultObject.snapshotBalance = message3.snapshotBalance
-
-                //get all the projects the corporate is contributed
-                let list1 = corporate.split(".")
-                let temp = list1[0] + "\\\\." + list1[1] + "\\\\." + list1[2] + "\\\\." + list1[3]
-                queryString = "{\"selector\":{\"docType\":\"Project\",\"contributors." + temp + "\":{\"$exists\":true}},\"fields\":[\"_id\"]}"
-
-                args = queryString
-                logger.debug(`query string:\n ${args}`);
-
-                let message4 = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
-                message4 = JSON.parse(message4.toString());
-
-                logger.debug(`response4 :  ${JSON.stringify(message4, null, 2)}`)
-
-                resultObject.projectCount = message4.length
-
-                result.push(resultObject)
+            //get amount assigned to corporate
+            let queryString = {
+                "selector": {
+                    "docType": "Transaction",
+                    "txType": "AssignToken",
+                    "to": corporate
+                },
+                "fields": ["qty"]
             }
-            return res.json(getMessage(true, result));
+
+            let args = JSON.stringify(queryString);
+            logger.debug(`query string:\n ${args}`);
+
+            let message2 = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
+            message2 = JSON.parse(message2.toString());
+
+            message2.forEach(elem => {
+                elem['Record'] = JSON.parse(elem['Record'])
+            })
+
+            logger.debug(`response2 :  ${JSON.stringify(message2, null, 2)}`)
+
+            let totalAssign = 0.0
+            for (let assign of message2) {
+                totalAssign += assign.Record.qty
+            }
+            resultObject.assignedValue = totalAssign
+
+            //get balance of corporate
+            let message3 = await query(req.userName, req.orgName, 'GetBalanceCorporate', CHAINCODE_NAME, CHANNEL_NAME, corporate);
+            message3 = JSON.parse(message3.toString());
+
+            logger.debug(`response3 :  ${JSON.stringify(message3, null, 2)}`)
+
+            resultObject.balance = message3.balance
+            resultObject.escrowBalance = message3.escrowBalance
+            resultObject.snapshotBalance = message3.snapshotBalance
+
+            //get all the projects the corporate is contributed
+            let list1 = corporate.split(".")
+            let temp = list1[0] + "\\\\." + list1[1] + "\\\\." + list1[2] + "\\\\." + list1[3]
+            queryString = "{\"selector\":{\"docType\":\"Project\",\"contributors." + temp + "\":{\"$exists\":true}},\"fields\":[\"_id\"]}"
+
+            args = queryString
+            logger.debug(`query string:\n ${args}`);
+
+            let message4 = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
+            message4 = JSON.parse(message4.toString());
+
+            logger.debug(`response4 :  ${JSON.stringify(message4, null, 2)}`)
+
+            resultObject.projectCount = message4.length
+
+            result.push(resultObject)
+            // }
         }
+        return res.json(getMessage(true, result));
     }
     catch (e) {
         generateError(e, next);

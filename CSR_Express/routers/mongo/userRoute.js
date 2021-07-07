@@ -71,7 +71,7 @@ router.get('/profile', (req, res, next) => {
 // get user redeem account
 router.get('/redeemAccount', (req, res, next) => {
     logger.debug("router-redeemAccount");
-    userService.getUserRedeemAccount(req.userName, req.query.type)
+    userService.getUserRedeemAccount(req.userName)
         .then((data) => {
             res.json(data || false)
         })

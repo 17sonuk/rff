@@ -109,18 +109,14 @@ userService.getUserDetails = (userName) => {
 }
 
 // get user redeem account
-userService.getUserRedeemAccount = (userName, paymentType) => {
+userService.getUserRedeemAccount = (userName) => {
     return userModel.getUserDetails(userName, 'userName').then(data => {
         if (data) {
-            if (paymentType === 'Paypal') {
-                return data['paymentDetails']['paypalEmailId']
-            } else if (paymentType === 'Cryptocurrency') {
-                return data['paymentDetails']['cryptoAddress']
-            } else if (paymentType === 'Bank') {
-                return data['paymentDetails']['bankDetails']
+            if (data['paymentDetails']) {
+                return data['paymentDetails']
             } else {
-                let err = new Error("Invalid payment type")
-                err.status = 500
+                let err = new Error("Payment details missing")
+                err.status = 404
                 throw err
             }
         } else {

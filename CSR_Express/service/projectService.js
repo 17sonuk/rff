@@ -9,7 +9,7 @@ logger.debug('<<<<<<<<<<<<<< project service >>>>>>>>>>>>>>>>>')
 //Create project
 projectService.createProject = (project) => {
     return projectModel.createProject(project).then(projectData => {
-        if (projectData.error && projectData.error === true) {
+        if (projectData && projectData.error === true) {
 
             return { success: false, message: projectData.message };
         } 
