@@ -267,12 +267,8 @@ func TestAssignTokens(test *testing.T) {
 	jsonarg, _ := json.Marshal(arg)
 	s := string(jsonarg)
 
-	// tokenQty := "1000"
-	// PaymentId := "1001"
 	Status := "Requested"
 	comments := "Requested"
-	// date := "15"
-	// txid := "t000368"
 
 	req := main.TokenRequest{
 		ObjectType: "TokenRequest",
@@ -285,6 +281,25 @@ func TestAssignTokens(test *testing.T) {
 	}
 	tokenreqBytes, _ := json.Marshal(req)
 
+	var arg1 [2]string
+	jsonarg1, _ := json.Marshal(arg1)
+	s1 := string(jsonarg1)
+
+	var arg2 [3]string
+	jsonarg2, _ := json.Marshal(arg2)
+	s2 := string(jsonarg2)
+
+	var arg3 [3]string
+	arg3[0] = bxId
+	jsonarg3, _ := json.Marshal(arg3)
+	s3 := string(jsonarg3)
+
+	var arg4 [3]string
+	arg4[0] = bxId
+	arg4[1] = date
+	jsonarg4, _ := json.Marshal(arg4)
+	s4 := string(jsonarg4)
+
 	chaincodeStub.GetStateReturnsOnCall(0, tokenreqBytes, nil)
 	chaincodeStub.GetStateReturnsOnCall(1, []byte("1000"), nil)
 	_, er := csr.AssignTokens(transactionContext, s)
@@ -292,6 +307,18 @@ func TestAssignTokens(test *testing.T) {
 
 	_, er = csr.AssignTokens(transactionContext, s)
 	require.EqualError(test, er, "No such token request exists")
+
+	_, er = csr.AssignTokens(transactionContext, s1)
+	require.EqualError(test, er, "Incorrect number of arguments. Expecting 3")
+
+	_, er = csr.AssignTokens(transactionContext, s2)
+	require.EqualError(test, er, "bank tx id must be a non-empty string")
+
+	_, er = csr.AssignTokens(transactionContext, s3)
+	require.EqualError(test, er, "date must be a non-empty string")
+
+	_, er = csr.AssignTokens(transactionContext, s4)
+	require.EqualError(test, er, "tx id must be a non-empty string")
 
 }
 
@@ -325,6 +352,32 @@ func TestRejectTokens(test *testing.T) {
 	}
 	tokenreqBytes, _ := json.Marshal(req)
 
+	var arg1 [3]string
+	jsonarg1, _ := json.Marshal(arg1)
+	s1 := string(jsonarg1)
+
+	var arg2 [4]string
+	jsonarg2, _ := json.Marshal(arg2)
+	s2 := string(jsonarg2)
+
+	var arg3 [4]string
+	arg3[0] = bxId
+	jsonarg3, _ := json.Marshal(arg3)
+	s3 := string(jsonarg3)
+
+	var arg4 [4]string
+	arg4[0] = bxId
+	arg4[1] = comments
+	jsonarg4, _ := json.Marshal(arg4)
+	s4 := string(jsonarg4)
+
+	var arg5 [4]string
+	arg5[0] = bxId
+	arg5[1] = comments
+	arg5[2] = date
+	jsonarg5, _ := json.Marshal(arg5)
+	s5 := string(jsonarg5)
+
 	chaincodeStub.GetStateReturnsOnCall(0, tokenreqBytes, nil)
 	chaincodeStub.GetStateReturnsOnCall(1, nil, nil)
 	_, er := csr.RejectTokens(transactionContext, s)
@@ -332,5 +385,20 @@ func TestRejectTokens(test *testing.T) {
 
 	_, er = csr.RejectTokens(transactionContext, s)
 	require.EqualError(test, er, "No such TokenRequest exists")
+
+	_, er = csr.RejectTokens(transactionContext, s1)
+	require.EqualError(test, er, "Incorrect number of arguments. Expecting 4")
+
+	_, er = csr.RejectTokens(transactionContext, s2)
+	require.EqualError(test, er, "bankTxId must be non-empty")
+
+	_, er = csr.RejectTokens(transactionContext, s3)
+	require.EqualError(test, er, "comments must be non-empty")
+
+	_, er = csr.RejectTokens(transactionContext, s4)
+	require.EqualError(test, er, "date must be non-empty")
+
+	_, er = csr.RejectTokens(transactionContext, s5)
+	require.EqualError(test, er, "tx Id must be non-empty")
 
 }

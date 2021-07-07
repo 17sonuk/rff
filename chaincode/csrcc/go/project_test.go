@@ -6,15 +6,14 @@ import (
 	"os"
 	"testing"
 
-	// "chaincode/go/pkg/mod/github.com/stretchr/testify@v1.7.0/require"
 	mocks "csrcc/go/mocks"
+
+	"github.com/stretchr/testify/require"
 	// "github.com/hyperledger/fabric-chaincode-go/pkg/cid"
 	// "github.com/hyperledger/fabric-chaincode-go/shim"
 	// "github.com/hyperledger/fabric-contract-api-go/contractapi"
-	"github.com/stretchr/testify/require"
 	// "github.com/hyperledger/fabric-samples/tree/v2.2.2/asset-transfer-private-data/chaincode-go/chaincode/mocks"
 	// "github.com/hyperledger/fabric-samples/asset-transfer-basic/chaincode-go/chaincode/mocks"
-	// "chaincode/go/pkg/mod/github.com/hyperledger/fabric-chaincode-go@v0.0.0-20210603161043-af0e3898842a/pkg/cid"
 )
 
 const ngoMsp = "NgoMSP"
@@ -179,7 +178,6 @@ func TestCreateProject(test *testing.T) {
 	_, err := csr.CreateProject(transactionContext, arg)
 	require.NoError(test, err, "err")
 
-	// chaincodeStub.GetStateReturns(nil, nil)
 	ex1, err := csr.CreateProject(transactionContext, argdup)
 	require.EqualError(test, err, "Incorrect number of arguments. Expecting 3", ex1)
 
@@ -258,6 +256,8 @@ func TestUpdateProject(test *testing.T) {
 	_, erro := csr.UpdateProject(transactionContext, s)
 	require.NoError(test, erro)
 
+	chaincodeStub.GetStateReturnsOnCall(0, nil, nil)
+	chaincodeStub.GetStateReturnsOnCall(1, nil, nil)
 	ex1, err := csr.UpdateProject(transactionContext, s)
 	require.EqualError(test, err, "project is not present", ex1)
 
@@ -323,6 +323,8 @@ func TestValidatePhase(test *testing.T) {
 	_, err := csr.ValidatePhase(transactionContext, s)
 	require.NoError(test, err, "err")
 
+	chaincodeStub.GetStateReturnsOnCall(0, nil, nil)
+	chaincodeStub.GetStateReturnsOnCall(1, nil, nil)
 	ex1, err := csr.ValidatePhase(transactionContext, s)
 	require.EqualError(test, err, "Project doesn't exist", ex1)
 
@@ -384,5 +386,10 @@ func TestAddDocumentHash(test *testing.T) {
 	chaincodeStub.GetStateReturnsOnCall(1, nil, nil)
 	_, er := csr.AddDocumentHash(transactionContext, s)
 	require.NoError(test, er)
+
+	chaincodeStub.GetStateReturnsOnCall(0, nil, nil)
+	chaincodeStub.GetStateReturnsOnCall(1, nil, nil)
+	_, er = csr.AddDocumentHash(transactionContext, s)
+	require.EqualError(test, er, "Project doesn't exist")
 
 }

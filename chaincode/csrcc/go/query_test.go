@@ -2,6 +2,7 @@ package main
 
 import (
 	main "csrcc/go"
+	"encoding/json"
 	"os"
 	"testing"
 
@@ -10,8 +11,17 @@ import (
 	// "github.com/hyperledger/fabric-chaincode-go/pkg/cid"
 	// "github.com/hyperledger/fabric-chaincode-go/shim"
 	// "github.com/hyperledger/fabric-contract-api-go/contractapi"
+
+	// "chaincode/go/pkg/mod/github.com/hyperledger/fabric-protos-go@v0.0.0-20190919234611-2a87503ac7c9/peer"
+
 	"github.com/hyperledger/fabric-chaincode-go/shim"
 	"github.com/hyperledger/fabric-protos-go/ledger/queryresult"
+
+	// "github.com/hyperledger/fabric-protos-go/tree/main/peer"
+
+	// "github.com/hyperledger/fabric-protos/tree/main/peer"
+
+	"github.com/hyperledger/fabric-protos-go/peer"
 	"github.com/stretchr/testify/require"
 	// "github.com/hyperledger/fabric-samples/tree/v2.2.2/asset-transfer-private-data/chaincode-go/chaincode/mocks"
 	// "github.com/hyperledger/fabric-samples/asset-transfer-basic/chaincode-go/chaincode/mocks"
@@ -51,6 +61,9 @@ func prepMocks4(orgMSP, clientId string) (*mocks.TransactionContext, *mocks.Chai
 	return transactionContext, chaincodeStub
 }
 
+// type QueryResponseMetadata struct {
+// 	*peer.QueryResponseMetadata
+// }
 type stateQueryIterator interface {
 	shim.StateQueryIteratorInterface
 }
@@ -70,6 +83,89 @@ func TestCommonQuery(test *testing.T) {
 	iterator.NextReturns(&queryresult.KV{Value: []byte(squery)}, nil)
 	chaincodeStub.GetQueryResultReturns(iterator, nil)
 	_, err := csr.CommonQuery(transactionContext, squery)
+	require.NoError(test, err)
+
+}
+
+func TestQueryByKey(test *testing.T) {
+	chaincodeStub := &mocks.ChaincodeStub{}
+	transactionContext := &mocks.TransactionContext{}
+	transactionContext.GetStubReturns(chaincodeStub)
+
+	csr := main.SmartContract{}
+
+	var arg [1]string
+	key := "12345678"
+	arg[0] = key
+	byt, _ := json.Marshal(arg)
+	s := string(byt)
+
+	chaincodeStub.GetStateReturns(byt, nil)
+	_, er := csr.QueryByKey(transactionContext, s)
+	require.NoError(test, er)
+
+}
+
+func TestGetBalance(test *testing.T) {
+	transactionContext, chaincodeStub := prepMocksAsCorp4()
+	transactionContext.GetStubReturns(chaincodeStub)
+	csr := main.SmartContract{}
+
+	balance := "23456"
+	snapbal := "1000"
+
+	chaincodeStub.GetStateReturnsOnCall(0, []byte(balance), nil)
+	chaincodeStub.GetStateReturnsOnCall(1, []byte(snapbal), nil)
+	_, er := csr.GetBalance(transactionContext)
+	require.NoError(test, er)
+}
+
+func TestGetAllCorporates(test *testing.T) {
+	chaincodeStub := &mocks.ChaincodeStub{}
+	transactionContext := &mocks.TransactionContext{}
+	transactionContext.GetStubReturns(chaincodeStub)
+
+	csr := main.SmartContract{}
+
+	var arg [2]string
+	arg[0] = "keanu"
+	arg[1] = "infosys"
+	jsonarg, _ := json.Marshal(arg)
+
+	chaincodeStub.GetStateReturns(jsonarg, nil)
+	_, er := csr.GetAllCorporates(transactionContext)
+	require.NoError(test, er)
+
+}
+
+func TestCommonQueryPagination(test *testing.T) {
+	chaincodeStub := &mocks.ChaincodeStub{}
+	transactionContext := &mocks.TransactionContext{}
+	transactionContext.GetStubReturns(chaincodeStub)
+
+	csr := main.SmartContract{}
+
+	squery := "{\"selector\":{\"docType\":\"Project\"}}, projectName: 'project1'"
+	PageSize := "10"
+	Bookmark := "sfdrr4wereaf"
+	var arg [3]string
+	arg[0] = squery
+	arg[1] = PageSize
+	arg[2] = Bookmark
+	jsonarg, _ := json.Marshal(arg)
+	s := string(jsonarg)
+
+	pes := &peer.QueryResponseMetadata{}
+	pes.FetchedRecordsCount = 1
+	pes.Bookmark = Bookmark
+
+	iterator := &mocks.StateQueryIterator{}
+	iterator.HasNextReturnsOnCall(0, true)
+	iterator.HasNextReturnsOnCall(1, false)
+	iterator.NextReturns(&queryresult.KV{Value: []byte(squery)}, nil)
+
+	chaincodeStub.GetQueryResultWithPaginationReturns(iterator, pes, nil)
+	_, err := csr.CommonQueryPagination(transactionContext, s)
 	require.NoError(test, err)
 
 }

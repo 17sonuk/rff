@@ -6,15 +6,14 @@ import (
 	"os"
 	"testing"
 
-	// "chaincode/go/pkg/mod/github.com/stretchr/testify@v1.7.0/require"
 	mocks "csrcc/go/mocks"
+
+	"github.com/stretchr/testify/require"
 	// "github.com/hyperledger/fabric-chaincode-go/pkg/cid"
 	// "github.com/hyperledger/fabric-chaincode-go/shim"
 	// "github.com/hyperledger/fabric-contract-api-go/contractapi"
-	"github.com/stretchr/testify/require"
 	// "github.com/hyperledger/fabric-samples/tree/v2.2.2/asset-transfer-private-data/chaincode-go/chaincode/mocks"
 	// "github.com/hyperledger/fabric-samples/asset-transfer-basic/chaincode-go/chaincode/mocks"
-	// "chaincode/go/pkg/mod/github.com/hyperledger/fabric-chaincode-go@v0.0.0-20210603161043-af0e3898842a/pkg/cid"
 )
 
 const ngoMsp2 = "NgoMSP"
