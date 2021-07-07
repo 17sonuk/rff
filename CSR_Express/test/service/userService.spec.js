@@ -522,20 +522,41 @@ describe('TESTING USER SERVICE - GetUserDetails', () => {
             }
         }
         mockObj.resolves(registerUserData);
-        userService.getUserRedeemAccount('ngo90', 'Paypal').then(res => {
-            expect(res).to.equal('info@paypal.com')
+        userService.getUserRedeemAccount('ngo90').then(res => {
+            expect(res).to.equal(registerUserData.paymentDetails)
         })
-        userService.getUserRedeemAccount('ngo90', 'Cryptocurrency').then(res => {
-            expect(res).to.equal('1234')
-        })
-        userService.getUserRedeemAccount('ngo90', 'Bank').then(res => {
-            expect(res).to.equal(registerUserData.paymentDetails['bankDetails'])
-        })
+
+        const registerUserData2 = {
+            firstName: 'Charles',
+            lastName: 'Mack',
+            orgName: 'Ngo',
+            userName: 'ngo93',
+            email: 'info93@ngo.com',
+            role: 'Ngo',
+            status: '',
+            description: 'desc',
+            website: 'test',
+            address: {
+                addressLine1: 'address10',
+                addressLine2: 'address20',
+                city: 'city',
+                state: 'state',
+                zipCode: '567',
+                country: 'India'
+            },
+            phone: [
+                {
+                    countryCode: '+91',
+                    phoneNumber: '97654579'
+                }
+            ]
+        }
+        mockObj.resolves(registerUserData2)
         try {
-            let res = await userService.getUserRedeemAccount('ngo90', 'Bank_wrong')
-            expect(res).to.equal("Invalid payment type")
+            let res = await userService.getUserRedeemAccount('ngo93')
+            expect(res).to.equal("Payment details missing")
         } catch (err) {
-            expect(err.message).to.equal("Invalid payment type")
+            expect(err.message).to.equal("Payment details missing")
         }
 
         mockObj.resolves(null);
