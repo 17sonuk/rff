@@ -40,3 +40,36 @@ test-network/organizations/ordererOrganizations/csr.com/users
 test-network/organizations/peerOrganizations
 
 test-network/system-genesis-block/*
+
+#fabric-ca related files & folders
+# 1. for orderer
+test-network/organizations/fabric-ca/orderer/msp
+test-network/organizations/fabric-ca/orderer/tls-cert.pem
+test-network/organizations/fabric-ca/orderer/ca-cert.pem
+test-network/organizations/fabric-ca/orderer/IssuerPublicKey
+test-network/organizations/fabric-ca/orderer/IssuerRevocationPublicKey
+test-network/organizations/fabric-ca/orderer/fabric-ca-server.db
+
+# 2. for corporate
+test-network/organizations/fabric-ca/corporate/msp
+test-network/organizations/fabric-ca/corporate/tls-cert.pem
+test-network/organizations/fabric-ca/corporate/ca-cert.pem
+test-network/organizations/fabric-ca/corporate/IssuerPublicKey
+test-network/organizations/fabric-ca/corporate/IssuerRevocationPublicKey
+test-network/organizations/fabric-ca/corporate/fabric-ca-server.db
+
+# 3. for ngo
+test-network/organizations/fabric-ca/ngo/msp
+test-network/organizations/fabric-ca/ngo/tls-cert.pem
+test-network/organizations/fabric-ca/ngo/ca-cert.pem
+test-network/organizations/fabric-ca/ngo/IssuerPublicKey
+test-network/organizations/fabric-ca/ngo/IssuerRevocationPublicKey
+test-network/organizations/fabric-ca/ngo/fabric-ca-server.db
+
+# 4. for ca
+test-network/organizations/fabric-ca/creditsauthority/msp
+test-network/organizations/fabric-ca/creditsauthority/tls-cert.pem
+test-network/organizations/fabric-ca/creditsauthority/ca-cert.pem
+test-network/organizations/fabric-ca/creditsauthority/IssuerPublicKey
+test-network/organizations/fabric-ca/creditsauthority/IssuerRevocationPublicKey
+test-network/organizations/fabric-ca/creditsauthority/fabric-ca-server.db
