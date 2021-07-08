@@ -264,7 +264,7 @@ func TestUpdateProject(test *testing.T) {
 }
 
 func TestValidatePhase(test *testing.T) {
-	transactionContext, chaincodeStub := prepMocksAsNgo()
+	transactionContext, chaincodeStub := prepMocksAsCa()
 	transactionContext.GetStubReturns(chaincodeStub)
 	csr := main.SmartContract{}
 
@@ -296,10 +296,6 @@ func TestValidatePhase(test *testing.T) {
 		NGO:              "goonj.ngo.csr.com",
 	}
 	newProAsBytes, _ := json.Marshal(projObj)
-
-	// ca validates
-	transactionContext, chaincodeStub = prepMocksAsCa()
-	transactionContext.GetStubReturns(chaincodeStub)
 
 	proId := "10001"
 	phasenum := "0"

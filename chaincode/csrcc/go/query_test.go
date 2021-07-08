@@ -6,26 +6,16 @@ import (
 	"os"
 	"testing"
 
-	// "chaincode/go/pkg/mod/github.com/stretchr/testify@v1.7.0/require"
 	mocks "csrcc/go/mocks"
+
+	"github.com/hyperledger/fabric-protos-go/ledger/queryresult"
+	"github.com/hyperledger/fabric-protos-go/peer"
+	"github.com/stretchr/testify/require"
 	// "github.com/hyperledger/fabric-chaincode-go/pkg/cid"
 	// "github.com/hyperledger/fabric-chaincode-go/shim"
 	// "github.com/hyperledger/fabric-contract-api-go/contractapi"
-
-	// "chaincode/go/pkg/mod/github.com/hyperledger/fabric-protos-go@v0.0.0-20190919234611-2a87503ac7c9/peer"
-
-	"github.com/hyperledger/fabric-chaincode-go/shim"
-	"github.com/hyperledger/fabric-protos-go/ledger/queryresult"
-
 	// "github.com/hyperledger/fabric-protos-go/tree/main/peer"
-
 	// "github.com/hyperledger/fabric-protos/tree/main/peer"
-
-	"github.com/hyperledger/fabric-protos-go/peer"
-	"github.com/stretchr/testify/require"
-	// "github.com/hyperledger/fabric-samples/tree/v2.2.2/asset-transfer-private-data/chaincode-go/chaincode/mocks"
-	// "github.com/hyperledger/fabric-samples/asset-transfer-basic/chaincode-go/chaincode/mocks"
-	// "chaincode/go/pkg/mod/github.com/hyperledger/fabric-chaincode-go@v0.0.0-20210603161043-af0e3898842a/pkg/cid"
 )
 
 const ngoMsp4 = "NgoMSP"
@@ -59,13 +49,6 @@ func prepMocks4(orgMSP, clientId string) (*mocks.TransactionContext, *mocks.Chai
 	os.Setenv("CORE_PEER_LOCALMSPID", orgMSP)
 	transactionContext.GetClientIdentityReturns(clientIdentity)
 	return transactionContext, chaincodeStub
-}
-
-// type QueryResponseMetadata struct {
-// 	*peer.QueryResponseMetadata
-// }
-type stateQueryIterator interface {
-	shim.StateQueryIteratorInterface
 }
 
 func TestCommonQuery(test *testing.T) {

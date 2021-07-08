@@ -73,7 +73,7 @@ router.get('/redeemAccount', (req, res, next) => {
     logger.debug("router-redeemAccount");
     userService.getUserRedeemAccount(req.userName)
         .then((data) => {
-            res.json(data || false)
+            res.json(data)
         })
         .catch(err => next(err))
 })

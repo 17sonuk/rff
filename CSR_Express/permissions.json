@@ -50,6 +50,7 @@
         "/query/amount-parked",
         "/query/balance",
         "/psp/razorpay",
+        "/psp/coinbase/charge",
         "/mongo/file/upload",
         "/mongo/file/getFile"
     ],

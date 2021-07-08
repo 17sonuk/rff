@@ -99,7 +99,7 @@ mainRouter.use((req, res, next) => {
 
     if (req.userName === 'guest') {
         console.log('is guest')
-        if (authMap[req.userName].has(req.path) || req.path.startsWith("/mongo/project/all") || req.path.startsWith("/query/getRecord") || (req.path.startsWith("/mongo/project") && !guestForbiddenpaths.includes('/mongo/project'))) {
+        if (authMap[req.userName].has(req.path) || req.path === '/psp/coinbase/charge' || req.path.startsWith("/mongo/project/all") || req.path.startsWith("/query/getRecord") || (req.path.startsWith("/mongo/project") && !guestForbiddenpaths.includes('/mongo/project'))) {
             return next();
         } else {
             //console.log(authMap[req.userName].has(req.path))

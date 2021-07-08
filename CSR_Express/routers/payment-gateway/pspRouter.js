@@ -1,10 +1,14 @@
 const express = require('express');
 const router = express.Router();
 
+const { COINBASE_API_KEY, COINBASE_WEBHOOK_SECRET } = process.env;
+
 const logger = require('../../loggers/logger');
 
+const paymentService = require('./paymentService');
+
 const { Client, resources, Webhook } = require('coinbase-commerce-node');
-Client.init('b3e8de8c-a744-4fd2-80bc-6801b3f3b5e6'); //API KEY
+Client.init(COINBASE_API_KEY);
 const { Charge } = resources;
 
 const { fieldErrorMessage, generateError, getMessage } = require('../../utils/functions');
@@ -12,28 +16,32 @@ const { fieldErrorMessage, generateError, getMessage } = require('../../utils/fu
 // create coinbase charge
 router.post('/coinbase/charge', async (req, res) => {
 
-    //types: ProjectTransfer, CreditRequest, RedeemApprove
+    //types: GuestTransfer | FundRequest
     if (!req.body.requestType) {
         return res.json(fieldErrorMessage('\'request type\''));
     }
-    if (!req.body.amount) {
+    if (!req.body.payload.amount) {
         return res.json(fieldErrorMessage('\'amount\''));
     }
     if (!req.body.payload) {
         return res.json(fieldErrorMessage('\'payload\''));
+    }
+    if (req.body.requestType === 'FundRequest' && !req.body.userName) {
+        return res.json(fieldErrorMessage('\'userName\''));
     }
 
     const chargeData = {
         name: req.body.requestType,
         description: 'testing coinbase gateway',
         local_price: {
-            amount: req.body.amount,
+            amount: req.body.payload.amount,
             currency: 'USD'
         },
         pricing_type: 'fixed_price',
         metadata: {
+            userName: req.body.userName,
             requestType: req.body.requestType,
-            payload: JSON.stringify(req.body.payload)
+            payload: req.body.payload
         }
     }
 
@@ -41,31 +49,32 @@ router.post('/coinbase/charge', async (req, res) => {
     res.send(charge)
 })
 
-router.use('/coinbase/chargeStatus', (req, res) => {
+
+router.use('/coinbase/chargeStatus', async (req, res) => {
 
     const body = req.body;
-    console.log('COINBASE HOOK BODY.......')
-    console.log(body)
+    logger.debug('COINBASE HOOK BODY.......')
+    logger.debug(body)
     const signature = req.headers['x-cc-webhook-signature'];
-    console.log('signature................ ' + signature);
-    console.log('header................ ' + req.headers);
-    const webhookSecret = '48b8d57b-b845-4106-88f8-c579b0c32a8c';
+
+    logger.debug('signature................ ' + signature);
+    logger.debug('header................ ' + req.headers);
+    // const webhookSecret = '48b8d57b-b845-4106-88f8-c579b0c32a8c';
 
     try {
-        const event = Webhook.verifySigHeader(JSON.stringify(body), signature, webhookSecret);
+        const event = Webhook.verifySigHeader(JSON.stringify(body), signature, COINBASE_WEBHOOK_SECRET);
         console.log(event);
-        if (event.type === 'charge:pending') {
-            console.log('charge pending');
-        } else if (event.type === 'charge:confirmed') {
+        if (event.type === 'charge:confirmed') {
             console.log('charge confirmed');
-        } else if (event.type === 'charge:failed') {
-            console.log('charge failed');
+            const response = await paymentService.saveTx(event);
+            return res.send(response)
         }
-        res.send('wbehook working');
-    } catch (error) {
-        console.log(error);
+        return res.send(`coinbase payment with id ${event.id} is in state ${event.type}`)
     }
-
+    catch (error) {
+        logger.debug(error);
+        return generateError(error, next);
+    }
 })
 
 module.exports = router;
