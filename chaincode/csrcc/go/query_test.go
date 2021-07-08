@@ -64,6 +64,7 @@ func TestCommonQuery(test *testing.T) {
 	iterator.HasNextReturnsOnCall(0, true)
 	iterator.HasNextReturnsOnCall(1, false)
 	iterator.NextReturns(&queryresult.KV{Value: []byte(squery)}, nil)
+
 	chaincodeStub.GetQueryResultReturns(iterator, nil)
 	_, err := csr.CommonQuery(transactionContext, squery)
 	require.NoError(test, err)
