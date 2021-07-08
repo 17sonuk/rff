@@ -95,6 +95,18 @@ describe('TESTING USER SERVICE - REGISTER', () => {
             expect(res).to.equal('user successfully registered...')
             userModel.registerUser.restore();
         })
+
+        mockObj.resolves(null);
+        try{
+        userService.registerUser(registerUserData).then(res => {
+            expect(registerUserData.status).to.equal('approved')
+            expect(res).to.equal('user successfully registered...')
+            userModel.registerUser.restore();
+        
+        })
+    }catch(err){
+        expect(err.message).to.equal('Bad Connection')
+    }
         done()
     })
 
@@ -950,8 +962,6 @@ describe('TESTING USER SERVICE - getNotification', () => {
         } catch (err) {
             expect(err.message).to.equal('Bad Connection')
         }
-
-
     })
 
 })
@@ -993,4 +1003,62 @@ describe('TESTING USER SERVICE - UpdateNotification', () => {
 
 
     })
+})
+
+describe('TESTING USER SERVICE - resetUserStatus', () => {
+    let mockObj = ""
+
+    beforeEach(() => {
+        mockObj = sandbox.stub(userModel, 'resetUserStatus');
+
+    });
+
+    afterEach(() => {
+        mockObj.restore();
+
+    });
+    it('testing response for ResetUserStatus', async () => {
+    const registerUserData1 = {
+        firstName: 'Rihana',
+        lastName: 'John',
+        orgName: 'Ngo',
+        userName: 'ngo90',
+        email: 'info90@ngo.com',
+        role: 'Ngo',
+        status: '',
+        description: '',
+        website: '',
+        address: {
+            addressLine1: 'address10',
+            addressLine2: 'address20',
+            city: 'city',
+            state: 'state',
+            zipCode: '6789',
+            country: 'India'
+        },
+        phone: [
+            {
+                countryCode: '+91',
+                phoneNumber: '97654579'
+            }
+        ],
+        paymentDetails: {
+            paymentType: "Cryptocurrency",
+            cryptoAddress: '1234',
+
+        }
+    }
+    mockObj.resolves(registerUserData1)
+    let res = await userService.resetUserStatus('ngo90')
+    expect(res).to.equal(true)
+
+    //When data is not present
+    mockObj.resolves(null)
+    try{
+    let res1 = await userService.resetUserStatus('ngo95')
+    expect(res1).to.equal(false)
+    }catch(err){
+        expect(err.message).to.equal("Couldn't reset user status")
+    }
+})
 })

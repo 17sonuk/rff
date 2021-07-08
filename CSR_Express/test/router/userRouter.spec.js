@@ -3,7 +3,11 @@ const { expect } = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const request = require('supertest');
 const userService = require('../../service/userService');
+
 const registerUser = require('../../fabric-sdk/registerUser');
+const abc= {
+    registerUser:registerUser
+}
 const sinon = require("sinon");
 const app = require('../../app')
 chai.use(chaiAsPromised)
@@ -60,73 +64,60 @@ describe('USER ROUTER - ONBOARD API', () => {
             });
         expect(response.status).to.equal(401);
     })
+})
+describe('USER ROUTER - ONBOARD API when there is bearer token', () => {
+    let mockObj = ""
+    let mockObj1= ""
+    beforeEach(() => {
+        mockObj = sandbox.stub(userService, 'registerUser');
+        mockObj1= sandbox.stub(abc,'registerUser');
+    });
+    afterEach(() => {
+        mockObj.restore();
+        mockObj1.restore();
+    });
+    it('testing onboard API for Ngo when there is Bearer Token', async function () {
+        const Data = {
+            firstName: "ngo2",
+            lastName: " xyz",
+            orgName: "ngo",
+            userName: "ngo2",
+            email: "ngo2@gmail.com",
+            role: "Ngo",
+            description: "some desc",
+            address: {
+                addressLine1: "address1",
+                addressLine2: "address2",
+                city: "city1",
+                state: "state1",
+                zipCode: "123456",
+                country: "Brazil"
+            },
+            phone: [{
+                countryCode: "91",
+                phoneNumber: "8989897878"
+            }],
+            paymentDetails: {
+                paymentType: "Paypal",
+                paypalEmailId: "ngo@paypal.com",
+            }
+        }
 
-    // it('testing onboard API for Ngo when there is Bearer Token', async function () {
-    //     const Data = {
-    //         firstName: "ngo2",
-    //         lastName: " xyz",
-    //         orgName: "ngo",
-    //         userName: "ngo2",
-    //         email: "ngo2@gmail.com",
-    //         role: "Ngo",
-    //         description: "some desc",
-    //         address: {
-    //             addressLine1: "address1",
-    //             addressLine2: "address2",
-    //             city: "city1",
-    //             state: "state1",
-    //             zipCode: "123456",
-    //             country: "Brazil"
-    //         },
-    //         phone: [{
-    //             countryCode: "91",
-    //             phoneNumber: "8989897878"
-    //         }],
-    //         paymentDetails: {
-    //             paymentType: "Paypal",
-    //             paypalEmailId: "ngo@paypal.com",
-    //         }
-    //     }
+        let payload = {
+            orgName: 'creditsauthority',
+            userName: 'ca'
+        }
+        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+        mockObj.resolves(Data)
+        mockObj1.resolves(false)
 
-    //     let payload = {
-    //         orgName: 'creditsauthority',
-    //         userName: 'ca'
-    //     }
-    //     const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
-    //     mockObj.resolves(Data)
-    //     // mockObj1.resolves(Data)
-
-    //     const response = await request(app)
-    //         .post("/mongo/user/onboard").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-    //         .send({
-    //             firstName: "ngo2",
-    //             lastName: " xyz",
-    //             orgName: "ngo",
-    //             userName: "ngo2",
-    //             email: "ngo2@gmail.com",
-    //             role: "Ngo",
-    //             description: "some desc",
-    //             address: {
-    //                 addressLine1: "address1",
-    //                 addressLine2: "address2",
-    //                 city: "city1",
-    //                 state: "state1",
-    //                 zipCode: "123456",
-    //                 country: "Brazil"
-    //             },
-    //             phone: [{
-    //                 countryCode: "91",
-    //                 phoneNumber: "8989897878"
-    //             }],
-    //             paymentDetails: {
-    //                 paymentType: "Paypal",
-    //                 paypalEmailId: "ngo@paypal.com",
-
-    //             }
-    //         });
-    //     console.log("Response in onboard API- Ngo:", response)
-    //     expect(response.status).to.equal(200);
-    // });
+        const response = await request(app)
+            .post("/mongo/user/onboard").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+            .send({
+              Data
+            });
+        expect(response.status).to.equal(200);
+    });
 })
 
 
