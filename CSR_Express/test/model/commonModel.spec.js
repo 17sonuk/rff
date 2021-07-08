@@ -29,12 +29,12 @@ describe('TESTING COMMON MODEL', () => {
     });
 
     it('testing response for saveCommunities', async () => {
-        const communities={
+        const communities=[{
             name:"TestUser",
             place:"Test"
-        }
+        }]
         const res = await commonModel.saveCommunities(communities);
-        
+        console.log("Response345:",res)
         expect(res).to.have.lengthOf(1);
         expect(res[0].name).to.equal('TestUser')
         expect(res[0].place).to.equal('Test')

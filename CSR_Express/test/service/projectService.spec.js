@@ -50,22 +50,20 @@ describe('TESTING PROJECT SERVICE - CREATE PROJECT', () => {
         expect(res.success).to.equal(true)
         expect(res.message).to.equal('project created in db')
 
-        // If there is any error in project
-        // testProject.projectId=""
-        // mockObj.resolves(testProject);
-        // let res1 = await projectService.createProject(testProject)
-        // console.log("response:",res1)
-        // expect(res1.success).to.equal(false)
+        //If there is any error in project
+        mockObj.resolves(null);
+        try{
+        let res1 = await projectService.createProject(testProject)
+        expect(res1.success).to.equal(false)
+        }catch(err){
+            expect(err.message).to.equal('Bad Connection')
+        }
+        // Project ID already exist.
+        mockObj.resolves({ message: 'Project ID already exist.', error: true });
+        let res2 = await projectService.createProject(testProject)
+        expect(res2.success).to.equal(false)
+        
 
-        //If project is not present
-        // mockObj.resolves(null);
-        // try{
-        // let res2 = await projectService.createProject(testProjectBlank)
-        // expect(res2.success).to.equal(false)
-        // }catch(err){
-        //     console.log("Error:",err.message)
-        //     expect(err.message).to.equal(null)
-        // }
     })
 })
 

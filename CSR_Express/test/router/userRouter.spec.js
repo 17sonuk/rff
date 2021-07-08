@@ -1,231 +1,555 @@
-// const chai = require('chai');
-// const { expect } = require('chai');
-// const chaiAsPromised = require('chai-as-promised');
-// // const { exception } = require('node:console');
-// const request = require('supertest');
-// const userService = require('../../service/userService');
-// // const app = require('../../routers/mongo/userRoute')
-// // const express = require('express');
-// // const app = express()
-// const sinon = require("sinon");
-// const app = require('../../app')
-// const { connectionToMongo, disconnectMongo } = require('../../model/connection')
-// chai.use(chaiAsPromised)
-// require('dotenv').config();
-// const { JWT_EXPIRY, TOKEN_SECRET, CA_EMAIL, IT_EMAIL, GUEST_EMAIL } = process.env;
-// var jwt = require('jsonwebtoken');
-// var auth;
+const chai = require('chai');
+const { expect } = require('chai');
+const chaiAsPromised = require('chai-as-promised');
+const request = require('supertest');
+const userService = require('../../service/userService');
+const registerUser = require('../../fabric-sdk/registerUser');
+const sinon = require("sinon");
+const app = require('../../app')
+chai.use(chaiAsPromised)
+var sandbox = require("sinon").createSandbox();
+require('dotenv').config();
+const { JWT_EXPIRY, TOKEN_SECRET, CA_EMAIL, IT_EMAIL, GUEST_EMAIL } = process.env;
+var jwt = require('jsonwebtoken');
+const { createSandbox } = require('sinon');
+var auth;
 
-// // const { expect } = require('chai')
-// // const request = require('supertest')
-// // // const model = require('../src/model/user')
-// // const app = 'http://localhost:4001/'
-// // const { connection } = require('mongoose')
-// // const { response } = require('express')
-// // const { connectionToMongo, connectToMongo, disconnectMongo } = require('../../model/connection')
-// // const { service } = require('../src/service/user')
 
-// describe('USER ROUTER - Testing app get routing', () => {
-   
+describe('USER ROUTER - ONBOARD API', () => {
+    let mockObj = ""
+    // let mockObj1= ""
+    beforeEach(() => {
+        mockObj = sandbox.stub(userService, 'registerUser');
+        // mockObj1= sandbox.stub(registerUser, 'main');
+    });
+    afterEach(() => {
+        mockObj.restore();
+        // mockObj1.restore();
+    });
 
-// })
+    it('testing onboard API for Ngo when there is no Bearer Token', async function () {
+        mockObj.rejects('Bad Connection')
+        // try{
+        const response = await request(app)
+            .post("/mongo/user/onboard")
+            .send({
+                firstName: "ngo2",
+                lastName: " xyz",
+                orgName: "ngo",
+                userName: "ngo2",
+                email: "ngo2@gmail.com",
+                role: "Ngo",
+                description: "some desc",
+                address: {
+                    addressLine1: "address1",
+                    addressLine2: "address2",
+                    city: "city1",
+                    state: "state1",
+                    zipCode: "123456",
+                    country: "Brazil"
+                },
+                phone: [{
+                    countryCode: "91",
+                    phoneNumber: "8989897878"
+                }],
+                paymentDetails: {
+                    paymentType: "Paypal",
+                    paypalEmailId: "ngo@paypal.com",
 
-// describe('USER ROUTER - Testing app post routing', () => {
-//     before((done) => {
-//         connectionToMongo('_test');
-//         done();
-//     })
+                }
+            });
+        expect(response.status).to.equal(401);
+    })
 
-//     after((done) => {
-      
-//         disconnectMongo()
-//             .then(() => {
-//                 console.log('Mongo connection closed.');
-//                 done()
-//             })
-//             .catch((err) => done(err))
-//     })
+    // it('testing onboard API for Ngo when there is Bearer Token', async function () {
+    //     const Data = {
+    //         firstName: "ngo2",
+    //         lastName: " xyz",
+    //         orgName: "ngo",
+    //         userName: "ngo2",
+    //         email: "ngo2@gmail.com",
+    //         role: "Ngo",
+    //         description: "some desc",
+    //         address: {
+    //             addressLine1: "address1",
+    //             addressLine2: "address2",
+    //             city: "city1",
+    //             state: "state1",
+    //             zipCode: "123456",
+    //             country: "Brazil"
+    //         },
+    //         phone: [{
+    //             countryCode: "91",
+    //             phoneNumber: "8989897878"
+    //         }],
+    //         paymentDetails: {
+    //             paymentType: "Paypal",
+    //             paypalEmailId: "ngo@paypal.com",
+    //         }
+    //     }
 
-//     it('testing onboard API for Ngo when there is no Bearer Token', async function() {
-        
-//         //  const registerUserStub = sinon.stub(userService, "registerUser").resolves({ success: false });
-//          try{
-//          const response = await request(app)
-//             // .set("Authorization", "Bearer " + token)
-//             .post("/mongo/user/onboard")
-//             .send({ 
-//                 firstName: "ngo2",
-//                 lastName: " xyz",
-//                 orgName: "ngo2",
-//                 userName: "ngo2",
-//                 email: "ngo2@gmail.com",
-//                 role: "Ngo",
-//                 description: "some desc",
-//                 address: {
-//                     addressLine1: "address1",
-//                     addressLine2: "address2",
-//                     city: "city1",
-//                     state: "state1",
-//                     zipCode: "123456",
-//                     country: "Brazil"
-//                 },
-//                 phone: [{
-//                     countryCode: "91",
-//                     phoneNumber: "8989897878"
-//                 }],
-//                 paymentDetails: {
-//                     paymentType: "Paypal",
-//                     paypalEmailId : "ngo@paypal.com",
-                    
-//                 }
-//             });
-//         expect(response.status).to.equal(401); 
-//          }catch(err){
-//              expect(err.status).to.equal(401)
-//          }
-        
-//     });
+    //     let payload = {
+    //         orgName: 'creditsauthority',
+    //         userName: 'ca'
+    //     }
+    //     const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+    //     mockObj.resolves(Data)
+    //     // mockObj1.resolves(Data)
 
-//     // it('testing onboard API for Corporate', async function() {
-        
-//     //     // const token=userService.login('ca@csr.com')
-//     //     const response = await request(app)
-//     //         // .set("Authorization", "Bearer " + token)
-//     //         .post("/mongo/user/onboard")
-//     //         .send({ 
-//     //             firstName: "Harry",
-//     //             lastName: " James",
-//     //             orgName: "corp1002",
-//     //             userName: "corp13",
-//     //             email: "corp13@gmail.com",
-//     //             role: "Corporate",
-//     //             subRole: "Individual",
-//     //             description: "some desc",
-//     //             address: {
-//     //                 addressLine1: "address19",
-//     //                 addressLine2: "address29",
-//     //                 city: "city1",
-//     //                 state: "state1",
-//     //                 zipCode: "123456",
-//     //                 country: "Brazil"
-//     //             },
-//     //             phone: [{
-//     //                 countryCode: "91",
-//     //                 phoneNumber: "898989"
-//     //             }],
-//     //         });
-//     //         console.log("Response in onboard API- corporate:",response)
-//     //     expect(response.status).to.equal(200); 
-       
-//     // });
+    //     const response = await request(app)
+    //         .post("/mongo/user/onboard").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+    //         .send({
+    //             firstName: "ngo2",
+    //             lastName: " xyz",
+    //             orgName: "ngo",
+    //             userName: "ngo2",
+    //             email: "ngo2@gmail.com",
+    //             role: "Ngo",
+    //             description: "some desc",
+    //             address: {
+    //                 addressLine1: "address1",
+    //                 addressLine2: "address2",
+    //                 city: "city1",
+    //                 state: "state1",
+    //                 zipCode: "123456",
+    //                 country: "Brazil"
+    //             },
+    //             phone: [{
+    //                 countryCode: "91",
+    //                 phoneNumber: "8989897878"
+    //             }],
+    //             paymentDetails: {
+    //                 paymentType: "Paypal",
+    //                 paypalEmailId: "ngo@paypal.com",
 
-    
-//     it('testing checkUserNameValidity', async function() {
-//     const response = await request(app)
-//             .post("/mongo/user/checkUserNameValidity")
-//             .send({  
-//                 userName: "ngo91" //ngo91
-//             });
-           
-//         expect(response.status).to.equal(200); 
-        
-//     });
+    //             }
+    //         });
+    //     console.log("Response in onboard API- Ngo:", response)
+    //     expect(response.status).to.equal(200);
+    // });
+})
 
-//     // it('testing onboard API for Ngo when there is Bearer Token', async function() {
-        
-//     //     //  const registerUserStub = sinon.stub(userService, "registerUser").resolves({ success: false });
-//     //     let payload = {
-//     //         orgName: 'creditsauthority',
-//     //         userName: 'ca'
-//     //     }
-//     //     const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
-//     //      const response = await request(app)
-//     //         .post("/mongo/user/onboard").set("csrtoken", "Bearer " + token)
-//     //         .send({ 
-//     //             firstName: "ngo2",
-//     //             lastName: " xyz",
-//     //             orgName: "ngo2",
-//     //             userName: "ngo2",
-//     //             email: "ngo2@gmail.com",
-//     //             role: "Ngo",
-//     //             description: "some desc",
-//     //             address: {
-//     //                 addressLine1: "address1",
-//     //                 addressLine2: "address2",
-//     //                 city: "city1",
-//     //                 state: "state1",
-//     //                 zipCode: "123456",
-//     //                 country: "Brazil"
-//     //             },
-//     //             phone: [{
-//     //                 countryCode: "91",
-//     //                 phoneNumber: "8989897878"
-//     //             }],
-//     //             paymentDetails: {
-//     //                 paymentType: "Paypal",
-//     //                 paypalEmailId : "ngo@paypal.com",
-                    
-//     //             }
-//     //         });
-            
-//     //     expect(response.status).to.equal(200);   
-//     // });
 
-//     it('testing profile api', async function() {
-//         const getUserStub = sinon.stub(userService, "getUserDetails").resolves({ success: true });
-//         let payload = {
-//             orgName: 'ngo',
-//             userName: 'ngo91'
-//         }
-//         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
-//         console.log("Token:",token)
-//         const response = await request(app)
-//             // .get("/mongo/user/profile?userName=:userName")
-//             .get("/mongo/user/profile")
-//             .set("csrtoken", "Bearer " + token)
-//             .send({  
-//                 userName: "ngo91" //ngo91
-//             });
-//         expect(response.status).to.equal(200);   
-//         expect(getUserStub.calledOnce).to.be.true; 
-//     });
+describe('USER ROUTER - CHECKUSERNAME API', () => {
+    let mockObj = ""
+    beforeEach(() => {
+        mockObj = sandbox.stub(userService, 'checkUserNameValidty');
+    });
+    afterEach(() => {
+        mockObj.restore();
+    });
 
-//     it('testing profile api from another user token', async function() {
+    it('testing checkUserNameValidity API', async function () {
 
-//         let payload = {
-//             orgName: 'creditsauthority',
-//             userName: 'ca'
-//         }
-//         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
-//         console.log("Token:",token)
-//         const response = await request(app)
-//             .get("/mongo/user/profile")
-//             .set("csrtoken", "Bearer " + token)
-//             .send({  
-//                 userName: "ngo91" //ngo91
-//             });
-//         expect(response.status).to.equal(401);   
-//     });
+        const dataVal = {
+            firstName: "ngo2",
+            lastName: " xyz",
+            orgName: "ngo",
+            userName: "ngo2",
+            email: "ngo2@gmail.com",
+            role: "Ngo",
+            description: "some desc",
+            address: {
+                addressLine1: "address1",
+                addressLine2: "address2",
+                city: "city1",
+                state: "state1",
+                zipCode: "123456",
+                country: "Brazil"
+            },
+            phone: [{
+                countryCode: "91",
+                phoneNumber: "8989897878"
+            }],
+            paymentDetails: {
+                paymentType: "Paypal",
+                paypalEmailId: "ngo@paypal.com",
 
-//     // it('testing redeemAccount api', async function() {
-//     //     const redeemAccountUserStub = sinon.stub(userService, "getUserRedeemAccount").resolves('ngo@paypal.com' );
-//     //     let payload = {
-//     //         orgName: 'ngo',
-//     //         userName: 'ngo91'
-//     //     }
-//     //     const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
-//     //     const response = await request(app)
-//     //         .get("/mongo/user/redeemAccount")
-//     //         .set("csrtoken", "Bearer " + token)
-//     //         .send({  
-//     //             userName: 'ngo91' ,
-//     //             paymentType: "Paypal"
-//     //         });
-//     //         // console.log("Response:",response);
-//     //     expect(response.status).to.equal(200);
-//     //     console.log("redeemAccountUserStub.calledOnce:",redeemAccountUserStub.calledOnce)
-//     //     // expect(redeemAccountUserStub.calledOnce).to.be.true; 
-//     //     sinon.assert.calledWith(redeemAccountUserStub, 'ngo91','Paypal');
+            }
+        }
 
-//     // })
-// })
+        let payload = {
+            orgName: 'creditsauthority',
+            userName: 'ca'
+        }
+        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+
+        mockObj.resolves(dataVal)
+
+        const response = await request(app)
+            .post("/mongo/user/checkUserNameValidity").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+            .send({
+                userName: "ngo2",
+            });
+        expect(response.body).to.be.eql(dataVal);
+
+
+    })
+
+    it('testing checkUserNameValidity API if user is already present', async function () {
+
+        let payload = {
+            orgName: 'creditsauthority',
+            userName: 'ca'
+        }
+        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+        mockObj.rejects("User already exists")
+        const response = await request(app)
+            .post("/mongo/user/checkUserNameValidity").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+            .send({
+                userName: "ngo2",
+            });
+        expect(response.status).to.equal(500);
+
+    })
+})
+describe('USER ROUTER - Profile API', () => {
+    let mockObj = ""
+    beforeEach(() => {
+        mockObj = sandbox.stub(userService, 'getUserDetails');
+    });
+    afterEach(() => {
+        mockObj.restore();
+    });
+
+    it('testing Profile API', async function () {
+
+        const dataVal = {
+            firstName: "ngo2",
+            lastName: " xyz",
+            orgName: "ngo",
+            userName: "ngo2",
+            email: "ngo2@gmail.com",
+            role: "Ngo",
+            description: "some desc",
+            address: {
+                addressLine1: "address1",
+                addressLine2: "address2",
+                city: "city1",
+                state: "state1",
+                zipCode: "123456",
+                country: "Brazil"
+            },
+            phone: [{
+                countryCode: "91",
+                phoneNumber: "8989897878"
+            }],
+            paymentDetails: {
+                paymentType: "Paypal",
+                paypalEmailId: "ngo@paypal.com",
+
+            }
+        }
+
+        let payload = {
+            orgName: 'ngo',
+            userName: 'ngo2'
+        }
+        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+
+        mockObj.resolves(dataVal)
+
+        const response = await request(app)
+            .get("/mongo/user/profile").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+            .send({
+                userName: "ngo2",
+            })
+        expect(response.body).to.be.eql(dataVal);
+
+        //If user is not present
+        mockObj.rejects('Bad Connection')
+        // try{
+        const response1 = await request(app)
+            .get("/mongo/user/profile").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+            .send({
+                userName: "ngo3",
+            })
+        expect(response1.status).to.equal(500);
+        // }catch(err){
+        //     console.log("error:15",err)
+        // }
+    })
+})
+
+
+
+describe('USER ROUTER - Redeem Account API', () => {
+    let mockObj = ""
+    beforeEach(() => {
+        mockObj = sandbox.stub(userService, 'getUserRedeemAccount');
+    });
+    afterEach(() => {
+        mockObj.restore();
+    });
+
+    it('testing getUserRedeemAccount API', async function () {
+
+        const dataVal = {
+            firstName: "ngo2",
+            lastName: " xyz",
+            orgName: "ngo",
+            userName: "ngo2",
+            email: "ngo2@gmail.com",
+            role: "Ngo",
+            description: "some desc",
+            address: {
+                addressLine1: "address1",
+                addressLine2: "address2",
+                city: "city1",
+                state: "state1",
+                zipCode: "123456",
+                country: "Brazil"
+            },
+            phone: [{
+                countryCode: "91",
+                phoneNumber: "8989897878"
+            }],
+            paymentDetails: {
+                paymentType: "Paypal",
+                paypalEmailId: "ngo@paypal.com",
+
+            }
+        }
+
+        let payload = {
+            orgName: 'ngo',
+            userName: 'ngo2'
+        }
+        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+
+        mockObj.resolves('ngo@paypal.com')
+
+        const response = await request(app)
+            .get("/mongo/user/redeemAccount").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+            .query({
+                type: 'Paypal'
+            })
+            .send({
+                userName: "ngo2",
+            })
+        expect(response.body).to.be.eql('ngo@paypal.com');
+
+        //If data is not present
+        mockObj.rejects('Unauthorized user')
+        const response1 = await request(app)
+            .get("/mongo/user/redeemAccount").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+            .query({
+                type: 'Paypal'
+            })
+            .send({
+                userName: "ngo4",
+            })
+        expect(response1.status).to.equal(500);
+    })
+})
+
+
+describe('USER ROUTER - unapproved-users API', () => {
+    let mockObj = ""
+    beforeEach(() => {
+        mockObj = sandbox.stub(userService, 'getUnapprovedUserDetails');
+    });
+    afterEach(() => {
+        mockObj.restore();
+    });
+
+    it('testing getUnapprovedUserDetails API', async function () {
+
+        const dataVal1 = {
+            firstName: "corp67",
+            lastName: " xyz",
+            orgName: "corporate",
+            userName: "corp2",
+            email: "corp2@gmail.com",
+            role: "Corporate",
+            subRole: "Individual",
+            description: "some desc",
+            address: {
+                addressLine1: "address1",
+                addressLine2: "address2",
+                city: "city1",
+                state: "state1",
+                zipCode: "123456",
+                country: "Brazil"
+            },
+            phone: [{
+                countryCode: "91",
+                phoneNumber: "8989897878"
+            }],
+
+        }
+
+        let payload = {
+            orgName: 'creditsauthority',
+            userName: 'ca'
+        }
+        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+
+        mockObj.resolves(dataVal1)
+
+        const response = await request(app)
+            .get("/mongo/user/unapproved-users").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+        expect(response.body).to.be.eql(dataVal1);
+
+        //If data is not present
+        mockObj.rejects('Bad Connection')
+        const response1 = await request(app)
+            .get("/mongo/user/unapproved-users").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+        expect(response1.status).to.equal(500);
+    })
+})
+
+
+
+describe('USER ROUTER - reject-user API', () => {
+    let mockObj = ""
+    beforeEach(() => {
+        mockObj = sandbox.stub(userService, 'rejectUser');
+    });
+    afterEach(() => {
+        mockObj.restore();
+    });
+
+    it('testing rejectUser API', async function () {
+
+        const dataVal1 = {
+            firstName: "corp67",
+            lastName: " xyz",
+            orgName: "corporate",
+            userName: "corp2",
+            email: "corp2@gmail.com",
+            role: "Corporate",
+            subRole: "Individual",
+            description: "some desc",
+            address: {
+                addressLine1: "address1",
+                addressLine2: "address2",
+                city: "city1",
+                state: "state1",
+                zipCode: "123456",
+                country: "Brazil"
+            },
+            phone: [{
+                countryCode: "91",
+                phoneNumber: "8989897878"
+            }],
+
+        }
+
+        let payload = {
+            orgName: 'creditsauthority',
+            userName: 'ca'
+        }
+        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+
+        mockObj.resolves(dataVal1)
+
+        const response = await request(app)
+            .post("/mongo/user/reject-user").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+            .send({
+                userName: "corp2"
+            })
+        expect(response.body).to.be.eql(dataVal1);
+
+        //If data is not present
+        mockObj.rejects('Bad Connection')
+        const response1 = await request(app)
+            .post("/mongo/user/reject-user").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+            .send({
+                userName: "corp2"
+            })
+        expect(response1.status).to.equal(500);
+    })
+})
+
+
+
+describe('USER ROUTER - Notification API', () => {
+    let mockObj = ""
+    beforeEach(() => {
+        mockObj = sandbox.stub(userService, 'getNotifications');
+    });
+    afterEach(() => {
+        mockObj.restore();
+    });
+
+    it('testing getNotifications API', async function () {
+
+        const Notif = {
+            userName: 'ca2345',
+            txId: "t101",
+            description: "Description",
+            seen: true
+        }
+        let payload = {
+            orgName: 'creditsauthority',
+            userName: 'ca'
+        }
+        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+
+        mockObj.resolves(Notif)
+        const response = await request(app)
+            .get("/mongo/user/notification/true").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+
+            .send({
+                name: 'ca.creditsauthority@csr.com',
+            })
+        expect(response.body).to.be.eql(Notif);
+
+        //If notif is not present
+        mockObj.rejects('Bad Connection')
+        const response1 = await request(app)
+            .get("/mongo/user/notification/false").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+            .send({
+                name: 'ca.creditsauthority@csr.com',
+
+            })
+        expect(response1.status).to.equal(500);
+    })
+})
+
+describe('USER ROUTER - UpdateNotification API', () => {
+    let mockObj = ""
+    beforeEach(() => {
+        mockObj = sandbox.stub(userService, 'updateNotification');
+    });
+    afterEach(() => {
+        mockObj.restore();
+    });
+
+    it('testing getNotifications API', async function () {
+
+        const Notif = {
+            userName: 'ca2345',
+            txId: "t101",
+            description: "Description",
+            seen: true
+        }
+        let payload = {
+            orgName: 'creditsauthority',
+            userName: 'ca'
+        }
+        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+
+        mockObj.resolves(Notif)
+        const response = await request(app)
+            .put("/mongo/user/notification").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+            .send({
+                name: 'ca.creditsauthority@csr.com',
+                txId: "t101"
+            })
+        expect(response.body).to.be.eql(Notif);
+
+        //If notif is not present
+        mockObj.rejects('Bad Connection')
+        const response1 = await request(app)
+            .put("/mongo/user/notification").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+            .send({
+                name: 'ca.creditsauthority@csr.com',
+                txId: 't101'
+            })
+        expect(response1.status).to.equal(500);
+    })
+})
+
+
