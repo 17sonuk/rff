@@ -102,8 +102,4 @@ app.use((err, req, res, next) => {
     return res.status(err.status).json(getMessage(false, (err.message)));
 });
 
-// app.listen(PORT, () => {
-//     logger.info(`Express is running on port ${PORT}`);
-// });
-
 module.exports = app;

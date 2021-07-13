@@ -41,6 +41,18 @@ commonModel.getCommunities = () => {
     })
 }
 
+commonModel.deleteCommunities = async (communityIds) => {
+    // let myquery = { _id: { $in: communityIds } };
+    return communityModel.deleteMany({ _id: { $in: communityIds } })
+        .then(data => {
+            console.log('deleted response:', data)
+            return data;
+        })
+        .catch(err => {
+            return null
+        })
+}
+
 commonModel.saveDonor = async (donor) => {
     try {
         let existingDonor = await donorModel.findOne({ email: donor.email })

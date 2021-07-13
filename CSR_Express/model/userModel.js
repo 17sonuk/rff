@@ -243,4 +243,19 @@ userModel.updateNotification = (username, txId) => {
     })
 }
 
+userModel.getNgoOrgName = (userName) => {
+    // let criteria = {}
+    // criteria[userName] = userName;
+    console.log('username:' + userName)
+    return orgModel.findOne({ userName: userName }, { _id: 0, orgName: 1 }).then(data => {
+        console.log('orgname:' + data)
+        if (data) {
+            return data.orgName
+        } else {
+            return x == y
+        }
+    })
+}
+
+//userModel.getNgoOrgName('meryl')
 module.exports = userModel;

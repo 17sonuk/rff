@@ -54,7 +54,7 @@ func TestRequestTokens(test *testing.T) {
 
 	Qty := "1000"
 	PaymentId := "1001"
-	Status := "Requested"
+	Status := "COMPLETED"
 	Comments := "Requested"
 	date := "15"
 	txid := "t000368"
@@ -108,6 +108,36 @@ func TestRequestTokens(test *testing.T) {
 	jsonuparg6, _ := json.Marshal(uparg6)
 	s6 := string(jsonuparg6)
 
+	var uparg7 [6]string
+	uparg7[0] = "0.0"
+	uparg7[1] = PaymentId
+	uparg7[2] = Status
+	uparg7[3] = Comments
+	uparg7[4] = date
+	uparg7[5] = txid
+	jsonuparg7, _ := json.Marshal(uparg7)
+	s7 := string(jsonuparg7)
+
+	var uparg8 [6]string
+	uparg8[0] = Qty
+	uparg8[1] = PaymentId
+	uparg8[2] = "PENDING"
+	uparg8[3] = Comments
+	uparg8[4] = date
+	uparg8[5] = txid
+	jsonuparg8, _ := json.Marshal(uparg8)
+	s8 := string(jsonuparg8)
+
+	var uparg9 [6]string
+	uparg9[0] = Qty
+	uparg9[1] = PaymentId
+	uparg9[2] = "PENDING"
+	uparg9[3] = Comments
+	uparg9[4] = "date"
+	uparg9[5] = txid
+	jsonuparg9, _ := json.Marshal(uparg9)
+	s9 := string(jsonuparg9)
+
 	_, err := csr.RequestTokens(transactionContext, s)
 	require.NoError(test, err, "err")
 
@@ -128,6 +158,34 @@ func TestRequestTokens(test *testing.T) {
 
 	ex, errors := csr.RequestTokens(transactionContext, s6)
 	require.EqualError(test, errors, "txid must be a non-empty string", ex)
+
+	ex, errors = csr.RequestTokens(transactionContext, s7)
+	require.EqualError(test, errors, "Invalid amount!", ex)
+
+	ex, errors = csr.RequestTokens(transactionContext, s8)
+	require.NoError(test, errors)
+
+	ex, errors = csr.RequestTokens(transactionContext, s9)
+	require.EqualError(test, errors, "Error converting date strconv.Atoi: parsing \"date\": invalid syntax", ex)
+
+	chaincodeStub.GetStateReturns([]byte(PaymentId), nil)
+	ex1, err = csr.RequestTokens(transactionContext, s)
+	require.EqualError(test, err, "Fund request with this ID already exists", ex1)
+
+	transactionContext, chaincodeStub = prepMocksAsCa3()
+	transactionContext.GetStubReturns(chaincodeStub)
+
+	ex1, err = csr.RequestTokens(transactionContext, s)
+	require.EqualError(test, err, "only corporate can initiate requestTokens", ex1)
+
+	// transactionContext, chaincodeStub = prepMocksAsCorp()
+	// transactionContext.GetStubReturns(chaincodeStub)
+
+	// chaincodeStub.GetStateReturnsOnCall(0, nil, nil)
+	// chaincodeStub.GetStateReturnsOnCall(1, nil, nil)
+	// chaincodeStub.GetStateReturnsOnCall(2, []byte(txid), nil)
+	// ex1, errr := csr.RequestTokens(transactionContext, s)
+	// require.EqualError(test, errr, "Failed to add a Tx: ", ex1)
 }
 
 func TestTransferTokens(test *testing.T) {
@@ -191,6 +249,36 @@ func TestTransferTokens(test *testing.T) {
 	jsonuparg6, _ := json.Marshal(uparg6)
 	s6 := string(jsonuparg6)
 
+	var uparg7 [6]string
+	uparg7[0] = "0.0"
+	uparg7[1] = ProjectId
+	uparg7[2] = phaseNumber
+	uparg7[3] = Notes
+	uparg7[4] = date
+	uparg7[5] = txid
+	jsonuparg7, _ := json.Marshal(uparg7)
+	s7 := string(jsonuparg7)
+
+	var uparg8 [6]string
+	uparg8[0] = Amount
+	uparg8[1] = ProjectId
+	uparg8[2] = "-1"
+	uparg8[3] = Notes
+	uparg8[4] = date
+	uparg8[5] = txid
+	jsonuparg8, _ := json.Marshal(uparg8)
+	s8 := string(jsonuparg8)
+
+	var uparg9 [6]string
+	uparg9[0] = Amount
+	uparg9[1] = ProjectId
+	uparg9[2] = phaseNumber
+	uparg9[3] = Notes
+	uparg9[4] = "fsdkkd"
+	uparg9[5] = txid
+	jsonuparg9, _ := json.Marshal(uparg9)
+	s9 := string(jsonuparg9)
+
 	contrib := main.Contribution{
 		Contributor:     "keanu.corporate.csr.com",
 		ContributionQty: 100.0,
@@ -223,6 +311,33 @@ func TestTransferTokens(test *testing.T) {
 	newProAsBytes, _ := json.Marshal(projObj)
 	balance := "5000000000"
 
+	lowBalance := "1"
+
+	ph1 := []main.Phase{
+		{Qty: 5000,
+			OutstandingQty:     5000,
+			PhaseState:         "Created",
+			StartDate:          10,
+			EndDate:            20,
+			Contributions:      map[string]main.Contribution{"keanu.corporate.csr.com": contrib},
+			ValidationCriteria: map[string][]main.Criterion{"o1": crite},
+		},
+	}
+
+	projObj1 := main.Project{
+		ObjectType:       "Project",
+		ProjectName:      "Project10",
+		ProjectType:      "Short",
+		Phases:           ph1,
+		CreationDate:     10,
+		TotalProjectCost: 5000,
+		Contributors:     map[string]string{"c1": "exists"},
+		ProjectState:     "Fully Funded",
+		NGO:              "goonj.ngo.csr.com",
+	}
+
+	newProAsBytes1, _ := json.Marshal(projObj1)
+
 	chaincodeStub.GetStateReturnsOnCall(0, newProAsBytes, nil)
 	chaincodeStub.GetStateReturnsOnCall(1, []byte(balance), nil)
 	_, err := csr.TransferTokens(transactionContext, s)
@@ -248,6 +363,42 @@ func TestTransferTokens(test *testing.T) {
 
 	ex1, err = csr.TransferTokens(transactionContext, s6)
 	require.EqualError(test, err, "tx id must be a non-empty string", ex1)
+
+	ex, errors := csr.TransferTokens(transactionContext, s7)
+	require.EqualError(test, errors, "Invalid Amount!", ex)
+
+	ex, errors = csr.TransferTokens(transactionContext, s8)
+	require.EqualError(test, errors, "Invalid phase Number!", ex)
+
+	ex, errors = csr.TransferTokens(transactionContext, s9)
+	require.EqualError(test, errors, "date is not an integer! strconv.Atoi: parsing \"fsdkkd\": invalid syntax", ex)
+
+	chaincodeStub.GetStateReturnsOnCall(0, nil, nil)
+	chaincodeStub.GetStateReturnsOnCall(1, nil, nil)
+	ex, errors = csr.TransferTokens(transactionContext, s)
+	require.EqualError(test, errors, "No such project exists!", ex)
+
+	transactionContext, chaincodeStub = prepMocksAsCa3()
+	transactionContext.GetStubReturns(chaincodeStub)
+
+	ex1, err = csr.TransferTokens(transactionContext, s)
+	require.EqualError(test, err, "only corporate can initiate transferTokens", ex1)
+
+	transactionContext, chaincodeStub = prepMocksAsCorp()
+	transactionContext.GetStubReturns(chaincodeStub)
+
+	chaincodeStub.GetStateReturnsOnCall(0, newProAsBytes, nil)
+	chaincodeStub.GetStateReturnsOnCall(1, []byte(lowBalance), nil)
+	ex, errors = csr.TransferTokens(transactionContext, s)
+	require.EqualError(test, errors, "Not enough balance. Available balance: 1.00", ex)
+
+	transactionContext, chaincodeStub = prepMocksAsCorp()
+	transactionContext.GetStubReturns(chaincodeStub)
+
+	chaincodeStub.GetStateReturnsOnCall(0, newProAsBytes1, nil)
+	chaincodeStub.GetStateReturnsOnCall(1, nil, nil)
+	ex, errors = csr.TransferTokens(transactionContext, s)
+	require.EqualError(test, errors, "Funding is not allowed to this phase!", ex)
 
 }
 
@@ -281,6 +432,17 @@ func TestAssignTokens(test *testing.T) {
 	}
 	tokenreqBytes, _ := json.Marshal(req)
 
+	req1 := main.TokenRequest{
+		ObjectType: "TokenRequest",
+		From:       "keanu.corporate.csr.com",
+		Qty:        1000,
+		Status:     "Assigned",
+		Date:       15,
+		PaymentId:  bxId,
+		Comments:   comments,
+	}
+	tokenreqBytes1, _ := json.Marshal(req1)
+
 	var arg1 [2]string
 	jsonarg1, _ := json.Marshal(arg1)
 	s1 := string(jsonarg1)
@@ -299,6 +461,14 @@ func TestAssignTokens(test *testing.T) {
 	arg4[1] = date
 	jsonarg4, _ := json.Marshal(arg4)
 	s4 := string(jsonarg4)
+
+	var arg5 [3]string
+	arg5[0] = bxId
+	arg5[1] = "date"
+	arg5[2] = txId
+
+	jsonarg5, _ := json.Marshal(arg5)
+	s5 := string(jsonarg5)
 
 	chaincodeStub.GetStateReturnsOnCall(0, tokenreqBytes, nil)
 	chaincodeStub.GetStateReturnsOnCall(1, []byte("1000"), nil)
@@ -319,6 +489,32 @@ func TestAssignTokens(test *testing.T) {
 
 	_, er = csr.AssignTokens(transactionContext, s4)
 	require.EqualError(test, er, "tx id must be a non-empty string")
+
+	_, er = csr.AssignTokens(transactionContext, s5)
+	require.EqualError(test, er, "strconv.Atoi: parsing \"date\": invalid syntax")
+
+	transactionContext, chaincodeStub = prepMocksAsCorp()
+	transactionContext.GetStubReturns(chaincodeStub)
+
+	ex1, err := csr.AssignTokens(transactionContext, s)
+	require.EqualError(test, err, "only creditsauthority can initiate assignTokens", ex1)
+
+	transactionContext, chaincodeStub = prepMocksAsCa3()
+	transactionContext.GetStubReturns(chaincodeStub)
+
+	chaincodeStub.GetStateReturnsOnCall(0, tokenreqBytes1, nil)
+	chaincodeStub.GetStateReturnsOnCall(1, []byte("1000"), nil)
+	_, er = csr.AssignTokens(transactionContext, s)
+	require.EqualError(test, er, "TokenRequest with id: 2435678 is already Assigned")
+
+	transactionContext, chaincodeStub = prepMocksAsCa3()
+	transactionContext.GetStubReturns(chaincodeStub)
+
+	chaincodeStub.GetStateReturnsOnCall(0, tokenreqBytes, nil)
+	chaincodeStub.GetStateReturnsOnCall(1, []byte("1000"), nil)
+	chaincodeStub.GetStateReturnsOnCall(2, []byte(txId), nil)
+	_, er = csr.AssignTokens(transactionContext, s)
+	require.EqualError(test, er, "Failed to add a Tx: tx id already exists")
 
 }
 
@@ -352,6 +548,17 @@ func TestRejectTokens(test *testing.T) {
 	}
 	tokenreqBytes, _ := json.Marshal(req)
 
+	req1 := main.TokenRequest{
+		ObjectType: "TokenRequest",
+		From:       "keanu.corporate.csr.com",
+		Qty:        1000,
+		Status:     "Status",
+		Date:       15,
+		PaymentId:  bxId,
+		Comments:   comments,
+	}
+	tokenreqBytes1, _ := json.Marshal(req1)
+
 	var arg1 [3]string
 	jsonarg1, _ := json.Marshal(arg1)
 	s1 := string(jsonarg1)
@@ -378,6 +585,15 @@ func TestRejectTokens(test *testing.T) {
 	jsonarg5, _ := json.Marshal(arg5)
 	s5 := string(jsonarg5)
 
+	var arg6 [4]string
+	arg6[0] = bxId
+	arg6[1] = comments
+	arg6[2] = "date"
+	arg6[3] = txId
+
+	jsonarg6, _ := json.Marshal(arg6)
+	s6 := string(jsonarg6)
+
 	chaincodeStub.GetStateReturnsOnCall(0, tokenreqBytes, nil)
 	chaincodeStub.GetStateReturnsOnCall(1, nil, nil)
 	_, er := csr.RejectTokens(transactionContext, s)
@@ -400,5 +616,33 @@ func TestRejectTokens(test *testing.T) {
 
 	_, er = csr.RejectTokens(transactionContext, s5)
 	require.EqualError(test, er, "tx Id must be non-empty")
+
+	_, er = csr.RejectTokens(transactionContext, s6)
+	require.EqualError(test, er, "strconv.Atoi: parsing \"date\": invalid syntax")
+
+	transactionContext, chaincodeStub = prepMocksAsCorp()
+	transactionContext.GetStubReturns(chaincodeStub)
+
+	ex1, err := csr.RejectTokens(transactionContext, s)
+	require.EqualError(test, err, "only creditsauthority can initiate rejectTokens", ex1)
+
+	transactionContext, chaincodeStub = prepMocksAsCa3()
+	transactionContext.GetStubReturns(chaincodeStub)
+
+	chaincodeStub.GetStateReturnsOnCall(0, tokenreqBytes1, nil)
+	chaincodeStub.GetStateReturnsOnCall(1, nil, nil)
+	_, er = csr.RejectTokens(transactionContext, s)
+	require.EqualError(test, er, "Invalid status, TokenRequest's Status should be Requested")
+
+	transactionContext, chaincodeStub = prepMocksAsCorp()
+	transactionContext.GetStubReturns(chaincodeStub)
+
+	transactionContext, chaincodeStub = prepMocksAsCa3()
+	transactionContext.GetStubReturns(chaincodeStub)
+
+	chaincodeStub.GetStateReturnsOnCall(0, tokenreqBytes, nil)
+	chaincodeStub.GetStateReturnsOnCall(1, []byte(txId), nil)
+	_, er = csr.RejectTokens(transactionContext, s)
+	require.EqualError(test, er, "Failed to add a Tx: tx id already exists")
 
 }

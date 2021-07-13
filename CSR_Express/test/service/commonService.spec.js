@@ -18,10 +18,10 @@ describe('TESTING COMMON SERVICE - SAVE COMMUNITIES', () => {
         mockObj.restore();
     });
     it('testing response for saveCommunities', async () => {
-        const communities = {
+        const communities = [{
             name: "TestUser12",
             place: "Test12"
-        }
+        }]
         mockObj.resolves(communities);
         let res = await commonService.saveCommunities(communities)
         expect(res).to.equal(communities)

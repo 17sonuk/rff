@@ -33,6 +33,16 @@ commonService.getCommunities = () => {
     })
 }
 
+commonService.deleteCommunities = (communityIds) => {
+    return commonModel.deleteCommunities(communityIds).then(data => {
+        if (data) return data;
+
+        let err = new Error("Bad Connection")
+        err.status = 500
+        throw err
+    })
+}
+
 commonService.saveDonor = (donor) => {
     return commonModel.saveDonor(donor).then(data => {
         if (data) return data;

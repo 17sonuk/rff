@@ -1,27 +1,32 @@
 const logger = require('../loggers/logger');
 
 const projectModel = require('../model/projectModel');
+const userModel = require('../model/userModel');
 
 const projectService = {};
 
 logger.debug('<<<<<<<<<<<<<< project service >>>>>>>>>>>>>>>>>')
 
 //Create project
-projectService.createProject = (project) => {
-    return projectModel.createProject(project).then(projectData => {
-        if (projectData && projectData.error === true) {
+projectService.createProject = (userName, project) => {
+    return userModel.getNgoOrgName(userName)
+        .then(data => {
+            project.orgName = data;
+            return projectModel.createProject(project).then(projectData => {
+                if (projectData && projectData.error === true) {
 
-            return { success: false, message: projectData.message };
-        } 
-        else if(!projectData){
-            let err = new Error("Bad Connection")
-            err.status = 500
-            throw err
-        }
-        else {
-            return { success: true, message: 'project created in db' };
-        }
-    })
+                    return { success: false, message: projectData.message };
+                }
+                else if (!projectData) {
+                    let err = new Error("Bad Connection")
+                    err.status = 500
+                    throw err
+                }
+                else {
+                    return { success: true, message: 'project created in db' };
+                }
+            })
+        })
 }
 
 //get projects for ngo

@@ -64,7 +64,6 @@ func TestCommonQuery(test *testing.T) {
 	iterator.HasNextReturnsOnCall(0, true)
 	iterator.HasNextReturnsOnCall(1, false)
 	iterator.NextReturns(&queryresult.KV{Value: []byte(squery)}, nil)
-
 	chaincodeStub.GetQueryResultReturns(iterator, nil)
 	_, err := csr.CommonQuery(transactionContext, squery)
 	require.NoError(test, err)
@@ -84,9 +83,21 @@ func TestQueryByKey(test *testing.T) {
 	byt, _ := json.Marshal(arg)
 	s := string(byt)
 
+	var arg1 [3]string
+	byt1, _ := json.Marshal(arg1)
+	s1 := string(byt1)
+
 	chaincodeStub.GetStateReturns(byt, nil)
 	_, er := csr.QueryByKey(transactionContext, s)
 	require.NoError(test, er)
+
+	chaincodeStub.GetStateReturns(byt1, nil)
+	_, er = csr.QueryByKey(transactionContext, s1)
+	require.EqualError(test, er, "Incorrect number of arguments. Expecting 1")
+
+	chaincodeStub.GetStateReturns(nil, nil)
+	_, er = csr.QueryByKey(transactionContext, s)
+	require.EqualError(test, er, "No data exists for the key: 12345678")
 
 }
 
@@ -102,6 +113,7 @@ func TestGetBalance(test *testing.T) {
 	chaincodeStub.GetStateReturnsOnCall(1, []byte(snapbal), nil)
 	_, er := csr.GetBalance(transactionContext)
 	require.NoError(test, er)
+
 }
 
 func TestGetAllCorporates(test *testing.T) {
@@ -139,6 +151,20 @@ func TestCommonQueryPagination(test *testing.T) {
 	jsonarg, _ := json.Marshal(arg)
 	s := string(jsonarg)
 
+	var arg1 [1]string
+	// arg[0] = squery
+	// arg[1] = PageSize
+	// arg[2] = Bookmark
+	jsonarg1, _ := json.Marshal(arg1)
+	s1 := string(jsonarg1)
+
+	var arg2 [3]string
+	arg[0] = squery
+	arg[1] = "0"
+	// arg[2] = Bookmark
+	jsonarg2, _ := json.Marshal(arg2)
+	s2 := string(jsonarg2)
+
 	pes := &peer.QueryResponseMetadata{}
 	pes.FetchedRecordsCount = 1
 	pes.Bookmark = Bookmark
@@ -151,5 +177,21 @@ func TestCommonQueryPagination(test *testing.T) {
 	chaincodeStub.GetQueryResultWithPaginationReturns(iterator, pes, nil)
 	_, err := csr.CommonQueryPagination(transactionContext, s)
 	require.NoError(test, err)
+
+	pes = &peer.QueryResponseMetadata{}
+	iterator = &mocks.StateQueryIterator{}
+	iterator.HasNextReturnsOnCall(0, false)
+	iterator.NextReturns(&queryresult.KV{Value: []byte(squery)}, nil)
+	chaincodeStub.GetQueryResultWithPaginationReturns(iterator, pes, nil)
+	_, err = csr.CommonQueryPagination(transactionContext, s1)
+	require.EqualError(test, err, "Incorrect number of arguments. Expecting 3")
+
+	pes = &peer.QueryResponseMetadata{}
+	iterator = &mocks.StateQueryIterator{}
+	iterator.HasNextReturnsOnCall(0, false)
+	iterator.NextReturns(&queryresult.KV{Value: []byte(squery)}, nil)
+	chaincodeStub.GetQueryResultWithPaginationReturns(iterator, pes, nil)
+	_, err = csr.CommonQueryPagination(transactionContext, s2)
+	require.EqualError(test, err, "Invalid page size!")
 
 }

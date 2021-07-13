@@ -274,7 +274,7 @@ router.get('/all', async (req, res, next) => {
         queryString["selector"]["projectType"] = projectType;
     }
     if (place) {
-        queryString["selector"]["place"] = place;
+        queryString["selector"]["place"] = place.toLowerCase();
     }
 
     logger.debug('queryString: ' + JSON.stringify(queryString));

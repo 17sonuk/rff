@@ -14,7 +14,7 @@ const { Charge } = resources;
 const { fieldErrorMessage, generateError, getMessage } = require('../../utils/functions');
 
 // create coinbase charge
-router.post('/coinbase/charge', async (req, res) => {
+router.post('/coinbase/charge', async (req, res, next) => {
 
     //types: GuestTransfer | FundRequest
     if (!req.body.requestType) {
@@ -50,26 +50,33 @@ router.post('/coinbase/charge', async (req, res) => {
 })
 
 
-router.use('/coinbase/chargeStatus', async (req, res) => {
+router.use('/coinbase/chargeStatus', async (req, res, next) => {
 
     const body = req.body;
     logger.debug('COINBASE HOOK BODY.......')
-    logger.debug(body)
+    console.log(body)
     const signature = req.headers['x-cc-webhook-signature'];
 
     logger.debug('signature................ ' + signature);
     logger.debug('header................ ' + req.headers);
-    // const webhookSecret = '48b8d57b-b845-4106-88f8-c579b0c32a8c';
 
     try {
-        const event = Webhook.verifySigHeader(JSON.stringify(body), signature, COINBASE_WEBHOOK_SECRET);
-        console.log(event);
-        if (event.type === 'charge:confirmed') {
-            console.log('charge confirmed');
-            const response = await paymentService.saveTx(event);
-            return res.send(response)
+        const isVerified = Webhook.verifySigHeader(JSON.stringify(body), signature, COINBASE_WEBHOOK_SECRET);
+        console.log(isVerified);
+        if (isVerified) {
+            // if (body.event.type === 'charge:created') {
+            //     console.log('charge created');
+            //     const response = await paymentService.saveTx(body.event.data, next);
+            //     return res.send(response)
+            // }
+            if (body.event.type === 'charge:confirmed') {
+                console.log('charge confirmed');
+                const response = await paymentService.saveTx(body.event.data, next);
+                return res.send(response)
+            }
+            return res.send(`coinbase payment with id ${body.event.id} is in state ${body.event.type}`)
         }
-        return res.send(`coinbase payment with id ${event.id} is in state ${event.type}`)
+        return res.send(`signature of coinbase payment with id ${body.event.id} couldn't be verified `)
     }
     catch (error) {
         logger.debug(error);

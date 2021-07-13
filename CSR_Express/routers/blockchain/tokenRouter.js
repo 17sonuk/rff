@@ -158,11 +158,15 @@ router.post('/transfer', async (req, res, next) => {
     }
 
     logger.debug(notes)
-    let args = JSON.stringify([amount, projectId, phaseNumber, notes, Date.now().toString(), uuid().toString()]);
+    let args = [amount, projectId, phaseNumber, notes, Date.now().toString(), uuid().toString()]
+    if (req.userName === 'guest') {
+        args[5] = donorDetails.paymentId;
+    }
+    args = JSON.stringify(args);
     logger.debug('args  : ' + args);
 
     try {
-        await invoke(req.userName, req.orgName, "TransferTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
+        await invoke.main(req.userName, req.orgName, "TransferTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
         logger.debug('Blockchain transfer success')
         // add contributor in mongoDB
         // assumption: mongo service won't fail.

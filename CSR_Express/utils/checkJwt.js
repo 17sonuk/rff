@@ -21,7 +21,7 @@ const checkJwt = jwt({
 }).unless((req) => {
     let skip = ['/mongo/user/login', '/mongo/user/onboard', '/users', '/psp/coinbase/chargeStatus']
     return skip.includes(req.originalUrl) || req.userName === 'guest' 
-    // || req.headers.testmode
+    || req.headers.testmode
 })
 
 module.exports = checkJwt;

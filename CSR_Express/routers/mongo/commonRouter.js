@@ -42,6 +42,24 @@ router.get('/community/all', (req, res, next) => {
         })
 })
 
+router.put('/community', (req, res, next) => {
+    // return project data object from service
+    logger.debug('router-deleteCommunities', req.body);
+
+    console.log(req.body)
+    commonService.deleteCommunities(req.body)
+        .then((data) => {
+            res.json(data)
+        })
+        .catch(err => {
+            if (err['_message']) {
+                err.status = 400
+                err.message = err['_message'];
+            }
+            next(err)
+        })
+})
+
 //to get all donor details
 router.get('/donor', (req, res, next) => {
     // return project data object from service

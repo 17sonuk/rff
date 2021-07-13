@@ -400,12 +400,19 @@ func (s *SmartContract) TransferTokens(ctx contractapi.TransactionContextInterfa
 	// InfoLogger.Printf("A project found...")
 
 	//funds can be transferred only if phase is open or partially funded
-	if projectObj.Phases[phaseNumber].PhaseState == "Open For Funding" || projectObj.Phases[phaseNumber].PhaseState == "Partially Funded" {
+	currentPhaseState := projectObj.Phases[phaseNumber].PhaseState
+	// if currentPhaseState != "Created" {
+	// 	qtyToTransfer = projectObj.Phases[phaseNumber].OutstandingQty
+	// 	qty = qtyToTransfer
+
+	// } else {
+	// 	return false, fmt.Errorf("Funding is not allowed to this phase!")
+	// }
+	if currentPhaseState != "Created" {
 		// InfoLogger.Printf("FUNDING IS ALLOWED...")
 		if projectObj.Phases[phaseNumber].OutstandingQty <= qty {
-			qtyToTransfer = projectObj.Phases[phaseNumber].OutstandingQty
-			qty = qtyToTransfer
-			projectObj.Phases[phaseNumber].OutstandingQty = 0
+			// qtyToTransfer = projectObj.Phases[phaseNumber].OutstandingQty
+			// qty = qtyToTransfer
 			projectObj.Phases[phaseNumber].PhaseState = "Fully Funded"
 			if phaseNumber == len(projectObj.Phases)-1 {
 				projectObj.ProjectState = "Fully Funded"
@@ -413,10 +420,12 @@ func (s *SmartContract) TransferTokens(ctx contractapi.TransactionContextInterfa
 				projectObj.ProjectState = "Partially Funded"
 			}
 		} else {
-			projectObj.Phases[phaseNumber].OutstandingQty = math.Round((projectObj.Phases[phaseNumber].OutstandingQty-qty)*100) / 100
-			projectObj.Phases[phaseNumber].PhaseState = "Partially Funded"
-			projectObj.ProjectState = "Partially Funded"
+			if currentPhaseState == "Open For Funding" {
+				projectObj.Phases[phaseNumber].PhaseState = "Partially Funded"
+				projectObj.ProjectState = "Partially Funded"
+			}
 		}
+		projectObj.Phases[phaseNumber].OutstandingQty = math.Round((projectObj.Phases[phaseNumber].OutstandingQty-qty)*100) / 100
 	} else {
 		// InfoLogger.Printf("FUNDING NOT ALLOWED...")
 		return false, fmt.Errorf("Funding is not allowed to this phase!")

@@ -23,7 +23,8 @@ const projectSchema = new Schema({
     description: { type: String, maxLength: 500 },
     images: { type: [String], validate: [imageLimit, 'max 3 images allowed!'] },
     phases: { type: [phaseSchema], validate: [phaseLimit, 'Number of phases should be greater than or equal to 1'] },
-    communities: { type: [String] }
+    communities: { type: [String] },
+    orgName: { type: String, maxLength: 50 }
 }, { collection: "Project" })
 
 function imageLimit(val) {
@@ -145,6 +146,21 @@ const donorSchema = new Schema({
     name: { type: String, maxLength: 100 }
 }, { collection: "Donor", timestamps: true })
 
+const citySchema = new Schema({
+    name: { type: String, required: true }
+})
+
+const stateSchema = new Schema({
+    name: { type: String, required: true },
+    cities: [citySchema],
+})
+
+const countrySchema = new Schema({
+    name: { type: String, required: true },
+    phone_code: { type: String, maxLength: 50 },
+    states: [stateSchema],
+}, { collection: "Country" })
+
 module.exports = {
     'notificationModel': models['Notification'] || model('Notification', notificationSchema),
     'orgModel': models['OrganisationProfile'] || model('OrganisationProfile', orgSchema),
@@ -152,5 +168,6 @@ module.exports = {
     'txDescriptionModel': models['TxDescription'] || model('TxDescription', txDescriptionSchema),
     'fileModel': models['File'] || model('File', fileDataSchema),
     'communityModel': models['Community'] || model('Community', communitySchema),
-    'donorModel': models['Donor'] || model('Donor', donorSchema)
+    'donorModel': models['Donor'] || model('Donor', donorSchema),
+    'countryModel': models['Country'] || model('Country', countrySchema)
 };

@@ -104,4 +104,6 @@ async function main(userName, orgName, functionName, chaincodeName, channelName,
     contract.removeContractListener(listener);
 }
 
-module.exports = main;
+module.exports = {
+    main,
+};

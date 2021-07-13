@@ -3,9 +3,12 @@ const { expect } = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const request = require('supertest');
 const invoke = require('../../fabric-sdk/invoke');
-const fabricInvoke={
+const query=require('../../fabric-sdk/query')
+const fabricInvoke=
+{
     invoke:invoke
 }
+// invoke.main()
 const sinon = require("sinon");
 const app = require('../../app')
 chai.use(chaiAsPromised)
@@ -26,7 +29,7 @@ describe('ESCROW ROUTER - /fund/reserve API', () => {
         const response = await request(app)
         .post("/escrow/fund/reserve").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
         .send({
-            id: "",
+            projectId: "",
             amount:"90"
         })
         expect(response.body.success).to.equal(false)
@@ -42,7 +45,7 @@ describe('ESCROW ROUTER - /fund/reserve API', () => {
         const response = await request(app)
         .post("/escrow/fund/reserve").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
         .send({
-            id: "P90",
+            projectId: "P90",
             amount:""
         })
         expect(response.body.success).to.equal(false)
@@ -52,27 +55,28 @@ describe('ESCROW ROUTER - /fund/reserve API', () => {
 
 describe('ESCROW ROUTER - /fund/reserve API SUCCESS', () => {
     let mockObj = ""
+    // let mockOb=""
+
     beforeEach(() => {
-        mockObj = sandbox.stub(fabricInvoke, 'invoke');
+        mockObj = sandbox.stub(fabricInvoke, "invoke");
+        // mockOb=sinon.mock(["invoke"]);
     });
     afterEach(() => {
         mockObj.restore();
     });
     it('testing reserve fund API', async function () {
-        mockObj.resolves(true)
+        mockObj.resolves(null)
         let payload = {
-            orgName: 'corporate',
-            userName: 'corp12'
+            userName: 'corp12',
+            orgName: 'corporate'
         }
         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
         const response = await request(app)
         .post("/escrow/fund/reserve").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
         .send({
-            "projectId": "7cb5a5ad-29f1-478a-952d-89b22e7f3906",
-            "phaseNumber": 1,
-            "amount": "20",
-            "reviewMsg": "test",
-            "rating": 5
+            projectId: "7cb5a5ad-29f1-478a-952d-89b22e7f3906",
+            amount: "20"
+          
         })
         console.log("Resp23:",response.body)
         expect(response.body.success).to.equal(true)

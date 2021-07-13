@@ -130,6 +130,7 @@ func (s *SmartContract) CreateProject(ctx contractapi.TransactionContextInterfac
 	projectObj.NGO = commonName
 	projectObj.ObjectType = "Project"
 	projectObj.ProjectState = "Created"
+	projectObj.Place = strings.ToLower(projectObj.Place)
 	projectObj.Contributors = make(map[string]string)
 
 	//TODO: move it to UI
@@ -257,7 +258,13 @@ func (s *SmartContract) ValidatePhase(ctx contractapi.TransactionContextInterfac
 	if validated {
 		projectObj.Phases[phaseNumber].PhaseState = "Validated"
 	} else {
-		projectObj.Phases[phaseNumber].PhaseState = "Fully Funded"
+		if projectObj.Phases[phaseNumber].OutstandingQty == projectObj.Phases[phaseNumber].Qty {
+			projectObj.Phases[phaseNumber].PhaseState = "Open For Funding"
+		} else if projectObj.Phases[phaseNumber].OutstandingQty <= 0.0 {
+			projectObj.Phases[phaseNumber].PhaseState = "Fully Funded"
+		} else {
+			projectObj.Phases[phaseNumber].PhaseState = "Partially Funded"
+		}
 	}
 
 	projectInBytes, err = json.Marshal(projectObj)
@@ -465,8 +472,9 @@ func (s *SmartContract) UpdateProject(ctx contractapi.TransactionContextInterfac
 		return false, fmt.Errorf("invalid phase number")
 	}
 
+	currentPhaseState := projectState.Phases[phaseNumber].PhaseState
 	if state == "Open For Funding" {
-		if projectState.Phases[phaseNumber].PhaseState == "Created" {
+		if currentPhaseState == "Created" {
 			projectState.Phases[phaseNumber].PhaseState = "Open For Funding"
 		} else {
 			// InfoLogger.Printf("Only created state can be opened for funding")
@@ -480,14 +488,14 @@ func (s *SmartContract) UpdateProject(ctx contractapi.TransactionContextInterfac
 		}
 	} else if state == "Seeking Validation" {
 		//TODO: check if documents are uploaded for each validation criteria
-		if projectState.Phases[phaseNumber].PhaseState == "Fully Funded" {
+		if currentPhaseState == "Open For Funding" || currentPhaseState == "Partially Funded" || currentPhaseState == "Fully Funded" {
 			projectState.Phases[phaseNumber].PhaseState = "Seeking Validation"
 		} else {
 			// InfoLogger.Printf("current phase is not yet fully funded to seek validation")
-			return false, fmt.Errorf("current phase is not yet fully funded to seek validation")
+			return false, fmt.Errorf("current phase is in an invalid state to seek validation")
 		}
 	} else if state == "Complete" {
-		if projectState.Phases[phaseNumber].PhaseState == "Validated" {
+		if currentPhaseState == "Validated" {
 			projectState.Phases[phaseNumber].PhaseState = "Complete"
 		} else {
 			// InfoLogger.Printf("current phase is not yet validated to be marked complete")

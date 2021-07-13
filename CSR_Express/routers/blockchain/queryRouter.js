@@ -473,7 +473,12 @@ router.get('/it-report', async function (req, res, next) {
             // }
 
             logger.debug("resultObject", resultObject)
-            result.push(resultObject)
+            let newResultObject = {}
+            newResultObject.donor = resultObject.corporate
+            newResultObject.funds_pledged = resultObject.creditsReceived
+            newResultObject.funds_disbursed = resultObject.creditsContributed
+            newResultObject.funds_available = resultObject.creditsUnspent
+            result.push(newResultObject)
         }
 
         if (responseType === 'json') {

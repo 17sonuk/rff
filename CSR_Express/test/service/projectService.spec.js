@@ -7,16 +7,21 @@ const sinon = require("sinon");
 
 const projectService = require('../../service/projectService');
 const projectModel = require('../../model/projectModel');
+const userModel = require('../../model/userModel');
 
 describe('TESTING PROJECT SERVICE - CREATE PROJECT', () => {
     let mockObj = ""
+    let mockObj1=""
     beforeEach(() => {
         mockObj = sandbox.stub(projectModel, 'createProject');
+        mockObj1 = sandbox.stub(userModel, 'getNgoOrgName');
     });
     afterEach(() => {
         mockObj.restore();
+        mockObj1.restore();
     });
     it('testing response for createProject', async () => {
+        // const testUserName="ngo501"
         const testProject = {
             "contributorsList": [],
             "images": [],
@@ -40,27 +45,31 @@ describe('TESTING PROJECT SERVICE - CREATE PROJECT', () => {
                     "description": "Deposit the annual fee and exam fee of students"
                 }
             ],
+            "orgName":"ngo"
         }
 
         // const testProjectBlank ={
 
         // }
+        mockObj1.resolves("ngo")
         mockObj.resolves(testProject);
-        let res = await projectService.createProject(testProject)
+        let res = await projectService.createProject("ngo501",testProject)
         expect(res.success).to.equal(true)
         expect(res.message).to.equal('project created in db')
 
         //If there is any error in project
+        mockObj1.resolves("ngo")
         mockObj.resolves(null);
         try{
-        let res1 = await projectService.createProject(testProject)
+        let res1 = await projectService.createProject("ngo501",testProject)
         expect(res1.success).to.equal(false)
         }catch(err){
             expect(err.message).to.equal('Bad Connection')
         }
         // Project ID already exist.
+        mockObj1.resolves("ngo")
         mockObj.resolves({ message: 'Project ID already exist.', error: true });
-        let res2 = await projectService.createProject(testProject)
+        let res2 = await projectService.createProject("ngo501",testProject)
         expect(res2.success).to.equal(false)
         
 

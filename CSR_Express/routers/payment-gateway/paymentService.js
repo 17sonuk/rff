@@ -7,41 +7,46 @@ const projectService = require('../../service/projectService');
 const commonService = require('../../service/commonService');
 const { generateError, getMessage } = require('../../utils/functions');
 
+const invoke = require('../../fabric-sdk/invoke');
+
 const paymentService = {};
 
 logger.debug('<<<<<<<<<<<<<< payment service >>>>>>>>>>>>>>>>>')
 
-paymentService.saveTx = async (event) => {
+paymentService.saveTx = async (event, next) => {
+    console.log('inside payment service...')
+    let payload = JSON.parse(event.metadata.payload)
+    console.log(typeof payload)
+    console.log(payload)
 
     if (event.metadata.requestType === 'FundRequest') {
+        console.log('inside fund request...')
         //extract fields from event metadata.
-        const amount = event.matadata.payload.amount.toString();
+        const amount = payload.amount.toString();
         const paymentId = event.id;
         const paymentStatus = "COMPLETED";
-        const comments = event.matadata.payload.comments;
+        const comments = payload.comments;
 
         const args = JSON.stringify([amount, paymentId, paymentStatus, comments, Date.now().toString(), uuid().toString()]);
         logger.debug('args  : ' + args);
 
         try {
-            await invoke(event.matadata.userName, 'corporate', "RequestTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
+            await invoke(event.metadata.userName, 'corporate', "RequestTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
             return getMessage(true, 'Successfully credited funds');
         } catch (e) {
             generateError(e, next);
         }
     }
     else if (event.metadata.requestType === 'GuestTransfer') {
-        const amount = event.matadata.payload.amount.toString();
-        const projectId = event.matadata.payload.projectId;
-        const phaseNumber = event.matadata.payload.phaseNumber.toString();
-        let notes = event.matadata.payload.notes;
-        const donorDetails = event.matadata.payload.donorDetails;
-        if (req.userName === 'guest') {
-            notes = donorDetails.email + " " + "PaymentId - " + event.id + " " + notes
-        }
+        console.log('inside GuestTransfer...')
+        const amount = payload.amount.toString();
+        const projectId = payload.projectId;
+        const phaseNumber = payload.phaseNumber.toString();
+        const donorDetails = payload.donorDetails;
+        const notes = donorDetails.email + " " + "PaymentId - " + event.id + " " + payload.notes;
 
         logger.debug(notes)
-        const args = JSON.stringify([amount, projectId, phaseNumber, notes, Date.now().toString(), uuid().toString()]);
+        const args = JSON.stringify([amount, projectId, phaseNumber, notes, Date.now().toString(), event.id]);
         logger.debug('args  : ' + args);
 
         try {

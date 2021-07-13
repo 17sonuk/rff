@@ -11,15 +11,15 @@ logger.debug('<<<<<<<<<<<<<< project router >>>>>>>>>>>>>>>>>')
 router.post('/create', (req, res, next) => {
     // return project data object from service
     logger.debug(`router-createProject: ${JSON.stringify(req.body, null, 2)}`);
-    
-    projectService.createProject(req.body)
+
+    projectService.createProject(req.userName, req.body)
         .then((data) => {
             res.json(data)
         })
-        .catch(err =>{ 
-            if(err['_message']){
-                err.status=400
-                err.message=err['_message'];
+        .catch(err => {
+            if (err['_message']) {
+                err.status = 400
+                err.message = err['_message'];
             }
             // console.log(err['_message'].toString())
             next(err)
