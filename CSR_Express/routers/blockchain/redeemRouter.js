@@ -60,7 +60,7 @@ router.post('/request', async (req, res, next) => {
     logger.debug('args  : ' + args);
 
     try {
-        await invoke(req.userName, req.orgName, "RedeemRequest", CHAINCODE_NAME, CHANNEL_NAME, args);
+        await invoke.main(req.userName, req.orgName, "RedeemRequest", CHAINCODE_NAME, CHANNEL_NAME, args);
         return res.json(getMessage(true, 'Successfully invoked RedeemRequest'));
     } catch (e) {
         generateError(e, next);
@@ -87,7 +87,7 @@ router.post('/approve', async (req, res, next) => {
     logger.debug('args  : ' + args);
 
     try {
-        await invoke(req.userName, req.orgName, "ApproveRedeemRequest", CHAINCODE_NAME, CHANNEL_NAME, args);
+        await invoke.main(req.userName, req.orgName, "ApproveRedeemRequest", CHAINCODE_NAME, CHANNEL_NAME, args);
         return res.json(getMessage(true, 'Successfully invoked ApproveRedeemRequest'));
     } catch (e) {
         generateError(e, next);
@@ -113,7 +113,7 @@ router.post('/reject', async (req, res, next) => {
     logger.debug('args  : ' + args);
 
     try {
-        await invoke(req.userName, req.orgName, "RejectRedeemRequest", CHAINCODE_NAME, CHANNEL_NAME, args);
+        await invoke.main(req.userName, req.orgName, "RejectRedeemRequest", CHAINCODE_NAME, CHANNEL_NAME, args);
         return res.json(getMessage(true, 'Successfully invoked RejectRedeemRequest'));
     }
     catch (e) {
@@ -163,7 +163,7 @@ router.get('/request/all', async (req, res, next) => {
     logger.debug('args : ' + args);
 
     try {
-        let message = await query(req.userName, req.orgName, "CommonQueryPagination", CHAINCODE_NAME, CHANNEL_NAME, args);
+        let message = await query.main(req.userName, req.orgName, "CommonQueryPagination", CHAINCODE_NAME, CHANNEL_NAME, args);
         message = JSON.parse(message.toString());
 
         message['Results'].forEach(elem => {

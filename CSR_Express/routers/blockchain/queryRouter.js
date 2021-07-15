@@ -27,7 +27,7 @@ router.get('/funds-raised-by-ngo', async function (req, res, next) {
     logger.debug(`query string:\n ${args}`);
 
     try {
-        let message = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
+        let message = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
         message = JSON.parse(message.toString());
 
         message.forEach(elem => {
@@ -75,7 +75,7 @@ router.get('/getRecord/:recordKey', async function (req, res, next) {
     logger.debug(`query string:\n ${args}`);
 
     try {
-        let message = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
+        let message = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
         message = JSON.parse(message.toString());
 
         message.forEach(elem => {
@@ -153,7 +153,7 @@ router.get('/total-locked-and-validity-of-corporate', async function (req, res, 
     logger.debug(`query string:\n ${args}`);
 
     try {
-        let message = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
+        let message = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
         message = JSON.parse(message.toString());
 
         message.forEach(elem => {
@@ -211,7 +211,7 @@ router.get('/amount-parked', async function (req, res, next) {
     logger.debug(`query string:\n ${args}`);
 
     try {
-        let message = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
+        let message = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
         message = JSON.parse(message.toString());
 
         message.forEach(elem => {
@@ -256,7 +256,7 @@ router.get('/it-data', async function (req, res, next) {
     logger.debug(`query string:\n ${args}`);
 
     try {
-        let message = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
+        let message = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
 
         // let newObject = new Object()
         let newObject = JSON.parse(message.toString())
@@ -404,7 +404,7 @@ router.get('/it-report', async function (req, res, next) {
             let args = JSON.stringify(queryString)
             logger.debug(`query string:\n ${args}`);
 
-            let message = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
+            let message = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
             let transactionList = JSON.parse(message.toString())
 
             // transactionList.forEach(elem => {
@@ -569,7 +569,7 @@ router.get('/ngo-report', async function (req, res, next) {
             let args = JSON.stringify(queryString);
             logger.debug(`query string:\n ${args}`);
 
-            let message = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
+            let message = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
             message = JSON.parse(message.toString());
 
             message.forEach(elem => {
@@ -594,7 +594,7 @@ router.get('/ngo-report', async function (req, res, next) {
             args = JSON.stringify(queryString);
             logger.debug(`query1 string:\n ${args}`);
 
-            let message2 = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
+            let message2 = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
             message2 = JSON.parse(message2.toString());
 
             message2.forEach(elem => {
@@ -614,7 +614,7 @@ router.get('/ngo-report', async function (req, res, next) {
             args = JSON.stringify(queryString);
             logger.debug(`query2 string:\n ${args}`);
 
-            let message3 = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
+            let message3 = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
             message3 = JSON.parse(message3.toString());
 
             message3.forEach(elem => {
@@ -685,7 +685,7 @@ router.get('/ngo-contribution-details', async function (req, res, next) {
     logger.debug(`query string:\n ${args}`);
 
     try {
-        let message = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
+        let message = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
         message = JSON.parse(message.toString());
 
         message.forEach(elem => {
@@ -747,7 +747,7 @@ router.get('/balance', async function (req, res, next) {
     logger.debug(`query string:\n ${args}`);
 
     try {
-        let message = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
+        let message = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
         let newObject = JSON.parse(message.toString())
 
         for (let i = 0; i < newObject.length; i++) {
@@ -772,7 +772,7 @@ router.get('/balance', async function (req, res, next) {
             logger.debug(`query string:\n ${args}`);
 
             //query esrow balance
-            message = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
+            message = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
             logger.debug(`response message: ${message.toString()}`);
 
             message = JSON.parse(message.toString())
@@ -863,7 +863,7 @@ router.get('/corporate-contributions', async function (req, res, next) {
             let args = JSON.stringify(queryString);
             logger.debug(`query string:\n ${args}`);
 
-            let message2 = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
+            let message2 = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
             message2 = JSON.parse(message2.toString());
 
             message2.forEach(elem => {
@@ -879,7 +879,7 @@ router.get('/corporate-contributions', async function (req, res, next) {
             resultObject.assignedValue = totalAssign
 
             //get balance of corporate
-            let message3 = await query(req.userName, req.orgName, 'GetBalanceCorporate', CHAINCODE_NAME, CHANNEL_NAME, corporate);
+            let message3 = await query.main(req.userName, req.orgName, 'GetBalanceCorporate', CHAINCODE_NAME, CHANNEL_NAME, corporate);
             message3 = JSON.parse(message3.toString());
 
             logger.debug(`response3 :  ${JSON.stringify(message3, null, 2)}`)
@@ -896,7 +896,7 @@ router.get('/corporate-contributions', async function (req, res, next) {
             args = queryString
             logger.debug(`query string:\n ${args}`);
 
-            let message4 = await query(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
+            let message4 = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
             message4 = JSON.parse(message4.toString());
 
             logger.debug(`response4 :  ${JSON.stringify(message4, null, 2)}`)

@@ -8,7 +8,20 @@ const userService = require('../../service/userService');
 
 const registerUser = require('../../fabric-sdk/registerUser');
 
+const { orgModel } = require('../../model/models')
+
 logger.debug('<<<<<<<<<<<<<< user router >>>>>>>>>>>>>>>>>')
+
+const nodemailer = require('nodemailer');
+
+const transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 587,
+    auth: {
+        user: 'csr.rainforest@gmail.com',
+        pass: 'bpvzgkzpbegaqokl',
+    },
+});
 
 //Onboarding of user
 router.post('/onboard', (req, res, next) => {
@@ -97,6 +110,26 @@ router.post('/approve-user', async (req, res, next) => {
         let orgName = await userService.approveUser(req.body.userName);
         try {
             await registerUser(req.body.userName, orgName);
+            transporter.verify()
+                .then((data) => {
+                    console.log(data);
+                    let receiverEmail = ''
+                    orgModel.findOne({ userName: req.body.userName }, { _id: 0, email: 1 })
+                        .then((email) => {
+                            receiverEmail = email
+                            console.log('sending email to :' + receiverEmail.email);
+                            transporter.sendMail({
+                                from: '"CSR Test Mail" <csr.rainforest@gmail.com', // sender address
+                                to: receiverEmail.email, // list of receivers
+                                subject: "Testing csr mail", // Subject line
+                                text: "Congrats " + req.body.userName + ", You have successfully onboarded to the CSR platform!", // plain text body
+                                //html: "<b>You have successfully onboarded to the CSR platform</b>", // html body
+                            }).then(info => {
+                                console.log({ info });
+                            }).catch(console.error);
+                        })
+                })
+                .catch(console.error);
             return res.json(getMessage(true, "User approved successfully!"));
         } catch (registerError) {
             if (registerError.status === 400) {

@@ -21,7 +21,7 @@ router.post('/snapshot/create', async (req, res, next) => {
     logger.debug('args  : ' + args);
 
     try {
-        await invoke(req.userName, req.orgName, "SnapshotCurrentCorporateBalances", CHAINCODE_NAME, CHANNEL_NAME, args);
+        await invoke.main(req.userName, req.orgName, "SnapshotCurrentCorporateBalances", CHAINCODE_NAME, CHANNEL_NAME, args);
         return res.json(getMessage(true, 'Successfully invoked SnapshotCurrentCorporateBalances'));
     }
     catch (e) {
@@ -45,7 +45,7 @@ router.post('/unspent/transfer', async (req, res, next) => {
     logger.debug('args  : ' + args);
 
     try {
-        await invoke(req.userName, req.orgName, "TransferUnspentTokensToGovt", CHAINCODE_NAME, CHANNEL_NAME, args);
+        await invoke.main(req.userName, req.orgName, "TransferUnspentTokensToGovt", CHAINCODE_NAME, CHANNEL_NAME, args);
         return res.json(getMessage(true, 'Successfully invoked TransferUnspentTokensToGovt'));
     }
     catch (e) {
@@ -66,7 +66,7 @@ router.post('/add-corporate-email', async (req, res, next) => {
     logger.debug('args  : ' + args);
 
     try {
-        await invoke(req.userName, req.orgName, "AddCorporateEmail", CHAINCODE_NAME, CHANNEL_NAME, args);
+        await invoke.main(req.userName, req.orgName, "AddCorporateEmail", CHAINCODE_NAME, CHANNEL_NAME, args);
         return res.json(getMessage(true, 'Successfully invoked AddCorporateEmail'));
     }
     catch (e) {
@@ -90,7 +90,7 @@ router.post('/it-data', async (req, res, next) => {
     logger.debug('args  : ' + args);
 
     try {
-        await invoke(req.userName, req.orgName, "SaveItData", CHAINCODE_NAME, CHANNEL_NAME, args);
+        await invoke.main(req.userName, req.orgName, "SaveItData", CHAINCODE_NAME, CHANNEL_NAME, args);
         return res.json(getMessage(true, 'Successfully invoked SaveItData'));
     }
     catch (e) {
@@ -113,7 +113,7 @@ async function saveITData(req, res, next, data) {
     logger.debug('args  : ' + args);
 
     try {
-        await invoke(req.userName, req.orgName, "SaveItData", CHAINCODE_NAME, CHANNEL_NAME, args);
+        await invoke.main(req.userName, req.orgName, "SaveItData", CHAINCODE_NAME, CHANNEL_NAME, args);
         return res.json(getMessage(true, 'Successfully invoked SaveItData'));
     }
     catch (e) {

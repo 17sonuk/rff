@@ -57,4 +57,6 @@ async function main(userName, orgName, functionName, chaincodeName, channelName,
     return result;
 }
 
-module.exports = main;
+module.exports = {
+    main,
+};

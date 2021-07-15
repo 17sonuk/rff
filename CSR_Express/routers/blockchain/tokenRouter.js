@@ -45,10 +45,10 @@ router.post('/request', async (req, res, next) => {
 
     try {
         if (paymentStatus === 'COMPLETED') {
-            await invoke(req.userName, req.orgName, "RequestTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
+            await invoke.main(req.userName, req.orgName, "RequestTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
             return res.json(getMessage(true, 'Successfully credited funds'));
         } else if (paymentStatus === 'PENDING') {
-            await invoke(req.userName, req.orgName, "RequestTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
+            await invoke.main(req.userName, req.orgName, "RequestTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
             return res.json(getMessage(true, 'Request is pending with Rainforest US. Please wait to receive funds in your wallet.'));
         } else {
             let error = new Error('Some error occured!');
@@ -82,7 +82,7 @@ router.post('/assign', async (req, res, next) => {
     logger.debug('args  : ' + args);
 
     try {
-        await invoke(req.userName, req.orgName, "AssignTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
+        await invoke.main(req.userName, req.orgName, "AssignTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
         return res.json(getMessage(true, 'Successfully invoked AssignTokens'));
     } catch (e) {
         generateError(e, next);
@@ -113,7 +113,7 @@ router.post('/reject', async (req, res, next) => {
     logger.debug('args  : ' + args);
 
     try {
-        await invoke(req.userName, req.orgName, "RejectTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
+        await invoke.main(req.userName, req.orgName, "RejectTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
         return res.json(getMessage(true, 'Successfully invoked RejectTokens'));
     }
     catch (e) {
@@ -247,7 +247,7 @@ router.get('/all-requests', async (req, res, next) => {
     logger.debug('args : ' + args);
 
     try {
-        let message = await query(req.userName, req.orgName, "CommonQueryPagination", CHAINCODE_NAME, CHANNEL_NAME, args);
+        let message = await query.main(req.userName, req.orgName, "CommonQueryPagination", CHAINCODE_NAME, CHANNEL_NAME, args);
         message = JSON.parse(message.toString());
 
         logger.debug(JSON.stringify(message, null, 2))

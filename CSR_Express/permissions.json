@@ -10,6 +10,7 @@
         "/country/getCities"
     ],
     "ngo": [
+        "/mongo/common/community",
         "/mongo/common/community/all",
         "/users",
         "/mongo/user/onboard",

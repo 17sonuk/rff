@@ -58,7 +58,7 @@ describe('ESCROW ROUTER - /fund/reserve API SUCCESS', () => {
     // let mockOb=""
 
     beforeEach(() => {
-        mockObj = sandbox.stub(fabricInvoke, "invoke");
+        mockObj = sandbox.stub(invoke, 'main');
         // mockOb=sinon.mock(["invoke"]);
     });
     afterEach(() => {

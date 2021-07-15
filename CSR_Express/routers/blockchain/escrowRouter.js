@@ -33,7 +33,7 @@ router.post('/fund/reserve', async (req, res, next) => {
     args = JSON.stringify(args);
 
     try {
-        await invoke(req.userName, req.orgName, 'ReserveFundsForProject', CHAINCODE_NAME, CHANNEL_NAME, args);
+        await invoke.main(req.userName, req.orgName, 'ReserveFundsForProject', CHAINCODE_NAME, CHANNEL_NAME, args);
         return res.json(getMessage(true, 'Successfully Reserved funds!'));
     }
     catch (e) {
@@ -62,7 +62,7 @@ router.post('/fund/release', async (req, res, next) => {
     args = JSON.stringify(args);
 
     try {
-        await invoke(req.userName, req.orgName, 'ReleaseFundsForProject', CHAINCODE_NAME, CHANNEL_NAME, args);
+        await invoke.main(req.userName, req.orgName, 'ReleaseFundsForProject', CHAINCODE_NAME, CHANNEL_NAME, args);
         return res.json(getMessage(true, 'Successfully Released funds!'));
     }
     catch (e) {

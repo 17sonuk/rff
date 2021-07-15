@@ -430,7 +430,7 @@ describe('TOKEN ROUTER - /all-requests API', () => {
         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
         const response = await request(app)
         .get("/token/all-requests").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-        .query({
+        .send({
             pageSize:2000,
             status:""
         })
@@ -447,7 +447,7 @@ describe('TOKEN ROUTER - /all-requests API', () => {
         const response = await request(app)
         .get("/token/all-requests").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
         .send({
-            pageSize:10,
+            pageSize:"10",
             status:"true"
         })
         expect(response.body.success).to.equal(false)
@@ -458,17 +458,12 @@ describe('TOKEN ROUTER - /all-requests API', () => {
 
 describe('TOKEN ROUTER - /all-requests API SUCCESS', () => {
     let mockObj = ""
-    let finalres={
-        metadata:{
-            recordsCount:1,
-            bookmark:""
+    let queryString = {
+        "selector": {
+            "docType": "TokenRequest",
+            "status": "true"
         },
-        records:"testProject"
-    }
-    
-    let msg={
-        success: true,
-        message: finalres
+        "sort": [{ "date": "asc" }]
     }
     beforeEach(() => {
         mockObj = sandbox.stub(query,'main');
@@ -476,8 +471,8 @@ describe('TOKEN ROUTER - /all-requests API SUCCESS', () => {
     afterEach(() => {
         mockObj.restore();
     });
-    it('testing token all-request API', async function () {
-        mockObj.resolves(msg)
+    it('testing token request API', async function () {
+        mockObj.resolves(null)
         let payload = {
             orgName: 'creditsauthority',
             userName: 'ca'
@@ -485,11 +480,10 @@ describe('TOKEN ROUTER - /all-requests API SUCCESS', () => {
         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
         const response = await request(app)
         .get("/token/all-requests").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-        .query({
-            // qString: JSON.stringify(queryString),
-            pageSize:10,
-            bookmark:"",
-            status:"Requested"
+        .send({
+            qString: JSON.stringify(queryString),
+            pageSize:"10001",
+            bookmark:""
           
         })
         console.log("Resp23:",response.body)

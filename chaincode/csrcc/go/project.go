@@ -554,7 +554,8 @@ func (s *SmartContract) UpdateProject(ctx contractapi.TransactionContextInterfac
 	notification := &Notification{TxId: txId, Description: eventPayload, Users: tmpList}
 	if state == "Seeking Validation" {
 		notification.Users = []string{"ca.creditsauthority.csr.com"}
-		eventPayload = "Your validation is requested for the phase " + strconv.Itoa(phaseNumber+1) + " of the project '" + projectState.ProjectName + "'"
+		eventPayload = "Your validation is requested for the project '" + projectState.ProjectName + "'"
+		notification.Description = eventPayload
 	}
 	// InfoLogger.Printf("notification:", eventPayload)
 	// InfoLogger.Printf(strings.Join(tmpList, " "))

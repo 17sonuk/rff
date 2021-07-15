@@ -37,7 +37,7 @@ router.post('/create', async (req, res, next) => {
     logger.debug('args  : ' + args);
 
     try {
-        await invoke(req.userName, req.orgName, "CreateProject", CHAINCODE_NAME, CHANNEL_NAME, args);
+        await invoke.main(req.userName, req.orgName, "CreateProject", CHAINCODE_NAME, CHANNEL_NAME, args);
         return res.json({ ...getMessage(true, 'Successfully invoked CreateProject'), 'projectId': projectId });
     }
     catch (e) {
@@ -71,7 +71,7 @@ router.put('/update', async (req, res, next) => {
     logger.debug('args  : ' + args);
 
     try {
-        await invoke(req.userName, req.orgName, "UpdateProject", CHAINCODE_NAME, CHANNEL_NAME, args);
+        await invoke.main(req.userName, req.orgName, "UpdateProject", CHAINCODE_NAME, CHANNEL_NAME, args);
         return res.json(getMessage(true, 'Successfully invoked UpdateProject'));
     }
     catch (e) {
@@ -140,7 +140,7 @@ router.post('/validate-phase', async (req, res, next) => {
     logger.debug('args  : ' + args);
 
     try {
-        await invoke(req.userName, req.orgName, "ValidatePhase", CHAINCODE_NAME, CHANNEL_NAME, args);
+        await invoke.main(req.userName, req.orgName, "ValidatePhase", CHAINCODE_NAME, CHANNEL_NAME, args);
         return res.json(getMessage(true, 'Successfully invoked ValidatePhase'));
     }
     catch (e) {
@@ -180,7 +180,7 @@ router.post('/add-document-hash', async (req, res, next) => {
     logger.debug('args  : ' + args);
 
     try {
-        await invoke(req.userName, req.orgName, "AddDocumentHash", CHAINCODE_NAME, CHANNEL_NAME, args);
+        await invoke.main(req.userName, req.orgName, "AddDocumentHash", CHAINCODE_NAME, CHANNEL_NAME, args);
         return res.json(getMessage(true, 'Successfully invoked AddDocumentHash'));
     }
     catch (e) {
@@ -283,7 +283,7 @@ router.get('/all', async (req, res, next) => {
     args = JSON.stringify(args);
 
     try {
-        let message = await query(req.userName, req.orgName, "CommonQueryPagination", CHAINCODE_NAME, CHANNEL_NAME, args);
+        let message = await query.main(req.userName, req.orgName, "CommonQueryPagination", CHAINCODE_NAME, CHANNEL_NAME, args);
         message = JSON.parse(message.toString());
         if (message.toString().includes("Error:")) {
             let errorMessage = message.toString().split("Error:")[1].trim()
@@ -391,7 +391,7 @@ router.get('/total-ongoing-projects', async (req, res, next) => {
     let args = JSON.stringify(queryString);
 
     try {
-        let message = await query(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args);
+        let message = await query.main(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args);
         message = JSON.parse(message.toString());
 
         logger.debug(`response :  ${JSON.stringify(message, null, 2)}`)
@@ -426,7 +426,7 @@ router.get('/corporate-project-details', async (req, res, next) => {
     let args = queryString;
 
     try {
-        let message = await query(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args);
+        let message = await query.main(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args);
 
         logger.debug(`response :  ${message.toString()}`)
 
@@ -498,7 +498,7 @@ router.get('/corporate-project-transactions', async (req, res, next) => {
     logger.debug('args : ' + args);
 
     try {
-        let message = await query(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args);
+        let message = await query.main(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args);
         message = JSON.parse(message.toString());
 
         message.forEach(elem => {
@@ -540,7 +540,7 @@ router.get('/locked-details', async (req, res, next) => {
     // logger.debug('args : ' + args);
 
     try {
-        let message = await query(req.userName, req.orgName, "GetAllCorporates", CHAINCODE_NAME, CHANNEL_NAME, '');
+        let message = await query.main(req.userName, req.orgName, "GetAllCorporates", CHAINCODE_NAME, CHANNEL_NAME, '');
         logger.debug(`response1 :  ${JSON.stringify(message, null, 2)}`)
 
         let corporateList = message
@@ -558,7 +558,7 @@ router.get('/locked-details', async (req, res, next) => {
             let args1 = JSON.stringify(queryString);
             logger.debug('args1 : ' + args1);
 
-            let message1 = await query(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args1);
+            let message1 = await query.main(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args1);
             message1 = JSON.parse(message1.toString());
 
             message1.forEach(elem => {
@@ -609,7 +609,7 @@ router.get('/total-corporate-ongoing-projects', async (req, res, next) => {
     logger.debug('args : ' + args);
 
     try {
-        let message = await query(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args);
+        let message = await query.main(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args);
         message = JSON.parse(message.toString());
 
         logger.debug(`response :  ${JSON.stringify(message, null, 2)}`)
@@ -658,7 +658,7 @@ router.get('/total-project-locked-amount', async (req, res, next) => {
     logger.debug('args : ' + args);
 
     try {
-        let message = await query(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args);
+        let message = await query.main(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args);
         message = JSON.parse(message.toString());
 
         message.forEach(elem => {
@@ -718,7 +718,7 @@ router.get('/ngo-project-and-locked-details', async (req, res, next) => {
     logger.debug('args : ' + args);
 
     try {
-        let message = await query(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args);
+        let message = await query.main(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args);
         message = JSON.parse(message.toString());
 
         message.forEach(elem => {
@@ -748,7 +748,7 @@ router.get('/ngo-project-and-locked-details', async (req, res, next) => {
             }
             let args1 = JSON.stringify(queryString1)
 
-            let message1 = await query(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args1);
+            let message1 = await query.main(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args1);
 
             message1 = JSON.parse(message1.toString());
 
@@ -835,7 +835,7 @@ router.get('/ngo-project-transactions', async (req, res, next) => {
     logger.debug('args : ' + args);
 
     try {
-        let message = await query(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args);
+        let message = await query.main(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args);
         message = JSON.parse(message.toString());
 
         message.forEach(elem => {
@@ -891,7 +891,7 @@ router.get('/transactions', async (req, res, next) => {
     logger.debug('args : ' + args);
 
     try {
-        let message = await query(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args);
+        let message = await query.main(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args);
         message = JSON.parse(message.toString());
 
         message.forEach(elem => {
@@ -931,7 +931,7 @@ router.get('/getCorporateProjectDetails', async (req, res, next) => {
     logger.debug('args : ' + args);
 
     try {
-        let message = await query(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args);
+        let message = await query.main(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args);
         message = JSON.parse(message.toString());
 
         message.forEach(elem => {

@@ -22,10 +22,6 @@ const express = require('express');
 const compression = require('compression')
 const rateLimit = require("express-rate-limit");
 
-const { connectionToMongo } = require('./model/connection')
-connectionToMongo();
-
-const registerUser = require('./fabric-sdk/registerUser');
 const { getMessage } = require('./utils/functions');
 const mainRouter = require('./routers/mainRouter');
 const logger = require('./loggers/logger');
@@ -67,26 +63,6 @@ app.use((req, res, next) => {
     logger.info(`${req.method} - ${req.ip} - ${req.originalUrl}\n${JSON.stringify(req.body, null, 2)}`);
     next();
 });
-
-// Register ca in wallet (startup activity)
-registerUser(CA_EMAIL.split('@')[0], 'creditsauthority')
-    .then(_ => {
-        logger.debug(_)
-    })
-    .catch(e => {
-        logger.error(`${e.stack || e}`)
-    });
-
-// Register guest donor in wallet (startup activity)
-registerUser(GUEST_EMAIL.split('@')[0], 'corporate')
-    .then(_ => {
-        logger.debug(_)
-    })
-    .catch(e => {
-        logger.error(`${e.stack || e}`)
-    })
-
-// await registerUser(IT_EMAIL.split('@')[0], 'creditsauthority')
 
 app.use(mainRouter);
 

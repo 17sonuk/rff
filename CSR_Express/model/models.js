@@ -20,7 +20,7 @@ const projectSchema = new Schema({
     contributorsList: [String],
     ngo: { type: String, required: true },
     place: { type: String, maxLength: 50 },
-    description: { type: String, maxLength: 500 },
+    description: { type: String, maxLength: 2500 },
     images: { type: [String], validate: [imageLimit, 'max 3 images allowed!'] },
     phases: { type: [phaseSchema], validate: [phaseLimit, 'Number of phases should be greater than or equal to 1'] },
     communities: { type: [String] },
