@@ -73,3 +73,6 @@ test-network/organizations/fabric-ca/creditsauthority/ca-cert.pem
 test-network/organizations/fabric-ca/creditsauthority/IssuerPublicKey
 test-network/organizations/fabric-ca/creditsauthority/IssuerRevocationPublicKey
 test-network/organizations/fabric-ca/creditsauthority/fabric-ca-server.db
+
+CSR_Express/.nyc_output
+CSR_Express/.env
