@@ -900,7 +900,6 @@ describe('BLOCKCHAIN PROJECT ROUTER - /corporate-project-transactions API', () =
         .send({
             corporate:"keanu",
             projectId: ""
-
         })
         expect(response.body.success).to.equal(false)
         expect(response.body.message).to.equal("'projectId' field is missing or Invalid in the request")

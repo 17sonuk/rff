@@ -31,7 +31,7 @@ paymentService.saveTx = async (event, next) => {
         logger.debug('args  : ' + args);
 
         try {
-            await invoke(event.metadata.userName, 'corporate', "RequestTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
+            await invoke.main(event.metadata.userName, 'corporate', "RequestTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
             return getMessage(true, 'Successfully credited funds');
         } catch (e) {
             generateError(e, next);
@@ -50,7 +50,7 @@ paymentService.saveTx = async (event, next) => {
         logger.debug('args  : ' + args);
 
         try {
-            await invoke('guest', 'corporate', "TransferTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
+            await invoke.main('guest', 'corporate', "TransferTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
             logger.debug('Blockchain transfer success')
 
             let response = {}

@@ -61,7 +61,7 @@ describe('BLOCKCHAIN TRANSACTION ROUTER - /parked-by-corporate API SUCCESS', () 
         // mockObj1.restore();
     });
     it('testing blockchain transaction parked-by-corporate API', async function () {
-        mockObj.resolves(finalres)
+        mockObj.resolves(null)
         // mockObj1.resolves(finalres)
         let payload = {
             userName: 'corp1',
@@ -71,7 +71,7 @@ describe('BLOCKCHAIN TRANSACTION ROUTER - /parked-by-corporate API SUCCESS', () 
         const response = await request(app)
         .get("/tx/parked-by-corporate").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
         .send({
-            parked: "true"
+            parked:true
 
         })
         console.log("Resp23:",response.body)

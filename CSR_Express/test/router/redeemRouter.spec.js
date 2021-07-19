@@ -502,6 +502,11 @@ describe('REDEEM ROUTER - /reject API SUCCESS', () => {
 
 describe('REDEEM ROUTER - /request/all API', () => {
     it('testing redeem router API when pageSize field is empty', async function () {
+        let qstring={
+            "pageSize":"",
+            "status":"Requested",
+            "bookmark":""
+        }
         let payload = {
             orgName: 'creditsauthority',
             userName: 'ca'
@@ -510,9 +515,10 @@ describe('REDEEM ROUTER - /request/all API', () => {
         const response = await request(app)
         .get("/redeem/request/all").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
         .query({
-            pageSize:"",
-            status:"Requested",
-            bookmark:""
+            qstring
+            // pageSize:"",
+            // status:"Requested",
+            // bookmark:""
         })
         expect(response.body.success).to.equal(false)
         expect(response.body.message).to.equal("'pageSize' field is missing or Invalid in the request")

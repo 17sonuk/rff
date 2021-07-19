@@ -66,8 +66,8 @@ describe('BLOCKCHAIN QUERY ROUTER - /funds-raised-by-ngo API SUCCESS', () => {
 describe('BLOCKCHAIN QUERY ROUTER - /getRecord/:recordKey API', () => {
     it('testing blockchain query router API when recordKey field is empty', async function () {
         let payload = {
-            userName: 'ngo1',
-            orgName: 'ngo'
+            userName: 'guest',
+            orgName: 'guest'
         }
         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
         const response = await request(app)
@@ -153,7 +153,7 @@ describe('BLOCKCHAIN QUERY ROUTER - /amount-parked API SUCCESS', () => {
         const response = await request(app)
         .get("/query/amount-parked").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
         .send({
-            projectId:""
+            projectId:"p01"
         })
         console.log("Resp23:",response.body)
         expect(response.body.success).to.equal(true)
@@ -170,6 +170,9 @@ describe('BLOCKCHAIN QUERY ROUTER - /it-report API', () => {
         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
         const response = await request(app)
         .get("/query/it-report").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+        .query({
+            year:"2021"
+        })
         .send({
             responseType:"",
             year:"2021"
@@ -188,7 +191,7 @@ describe('BLOCKCHAIN QUERY ROUTER - /it-report API', () => {
         .get("/query/it-report").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
         .send({
             responseType:"json",
-            year:""
+            "year":""
         })
         expect(response.body.success).to.equal(false)
         expect(response.body.message).to.equal("'year' field is missing or Invalid in the request")

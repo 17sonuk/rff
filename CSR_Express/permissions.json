@@ -5,9 +5,9 @@
         "/mongo/user/checkUserNameValidity",
         "/query/getRecord",
         "/project/total-project-locked-amount",
-        "/country/getCountries",
-        "/country/getStates",
-        "/country/getCities"
+        "/country/countries",
+        "/country/states",
+        "/country/cities"
     ],
     "ngo": [
         "/mongo/common/community",

@@ -19,9 +19,11 @@ const checkJwt = jwt({
     issuer: `https://${domain}/`,
     algorithms: ["RS256"],
 }).unless((req) => {
-    let skip = ['/mongo/user/login', '/mongo/user/onboard', '/users', '/psp/coinbase/chargeStatus']
-    return skip.includes(req.originalUrl) || req.userName === 'guest' 
-    || req.headers.testmode
+    let skip = ['/mongo/user/login', '/mongo/user/onboard', '/users', '/psp/coinbase/chargeStatus', '/country/countries', '/country/states', '/country/cities']
+    return skip.includes(req.originalUrl)
+        || skip.includes(req.path)
+        || req.userName === 'guest'
+        || req.headers.testmode
 })
 
 module.exports = checkJwt;

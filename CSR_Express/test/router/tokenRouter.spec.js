@@ -477,7 +477,7 @@ describe('TOKEN ROUTER - /all-requests API SUCCESS', () => {
         mockObj.restore();
     });
     it('testing token all-request API', async function () {
-        mockObj.resolves(msg)
+        mockObj.resolves("msg")
         let payload = {
             orgName: 'creditsauthority',
             userName: 'ca'
@@ -486,12 +486,16 @@ describe('TOKEN ROUTER - /all-requests API SUCCESS', () => {
         const response = await request(app)
         .get("/token/all-requests").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
         .query({
-            // qString: JSON.stringify(queryString),
-            pageSize:10,
+            pageSize:"1",
             bookmark:"",
             status:"Requested"
-          
         })
+        // .send({
+        //     // qString: JSON.stringify(queryString),
+        //     pageSize:"1",
+        //     bookmark:"",
+        //     status:"Requested"
+        // })
         console.log("Resp23:",response.body)
         expect(response.body.success).to.equal(true)
         // expect(response.body.message).to.equal("'amount' field is missing or Invalid in the request")

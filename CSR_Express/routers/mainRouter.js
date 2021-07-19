@@ -32,7 +32,9 @@ const { fieldErrorMessage, generateError, getMessage } = require('../utils/funct
 // Authentication
 mainRouter.use((req, res, next) => {
     let skip = ['/users', '/psp/coinbase/chargeStatus']
-    if (skip.includes(req.originalUrl)) {
+    //, '/country/countries', '/country/states', '/country/cities'
+    console.log(req.path)
+    if (skip.includes(req.originalUrl) || skip.includes(req.path)) {
         next();
     } else {
         let authHeader = '';
@@ -82,7 +84,7 @@ mainRouter.use((req, res, next) => {
         generateError(e, next);
     }
 
-    let skip = ['/mongo/user/onboard', '/mongo/user/checkUserNameValidity', '/users', '/psp/coinbase/chargeStatus'];
+    let skip = ['/mongo/user/onboard', '/mongo/user/checkUserNameValidity', '/users', '/psp/coinbase/chargeStatus', '/country/countries', '/country/states', '/country/cities'];
     if (skip.includes(req.path)) {
         return next();
     }
