@@ -451,25 +451,20 @@ describe('TOKEN ROUTER - /all-requests API', () => {
             status:"true"
         })
         expect(response.body.success).to.equal(false)
-        expect(response.body.message).to.equal("Unauthorized User")
+        expect(response.body.message).to.equal("Unauthorised token tx request access...")
     });
 
 });
 
 describe('TOKEN ROUTER - /all-requests API SUCCESS', () => {
     let mockObj = ""
-    let finalres={
-        metadata:{
-            recordsCount:1,
-            bookmark:""
-        },
-        records:"testProject"
-    }
-    
     let msg={
-        success: true,
-        message: finalres
+        Results:[],
+        RecordsCount:'0',
+        Bookmark:'nil'
     }
+    var buffer = Buffer.from(JSON.stringify(msg));
+
     beforeEach(() => {
         mockObj = sandbox.stub(query,'main');
     });
@@ -477,7 +472,7 @@ describe('TOKEN ROUTER - /all-requests API SUCCESS', () => {
         mockObj.restore();
     });
     it('testing token all-request API', async function () {
-        mockObj.resolves("msg")
+        mockObj.resolves(buffer)
         let payload = {
             orgName: 'creditsauthority',
             userName: 'ca'

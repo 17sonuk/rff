@@ -353,7 +353,7 @@ describe('BLOCKCHAIN PROJECT ROUTER - /update API', () => {
         }
         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
         const response = await request(app)
-        .post("/project/update").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+        .put("/project/update").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
         .send({
             projectId: "",
             phaseNumber:"0",
@@ -371,7 +371,7 @@ describe('BLOCKCHAIN PROJECT ROUTER - /update API', () => {
         }
         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
         const response = await request(app)
-        .post("/project/update").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+        .put("/project/update").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
         .send({
             projectId: "p01",
             phaseNumber:"",
@@ -389,7 +389,7 @@ describe('BLOCKCHAIN PROJECT ROUTER - /update API', () => {
         }
         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
         const response = await request(app)
-        .post("/project/update").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+        .put("/project/update").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
         .send({
             projectId: "p01",
             phaseNumber:"0",
@@ -514,14 +514,14 @@ describe('BLOCKCHAIN PROJECT ROUTER - /validate-phase API SUCCESS', () => {
         mockObj.restore();
     });
     it('testing blockchain project validate-phase API', async function () {
-        mockObj.resolves(resp)
+        mockObj.resolves(null)
         let payload = {
             userName: 'ca',
             orgName: 'creditsauthority'
         }
         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
         const response = await request(app)
-        .put("/project/validate-phase").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+        .post("/project/validate-phase").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
         .send({
             projectId: "p01",
             phaseNumber:"0",
@@ -654,18 +654,18 @@ describe('BLOCKCHAIN PROJECT ROUTER - /add-document-hash API SUCCESS', () => {
         mockObj.restore();
     });
     it('testing blockchain project add-document-hash API', async function () {
-        mockObj.resolves(resp)
+        mockObj.resolves(null)
         let payload = {
             userName: 'ngo2',
             orgName: 'ngo'
         }
         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
         const response = await request(app)
-        .put("/project/add-document-hash").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+        .post("/project/add-document-hash").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
         .send({
             projectId: "p01",
             phaseNumber:"0",
-            criterion:"true",
+            criterion:"asdfgh",
             docHash:"Validated",
             docName:"Something"
           
@@ -685,7 +685,7 @@ describe('BLOCKCHAIN PROJECT ROUTER - /all API', () => {
         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
         const response = await request(app)
         .get("/project/all").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-        .send({
+        .query({
             self: "",
             ongoing:"true",
             newRecords:"1",
@@ -708,7 +708,7 @@ describe('BLOCKCHAIN PROJECT ROUTER - /all API', () => {
         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
         const response = await request(app)
         .get("/project/all").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-        .send({
+        .query({
             self: "1",
             ongoing:"",
             newRecords:"1",
@@ -730,7 +730,7 @@ describe('BLOCKCHAIN PROJECT ROUTER - /all API', () => {
         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
         const response = await request(app)
         .get("/project/all").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-        .send({
+        .query({
             self: 1,
             ongoing:"true",
             newRecords:"",
@@ -753,7 +753,7 @@ describe('BLOCKCHAIN PROJECT ROUTER - /all API', () => {
         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
         const response = await request(app)
         .get("/project/all").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-        .send({
+        .query({
             self: 1,
             ongoing:"true",
             newRecords:"1",
@@ -768,44 +768,22 @@ describe('BLOCKCHAIN PROJECT ROUTER - /all API', () => {
         expect(response.body.message).to.equal("'pageSize' field is missing or Invalid in the request")
     });
 
-    // it('testing blockchain project router API when docName field is empty', async function () {
-    //     let payload = {
-    //         userName: 'ngo2',
-    //         orgName: 'ngo'
-    //     }
-    //     const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
-    //     const response = await request(app)
-    //     .get("/project/all").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-    //     .send({
-    //         self: "true",
-    //         ongoing:"true",
-    //         newRecords:"1",
-    //         pageSize:"10",
-    //         bookmark:"Something",
-    //         ngoName:"ngo",
-    //         projectType:"Education",
-    //         place:"fg"
-
-    //     })
-    //     expect(response.body.success).to.equal(false)
-    //     expect(response.body.message).to.equal("'docName' field is missing or Invalid in the request")
-    // });
 })
 
 describe('BLOCKCHAIN PROJECT ROUTER - /all API SUCCESS', () => {
     let mockObj = ""
     let finalres={
-        metadata:{
-            recordsCount:1,
-            bookmark:""
-        },
-        records:"testProject"
+        Results:[],
+        RecordsCount:1,
+        bookmark:"nil"
     }
     
     let msg={
         success: true,
         message: finalres
     }
+    let transactionList=[]
+    let buffer=Buffer.from(JSON.stringify(finalres));
     
     beforeEach(() => {
         mockObj = sandbox.stub(query,'main');
@@ -814,7 +792,7 @@ describe('BLOCKCHAIN PROJECT ROUTER - /all API SUCCESS', () => {
         mockObj.restore();
     });
     it('testing blockchain project all API', async function () {
-        mockObj.resolves(msg)
+        mockObj.resolves(buffer)
         let payload = {
             userName: 'ngo2',
             orgName: 'ngo'
@@ -822,8 +800,8 @@ describe('BLOCKCHAIN PROJECT ROUTER - /all API SUCCESS', () => {
         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
         const response = await request(app)
         .get("/project/all").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-        .send({
-            self: "",
+        .query({
+            self: "self",
             ongoing:"true",
             newRecords:"1",
             pageSize:"10",
@@ -848,7 +826,12 @@ describe('BLOCKCHAIN PROJECT ROUTER - /total-ongoing-projects API SUCCESS', () =
         },
         projectCount:1
     }
-    
+    let msg={
+        Results:[],
+        RecordsCount:'0',
+        Bookmark:'nil'
+    }
+    var buffer = Buffer.from(JSON.stringify(msg));
     
     beforeEach(() => {
         mockObj = sandbox.stub(query,'main');
@@ -857,7 +840,7 @@ describe('BLOCKCHAIN PROJECT ROUTER - /total-ongoing-projects API SUCCESS', () =
         mockObj.restore();
     });
     it('testing blockchain project total-ongoing-projects API', async function () {
-        mockObj.resolves(finalres)
+        mockObj.resolves(buffer)
         let payload = {
             userName: 'ca',
             orgName: 'creditsauthority'
@@ -880,7 +863,7 @@ describe('BLOCKCHAIN PROJECT ROUTER - /corporate-project-transactions API', () =
         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
         const response = await request(app)
         .get("/project/corporate-project-transactions").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-        .send({
+        .query({
             corporate:"",
             projectId: "p01"
 
@@ -897,7 +880,7 @@ describe('BLOCKCHAIN PROJECT ROUTER - /corporate-project-transactions API', () =
         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
         const response = await request(app)
         .get("/project/corporate-project-transactions").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-        .send({
+        .query({
             corporate:"keanu",
             projectId: ""
         })
@@ -917,7 +900,8 @@ describe('BLOCKCHAIN PROJECT ROUTER - /corporate-project-transactions API SUCCES
         records:"sdfg"
     }
     
-    
+    let transactionList=[]
+    let buffer=Buffer.from(JSON.stringify(transactionList));
     beforeEach(() => {
         mockObj = sandbox.stub(query,'main');
     });
@@ -925,7 +909,7 @@ describe('BLOCKCHAIN PROJECT ROUTER - /corporate-project-transactions API SUCCES
         mockObj.restore();
     });
     it('testing blockchain project corporate-project-transactions API', async function () {
-        mockObj.resolves(finalres)
+        mockObj.resolves(buffer)
         let payload = {
             userName: 'ca',
             orgName: 'creditsauthority'
@@ -933,7 +917,7 @@ describe('BLOCKCHAIN PROJECT ROUTER - /corporate-project-transactions API SUCCES
         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
         const response = await request(app)
         .get("/project/corporate-project-transactions").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-        .send({
+        .query({
             corporate:"keanu",
             projectId: "p01"
 
@@ -972,7 +956,8 @@ describe('BLOCKCHAIN PROJECT ROUTER - /total-corporate-ongoing-projects API SUCC
         },
         projectCount:"1"
     }
-    
+    let transactionList=[]
+    let buffer=Buffer.from(JSON.stringify(transactionList));
     
     beforeEach(() => {
         mockObj = sandbox.stub(query,'main');
@@ -981,7 +966,7 @@ describe('BLOCKCHAIN PROJECT ROUTER - /total-corporate-ongoing-projects API SUCC
         mockObj.restore();
     });
     it('testing blockchain project total-corporate-ongoing-projects API', async function () {
-        mockObj.resolves(finalres)
+        mockObj.resolves(buffer)
         let payload = {
             userName: 'corp2',
             orgName: 'corporate'
@@ -989,7 +974,7 @@ describe('BLOCKCHAIN PROJECT ROUTER - /total-corporate-ongoing-projects API SUCC
         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
         const response = await request(app)
         .get("/project/total-corporate-ongoing-projects").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-        .send({
+        .query({
             corporate:"keanu"
 
         })
@@ -1026,7 +1011,8 @@ describe('BLOCKCHAIN PROJECT ROUTER - /ngo-project-transactions API SUCCESS', ()
         },
         projectCount:"1"
     }
-    
+    let transactionList=[]
+    let buffer=Buffer.from(JSON.stringify(transactionList));
     
     beforeEach(() => {
         mockObj = sandbox.stub(query,'main');
@@ -1035,7 +1021,7 @@ describe('BLOCKCHAIN PROJECT ROUTER - /ngo-project-transactions API SUCCESS', ()
         mockObj.restore();
     });
     it('testing blockchain project ngo-project-transactions API', async function () {
-        mockObj.resolves(null)
+        mockObj.resolves(buffer)
         let payload = {
             userName: 'ngo2',
             orgName: 'ngo'
@@ -1080,7 +1066,8 @@ describe('BLOCKCHAIN PROJECT ROUTER - /transactions API SUCCESS', () => {
         },
         records:"1"
     }
-    
+    let transactionList=[]
+    let buffer=Buffer.from(JSON.stringify(transactionList));
     
     beforeEach(() => {
         mockObj = sandbox.stub(query,'main');
@@ -1089,7 +1076,7 @@ describe('BLOCKCHAIN PROJECT ROUTER - /transactions API SUCCESS', () => {
         mockObj.restore();
     });
     it('testing blockchain project transactions API', async function () {
-        mockObj.resolves(null)
+        mockObj.resolves(buffer)
         let payload = {
             userName: 'ca',
             orgName: 'creditsauthority'
@@ -1134,7 +1121,8 @@ describe('BLOCKCHAIN PROJECT ROUTER - /getCorporateProjectDetails API SUCCESS', 
         },
         records:"1"
     }
-    
+    let transactionList=[]
+    let buffer=Buffer.from(JSON.stringify(transactionList));
     
     beforeEach(() => {
         mockObj = sandbox.stub(query,'main');
@@ -1143,7 +1131,7 @@ describe('BLOCKCHAIN PROJECT ROUTER - /getCorporateProjectDetails API SUCCESS', 
         mockObj.restore();
     });
     it('testing blockchain project getCorporateProjectDetails API', async function () {
-        mockObj.resolves(finalres)
+        mockObj.resolves(buffer)
         let payload = {
             userName: 'ca',
             orgName: 'creditsauthority'
@@ -1151,8 +1139,8 @@ describe('BLOCKCHAIN PROJECT ROUTER - /getCorporateProjectDetails API SUCCESS', 
         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
         const response = await request(app)
         .get("/project/getCorporateProjectDetails").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-        .send({
-            corporate:"keanu"
+        .query({
+            args:"keanu"
 
         })
         console.log("Resp23:",response.body)

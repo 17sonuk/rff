@@ -134,10 +134,10 @@ router.get('/request/all', async (req, res, next) => {
     logger.debug('status : ' + status);
 
     if (!pageSize) {
-        return res.json(getErrorMessage('\'pageSize\''));
+        return res.json(fieldErrorMessage('\'pageSize\''));
     }
     if (!status) {
-        return res.json(getErrorMessage('\'status\''));
+        return res.json(fieldErrorMessage('\'status\''));
     }
 
     let queryString = {

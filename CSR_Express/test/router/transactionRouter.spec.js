@@ -36,20 +36,8 @@ describe('BLOCKCHAIN TRANSACTION ROUTER - /parked-by-corporate API', () => {
 
 describe('BLOCKCHAIN TRANSACTION ROUTER - /parked-by-corporate API SUCCESS', () => {
     let mockObj = ""
-    // let mockObj1 = ""
-    let finalres={
-        // getmessage:{
-        success: true,
-        message:{
-            Record:{
-                projectName:"gfd",
-                from:"gh",
-                to:"fd"
-            }
-        }
-        // }
-        // records:"1"
-    }
+    let msg=[]
+    let buffer=Buffer.from(JSON.stringify(msg));
     
     
     beforeEach(() => {
@@ -61,7 +49,7 @@ describe('BLOCKCHAIN TRANSACTION ROUTER - /parked-by-corporate API SUCCESS', () 
         // mockObj1.restore();
     });
     it('testing blockchain transaction parked-by-corporate API', async function () {
-        mockObj.resolves(null)
+        mockObj.resolves(buffer)
         // mockObj1.resolves(finalres)
         let payload = {
             userName: 'corp1',
@@ -70,9 +58,8 @@ describe('BLOCKCHAIN TRANSACTION ROUTER - /parked-by-corporate API SUCCESS', () 
         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
         const response = await request(app)
         .get("/tx/parked-by-corporate").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-        .send({
+        .query({
             parked:true
-
         })
         console.log("Resp23:",response.body)
         expect(response.body.success).to.equal(true)

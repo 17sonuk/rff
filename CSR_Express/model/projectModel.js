@@ -27,21 +27,21 @@ projectModelObj.createProject = (projectData) => {
 
 //get projects for ngo
 projectModelObj.getAllProjectsNgo = (ngoName) => {
-    return projectModel.find({ ngo: ngoName }, { _id: 0, projectId: 1, place: 1, images: 1 }).then(data => {
+    return projectModel.find({ ngo: ngoName }, { _id: 0, projectId: 1, place: 1, description: 1, images: 1 }).then(data => {
         return data
     })
 }
 
 // get projects for corporate(invested)
 projectModelObj.getProjectsCorporate = (corporateName) => {
-    return projectModel.find({ contributorsList: corporateName }, { _id: 0, projectId: 1, place: 1, images: { $slice: 1 } }).then(data => {
+    return projectModel.find({ contributorsList: corporateName }, { _id: 0, projectId: 1, place: 1, description: 1, images: { $slice: 1 } }).then(data => {
         return data
     })
 }
 
 // get all projects
 projectModelObj.getAllProjects = () => {
-    return projectModel.find({}, { _id: 0, projectId: 1, place: 1, images: { $slice: 1 } }).then(data => {
+    return projectModel.find({}, { _id: 0, projectId: 1, place: 1, description: 1, images: { $slice: 1 } }).then(data => {
         return data
     })
 }

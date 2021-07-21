@@ -5,6 +5,7 @@ const https = require('https'); // https
 const helmet = require("helmet");
 const authJson = require('./permissions.json');
 const fileUpload = require('express-fileupload') //Alternative of IPFS
+const cookieParser = require('cookie-parser')
 
 const authMap = {
     'common': new Set(authJson.common),
@@ -51,14 +52,20 @@ const limiter = rateLimit({
 //app.use(limiter);
 
 app.options('*', cors());
-app.use(cors());
+app.use(cors({
+    // origin: ['http://127.0.0.1:4200', 'https://127.0.0.1:4200', 'https://52.66.199.83:4000'],
+    // credentials: true
+}));
 
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({
     extended: false
 }));
 
+app.use(cookieParser())
+
 app.use((req, res, next) => {
+    console.log('cookies are:', req.cookies)
     req.authMap = authMap;
     logger.info(`${req.method} - ${req.ip} - ${req.originalUrl}\n${JSON.stringify(req.body, null, 2)}`);
     next();

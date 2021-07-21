@@ -515,10 +515,10 @@ describe('REDEEM ROUTER - /request/all API', () => {
         const response = await request(app)
         .get("/redeem/request/all").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
         .query({
-            qstring
+            // qstring
             // pageSize:"",
-            // status:"Requested",
-            // bookmark:""
+            status:"Requested",
+            bookmark:""
         })
         expect(response.body.success).to.equal(false)
         expect(response.body.message).to.equal("'pageSize' field is missing or Invalid in the request")
@@ -532,8 +532,8 @@ describe('REDEEM ROUTER - /request/all API', () => {
         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
         const response = await request(app)
         .get("/redeem/request/all").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-        .send({
-            pageSize:"10",
+        .query({
+            pageSize:10,
             status:"",
             bookmark:""
         })
@@ -541,34 +541,34 @@ describe('REDEEM ROUTER - /request/all API', () => {
         expect(response.body.message).to.equal("'status' field is missing or Invalid in the request")
     });
 
-    it('testing redeem router API when unauthorised use', async function () {
-        let payload = {
-            orgName: 'guest',
-            userName: 'guest'
-        }
-        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
-        const response = await request(app)
-        .get("/redeem/request/all").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-        .send({
-            pageSize:"10",
-            status:"true",
-            bookmark:""
-        })
-        expect(response.body.success).to.equal(false)
-        expect(response.body.message).to.equal("Unauthorized User")
-    });
+    // it('testing redeem router API when unauthorised use', async function () {
+    //     let payload = {
+    //         orgName: 'guest',
+    //         userName: 'guest'
+    //     }
+    //     const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+    //     const response = await request(app)
+    //     .get("/redeem/request/all").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+    //     .query({
+    //         pageSize:10,
+    //         status:"Requested",
+    //         bookmark:""
+    //     })
+    //     expect(response.body.success).to.equal(false)
+    //     expect(response.body.message).to.equal("Unauthorized User")
+    // });
 
 });
 
 describe('REDEEM ROUTER - /request/all API SUCCESS', () => {
     let mockObj = ""
-    let queryString = {
-        "selector": {
-            "docType": "TokenRequest",
-            "status": "Requested"
-        },
-        "sort": [{ "date": "asc" }]
+    let msg={
+        Results:[],
+        RecordsCount:'0',
+        Bookmark:'nil'
     }
+    var buffer = Buffer.from(JSON.stringify(msg));
+    
     beforeEach(() => {
         mockObj = sandbox.stub(query,'main');
     });
@@ -576,7 +576,7 @@ describe('REDEEM ROUTER - /request/all API SUCCESS', () => {
         mockObj.restore();
     });
     it('testing redeem request API', async function () {
-        mockObj.resolves(null)
+        mockObj.resolves(buffer)
         let payload = {
             orgName: 'creditsauthority',
             userName: 'ca'
@@ -584,8 +584,8 @@ describe('REDEEM ROUTER - /request/all API SUCCESS', () => {
         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
         const response = await request(app)
         .get("/redeem/request/all").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-        .send({
-            pageSize:"10",
+        .query({
+            pageSize:10,
             status:"Requested",
             bookmark:""
             // qString: JSON.stringify(queryString)

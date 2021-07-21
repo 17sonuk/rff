@@ -33,13 +33,8 @@ const query = require('../../fabric-sdk/query');
 
 describe('BLOCKCHAIN QUERY ROUTER - /funds-raised-by-ngo API SUCCESS', () => {
     let mockObj = ""
-    let finalres={
-        getmessage:{
-            success: true,
-            message: "CommonQuery successful"
-        },
-        records:"1"
-    }
+    let transactionList=[]
+    let buffer=Buffer.from(JSON.stringify(transactionList));
     
     
     beforeEach(() => {
@@ -49,7 +44,7 @@ describe('BLOCKCHAIN QUERY ROUTER - /funds-raised-by-ngo API SUCCESS', () => {
         mockObj.restore();
     });
     it('testing blockchain query funds-raised-by-ngo API', async function () {
-        mockObj.resolves(finalres)
+        mockObj.resolves(buffer)
         let payload = {
             userName: 'ngo1',
             orgName: 'ngo'
@@ -67,7 +62,7 @@ describe('BLOCKCHAIN QUERY ROUTER - /getRecord/:recordKey API', () => {
     it('testing blockchain query router API when recordKey field is empty', async function () {
         let payload = {
             userName: 'guest',
-            orgName: 'guest'
+            orgName: 'corporate'
         }
         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
         const response = await request(app)
@@ -79,13 +74,8 @@ describe('BLOCKCHAIN QUERY ROUTER - /getRecord/:recordKey API', () => {
 
 describe('BLOCKCHAIN QUERY ROUTER - /getRecord/:recordKey API SUCCESS', () => {
     let mockObj = ""
-    let finalres={
-        getmessage:{
-            success: true,
-            message: "CommonQuery successful"
-        },
-        records:"1"
-    }
+    let transactionList=[]
+    let buffer=Buffer.from(JSON.stringify(transactionList));
     
     
     beforeEach(() => {
@@ -95,10 +85,10 @@ describe('BLOCKCHAIN QUERY ROUTER - /getRecord/:recordKey API SUCCESS', () => {
         mockObj.restore();
     });
     it('testing blockchain query /getRecord/:recordKey API', async function () {
-        mockObj.resolves(finalres)
+        mockObj.resolves(buffer)
         let payload = {
             userName: 'guest',
-            orgName: 'guest'
+            orgName: 'corporate'
         }
         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
         const response = await request(app)
@@ -128,14 +118,15 @@ describe('BLOCKCHAIN QUERY ROUTER - /amount-parked API', () => {
 
 describe('BLOCKCHAIN QUERY ROUTER - /amount-parked API SUCCESS', () => {
     let mockObj = ""
-    let finalres={
-        getmessage:{
-            success: true,
-            message: "CommonQuery successful"
-        },
-        records:"1"
-    }
-    
+    // let finalres={
+    //     getmessage:{
+    //         success: true,
+    //         message: "CommonQuery successful"
+    //     },
+    //     records:"1"
+    // }
+    let transactionList=[]
+    let buffer=Buffer.from(JSON.stringify(transactionList));
     
     beforeEach(() => {
         mockObj = sandbox.stub(query,'main');
@@ -144,7 +135,7 @@ describe('BLOCKCHAIN QUERY ROUTER - /amount-parked API SUCCESS', () => {
         mockObj.restore();
     });
     it('testing blockchain query /amount-parked API', async function () {
-        mockObj.resolves(finalres)
+        mockObj.resolves(buffer)
         let payload = {
             userName: 'corp1',
             orgName: 'corporate'
@@ -152,7 +143,7 @@ describe('BLOCKCHAIN QUERY ROUTER - /amount-parked API SUCCESS', () => {
         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
         const response = await request(app)
         .get("/query/amount-parked").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-        .send({
+        .query({
             projectId:"p01"
         })
         console.log("Resp23:",response.body)
@@ -169,14 +160,14 @@ describe('BLOCKCHAIN QUERY ROUTER - /it-report API', () => {
         }
         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
         const response = await request(app)
-        .get("/query/it-report").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+        .get("/query/it-report").set("csrtoken", "Bearer " + token).set("testmode", "Testing").set({responseType:""})
         .query({
             year:"2021"
         })
-        .send({
-            responseType:"",
-            year:"2021"
-        })
+        // .send({
+        //     responseType:"",
+        //     // year:"2021"
+        // })
         expect(response.body.success).to.equal(false)
         expect(response.body.message).to.equal("'responseType' field is missing or Invalid in the request")
     });
@@ -188,11 +179,14 @@ describe('BLOCKCHAIN QUERY ROUTER - /it-report API', () => {
         }
         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
         const response = await request(app)
-        .get("/query/it-report").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-        .send({
-            responseType:"json",
-            "year":""
+        
+        .get("/query/it-report").set("csrtoken", "Bearer " + token).set("testmode", "Testing").set({responseType:"json"})
+        .query({
+            year:""
         })
+        // .send({
+        //     responseType:"json"
+        // })
         expect(response.body.success).to.equal(false)
         expect(response.body.message).to.equal("'year' field is missing or Invalid in the request")
     });
@@ -200,14 +194,8 @@ describe('BLOCKCHAIN QUERY ROUTER - /it-report API', () => {
 
 describe('BLOCKCHAIN QUERY ROUTER - /it-report API SUCCESS', () => {
     let mockObj = ""
-    let finalres={
-        getmessage:{
-            success: true,
-            message: "CommonQuery successful"
-        },
-        records:"1"
-    }
-    
+    let transactionList=[]
+    let buffer=Buffer.from(JSON.stringify(transactionList));
     
     beforeEach(() => {
         mockObj = sandbox.stub(query,'main');
@@ -216,18 +204,20 @@ describe('BLOCKCHAIN QUERY ROUTER - /it-report API SUCCESS', () => {
         mockObj.restore();
     });
     it('testing blockchain query /it-report API', async function () {
-        mockObj.resolves(finalres)
+        mockObj.resolves(buffer)
         let payload = {
             userName: 'ca',
             orgName: 'creditsauthority'
         }
         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
         const response = await request(app)
-        .get("/query/it-report").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-        .send({
-            responseType:"json",
+        .get("/query/it-report").set("csrtoken", "Bearer " + token).set("testmode", "Testing").set({responseType:"json"})
+        .query({
             year:"2021"
         })
+        // .send({
+        //     responseType:"json",
+        // })
         console.log("Resp23:",response.body)
         expect(response.body.success).to.equal(true)
         // expect(response.body.message).to.equal("'amount' field is missing or Invalid in the request")
@@ -238,13 +228,8 @@ describe('BLOCKCHAIN QUERY ROUTER - /it-report API SUCCESS', () => {
 
 describe('BLOCKCHAIN QUERY ROUTER - /ngo-report API', () => {
     let mockObj = ""
-    let finalres={
-        getmessage:{
-            success: true,
-            message: "CommonQuery successful"
-        },
-        records:"1"
-    }
+    let transactionList=[]
+    let buffer=Buffer.from(JSON.stringify(transactionList));
     
     
     beforeEach(() => {
@@ -254,7 +239,7 @@ describe('BLOCKCHAIN QUERY ROUTER - /ngo-report API', () => {
         mockObj.restore();
     });
     it('testing blockchain query /ngo-report API', async function () {
-        mockObj.resolves(finalres)
+        mockObj.resolves(buffer)
         let payload = {
             userName: 'ca',
             orgName: 'creditsauthority'
@@ -291,13 +276,8 @@ describe('BLOCKCHAIN QUERY ROUTER - /ngo-contribution-details API', () => {
 
 describe('BLOCKCHAIN QUERY ROUTER - /ngo-contribution-details API SUCCESS', () => {
     let mockObj = ""
-    let finalres={
-        getmessage:{
-            success: true,
-            message: "CommonQuery successful"
-        },
-        records:"1"
-    }
+    let transactionList=[]
+    let buffer=Buffer.from(JSON.stringify(transactionList));
     
     
     beforeEach(() => {
@@ -307,7 +287,7 @@ describe('BLOCKCHAIN QUERY ROUTER - /ngo-contribution-details API SUCCESS', () =
         mockObj.restore();
     });
     it('testing blockchain query /ngo-contribution-details API', async function () {
-        mockObj.resolves(finalres)
+        mockObj.resolves(buffer)
         let payload = {
             userName: 'ca',
             orgName: 'creditsauthority'
@@ -315,7 +295,7 @@ describe('BLOCKCHAIN QUERY ROUTER - /ngo-contribution-details API SUCCESS', () =
         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
         const response = await request(app)
         .get("/query/ngo-contribution-details").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-        .send({
+        .query({
             ngoName:"goonj"
         })
         console.log("Resp23:",response.body)
@@ -326,14 +306,8 @@ describe('BLOCKCHAIN QUERY ROUTER - /ngo-contribution-details API SUCCESS', () =
 
 describe('BLOCKCHAIN QUERY ROUTER - /balance API SUCCESS', () => {
     let mockObj = ""
-    let finalres={
-        success: true,
-        getmessage:{
-            success: true,
-            message: "CommonQuery successful"
-        },
-        records:"1"
-    }
+    let transactionList=[]
+    let buffer=Buffer.from(JSON.stringify(transactionList));
     
     
     beforeEach(() => {
@@ -343,7 +317,7 @@ describe('BLOCKCHAIN QUERY ROUTER - /balance API SUCCESS', () => {
         mockObj.restore();
     });
     it('testing blockchain query balance API', async function () {
-        mockObj.resolves(finalres)
+        mockObj.resolves(buffer)
         let payload = {
             userName: 'ngo1',
             orgName: 'ngo'
@@ -359,13 +333,8 @@ describe('BLOCKCHAIN QUERY ROUTER - /balance API SUCCESS', () => {
 
 describe('BLOCKCHAIN QUERY ROUTER - /corporate-contributions API', () => {
     let mockObj = ""
-    let finalres={
-        getmessage:{
-            success: true,
-            message: "CommonQuery successful"
-        },
-        records:"1"
-    }
+    let transactionList=[]
+    let buffer=Buffer.from(JSON.stringify(transactionList));
     
     
     beforeEach(() => {
@@ -375,7 +344,7 @@ describe('BLOCKCHAIN QUERY ROUTER - /corporate-contributions API', () => {
         mockObj.restore();
     });
     it('testing blockchain query /corporate-contributions API', async function () {
-        mockObj.resolves(finalres)
+        mockObj.resolves(buffer)
         let payload = {
             userName: 'ca',
             orgName: 'creditsauthority'

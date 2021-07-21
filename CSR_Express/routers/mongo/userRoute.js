@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 
+require('dotenv').config();
+const { SMTP_EMAIL, APP_PASSWORD } = process.env;
+
 const logger = require('../../loggers/logger');
 const { generateError, getMessage } = require('../../utils/functions');
 
@@ -18,8 +21,8 @@ const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,
     auth: {
-        user: 'csr.rainforest@gmail.com',
-        pass: 'bpvzgkzpbegaqokl',
+        user: SMTP_EMAIL,
+        pass: APP_PASSWORD,
     },
 });
 

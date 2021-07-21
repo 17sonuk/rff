@@ -38,12 +38,14 @@ mainRouter.use((req, res, next) => {
         next();
     } else {
         let authHeader = '';
+        // console.log('all cokies:', req.cookies)
         if (req.originalUrl === '/mongo/user/onboard' || req.originalUrl === '/mongo/user/checkUserNameValidity') {
             if (!req.headers.csrtoken) {
                 return next();
             }
         }
         authHeader = req.headers.csrtoken;
+        // console.log('cookie is: ', authHeader);
         if (authHeader) {
             const token = authHeader.split(' ')[1];
             jwt.verify(token, TOKEN_SECRET, (err, decoded) => {
@@ -188,6 +190,13 @@ mainRouter.post('/users', async (req, res, next) => {
             if (userName !== 'guest') {
                 finalResponse['name'] = mongoResponse.name;
             }
+
+            // res.cookie('csrtoken', token, {
+            //     maxAge: 1000 * 60 * 24,
+            //     httpOnly: true,
+            //     // sameSite: "none",
+            //     // secure: false
+            // })
             return res.json(finalResponse);
         } else {
             let err = new Error('Unauthorized user')
