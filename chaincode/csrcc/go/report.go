@@ -34,7 +34,7 @@ func (s *SmartContract) SaveItData(ctx contractapi.TransactionContextInterface, 
 		return false, fmt.Errorf("Error getting transaction creator: " + err.Error())
 	}
 	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
-	if mspId != "CreditsAuthorityMSP" || (commonName != "itdept" && !strings.HasPrefix(commonName, "ca")) {
+	if mspId != CreditsAuthorityMSP || (commonName != "itdept" && !strings.HasPrefix(commonName, "ca")) {
 		InfoLogger.Printf("only creditsauthority's IT dept or CA can initiate saveItData")
 		return false, fmt.Errorf("only creditsauthority's IT dept or CA can initiate saveItData")
 	}

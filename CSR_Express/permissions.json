@@ -86,7 +86,8 @@
         "/query/it-report",
         "/psp/razorpay",
         "/psp/razorpay/payment",
-        "/mongo/file/getFile"
+        "/mongo/file/getFile",
+        "/utils/yearly-report"
     ],
     "guest": [
         "/mongo/file/getFile",

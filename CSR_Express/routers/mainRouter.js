@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { JWT_EXPIRY, TOKEN_SECRET, CA_EMAIL, IT_EMAIL, GUEST_EMAIL } = process.env;
+const { JWT_EXPIRY, TOKEN_SECRET, CA_EMAIL, CA_USERNAME, IT_EMAIL, GUEST_EMAIL } = process.env;
 
 const express = require('express');
 var jwt = require('jsonwebtoken');
@@ -58,6 +58,8 @@ mainRouter.use((req, res, next) => {
                 } else {
                     req.userName = decoded.userName;
                     req.orgName = decoded.orgName;
+                    req.email = decoded.email;
+                    req.name = decoded.name;
                     logger.debug(`Decoded from JWT token: useName - ${decoded.userName}, orgName - ${decoded.orgName}`);
                     next();
                 }
@@ -82,7 +84,7 @@ mainRouter.use((req, res, next) => {
     let e = new Error('Unauthorized User')
     e.status = 401
 
-    if (req.path === '/mongo/user/onboard' && req.body['role'] === 'Ngo' && (req.userName !== 'ca' || req.orgName !== 'creditsauthority')) {
+    if (req.path === '/mongo/user/onboard' && req.body['role'] === 'Ngo' && (req.userName !== CA_USERNAME || req.orgName !== 'creditsauthority')) {
         generateError(e, next);
     }
 
@@ -157,7 +159,8 @@ mainRouter.post('/users', async (req, res, next) => {
         orgName = 'corporate';
     } else if (email === CA_EMAIL || email === IT_EMAIL) {
         mongoResponse = { role: "CreditsAuthority", userName: user };
-        userName = user;
+        // userName = user;
+        userName = 'ca'
         orgName = 'creditsauthority';
     } else {
         mongoResponse = await userService.login(email);
@@ -173,6 +176,11 @@ mainRouter.post('/users', async (req, res, next) => {
     let payload = {
         orgName: orgName,
         userName: userName
+    }
+
+    if (orgName === 'corporate' && userName !== 'guest') {
+        payload.email = mongoResponse.email;
+        payload.name = mongoResponse.name;
     }
 
     const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });

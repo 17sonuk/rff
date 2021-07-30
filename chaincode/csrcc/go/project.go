@@ -22,7 +22,8 @@ type Project struct {
 	NGO              string            `json:"ngo"`
 	Contributors     map[string]string `json:"contributors"`
 	VisibleTo        []string          `json:"visibleTo"`
-	NoOfUpdates      uint8             `json:"noOfUpdates"`
+	TotalReceived    float64           `json:"totalReceived"`
+	TotalRedeemed    float64           `json:"totalRedeemed"`
 }
 
 type Phase struct {
@@ -66,7 +67,7 @@ func (s *SmartContract) CreateProject(ctx contractapi.TransactionContextInterfac
 	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
 	fmt.Println("client is: " + commonName)
 
-	if mspId != "NgoMSP" {
+	if mspId != NgoMSP {
 		//InfoLogger.Printf("only ngo can initiate createProject")
 		return false, fmt.Errorf("only ngo can initiate createProject")
 	}
@@ -187,7 +188,7 @@ func (s *SmartContract) ValidatePhase(ctx contractapi.TransactionContextInterfac
 		return false, fmt.Errorf("Error getting transaction creator: " + err.Error())
 	}
 	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
-	if mspId != "CreditsAuthorityMSP" {
+	if mspId != CreditsAuthorityMSP {
 		// InfoLogger.Printf("only creditsauthority can initiate ValidatePhase")
 		return false, fmt.Errorf("only creditsauthority can initiate ValidatePhase")
 	}
@@ -311,7 +312,7 @@ func (s *SmartContract) AddDocumentHash(ctx contractapi.TransactionContextInterf
 		return false, fmt.Errorf("Error getting transaction creator: " + err.Error())
 	}
 	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
-	if mspId != "NgoMSP" {
+	if mspId != NgoMSP {
 		// InfoLogger.Printf("only ngo can initiate addDocumentHash")
 		return false, fmt.Errorf("only ngo can initiate addDocumentHash")
 	}
@@ -423,7 +424,7 @@ func (s *SmartContract) UpdateProject(ctx contractapi.TransactionContextInterfac
 		return false, fmt.Errorf("Error getting transaction creator: " + err.Error())
 	}
 	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
-	if mspId != "NgoMSP" {
+	if mspId != NgoMSP {
 		// InfoLogger.Printf("only ngo can initiate UpdateProject")
 		return false, fmt.Errorf("only ngo can initiate UpdateProject")
 	}
@@ -553,7 +554,7 @@ func (s *SmartContract) UpdateProject(ctx contractapi.TransactionContextInterfac
 
 	notification := &Notification{TxId: txId, Description: eventPayload, Users: tmpList}
 	if state == "Seeking Validation" {
-		notification.Users = []string{"ca.creditsauthority.csr.com"}
+		notification.Users = []string{"ca." + creditsauthority + "." + domain}
 		eventPayload = "Your validation is requested for the project '" + projectState.ProjectName + "'"
 		notification.Description = eventPayload
 	}
@@ -567,99 +568,99 @@ func (s *SmartContract) UpdateProject(ctx contractapi.TransactionContextInterfac
 }
 
 //added extra feature - dont test
-func (s *SmartContract) UpdateVisibleTo(ctx contractapi.TransactionContextInterface, arg string) (bool, error) {
-	InfoLogger.Printf("*************** UpdateVisibleTo Started ***************")
-	InfoLogger.Printf("args received:", arg)
+// func (s *SmartContract) UpdateVisibleTo(ctx contractapi.TransactionContextInterface, arg string) (bool, error) {
+// 	InfoLogger.Printf("*************** UpdateVisibleTo Started ***************")
+// 	InfoLogger.Printf("args received:", arg)
 
-	//getusercontext to populate the required data
-	creator, err := ctx.GetStub().GetCreator()
-	if err != nil {
-		return false, fmt.Errorf("Error getting transaction creator: " + err.Error())
-	}
-	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
-	if mspId != "NgoMSP" {
-		InfoLogger.Printf("only ngo can initiate UpdateVisibleTo")
-		return false, fmt.Errorf("only ngo can initiate UpdateVisibleTo")
-	}
-	InfoLogger.Printf("current logged in user:", commonName, "with mspId:", mspId)
+// 	//getusercontext to populate the required data
+// 	creator, err := ctx.GetStub().GetCreator()
+// 	if err != nil {
+// 		return false, fmt.Errorf("Error getting transaction creator: " + err.Error())
+// 	}
+// 	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
+// 	if mspId != NgoMSP {
+// 		InfoLogger.Printf("only ngo can initiate UpdateVisibleTo")
+// 		return false, fmt.Errorf("only ngo can initiate UpdateVisibleTo")
+// 	}
+// 	InfoLogger.Printf("current logged in user:", commonName, "with mspId:", mspId)
 
-	var args []string
+// 	var args []string
 
-	err = json.Unmarshal([]byte(arg), &args)
-	if err != nil {
-		return false, fmt.Errorf(err.Error())
-	}
+// 	err = json.Unmarshal([]byte(arg), &args)
+// 	if err != nil {
+// 		return false, fmt.Errorf(err.Error())
+// 	}
 
-	if len(args) != 4 {
-		return false, fmt.Errorf("Incorrect number of arguments. Expecting 4")
-	} else if len(args[0]) <= 0 {
-		return false, fmt.Errorf("projectId must be a non-empty string")
-	} else if len(args[1]) <= 0 {
-		return false, fmt.Errorf("corporateName must be a non-empty string")
-	} else if len(args[2]) <= 0 {
-		return false, fmt.Errorf("date must be a non-empty string")
-	} else if len(args[3]) <= 0 {
-		return false, fmt.Errorf("txId must be a non-empty string")
-	}
+// 	if len(args) != 4 {
+// 		return false, fmt.Errorf("Incorrect number of arguments. Expecting 4")
+// 	} else if len(args[0]) <= 0 {
+// 		return false, fmt.Errorf("projectId must be a non-empty string")
+// 	} else if len(args[1]) <= 0 {
+// 		return false, fmt.Errorf("corporateName must be a non-empty string")
+// 	} else if len(args[2]) <= 0 {
+// 		return false, fmt.Errorf("date must be a non-empty string")
+// 	} else if len(args[3]) <= 0 {
+// 		return false, fmt.Errorf("txId must be a non-empty string")
+// 	}
 
-	projectId := strings.ToLower(args[0])
-	corporateName := strings.ToLower(args[1])
-	date, err := strconv.Atoi(args[2])
-	if err != nil {
-		return false, fmt.Errorf("date should be numeric.")
-	}
-	txId := args[3]
+// 	projectId := strings.ToLower(args[0])
+// 	corporateName := strings.ToLower(args[1])
+// 	date, err := strconv.Atoi(args[2])
+// 	if err != nil {
+// 		return false, fmt.Errorf("date should be numeric.")
+// 	}
+// 	txId := args[3]
 
-	//check if the project exists
-	projectAsBytes, err := ctx.GetStub().GetState(projectId)
-	if err != nil {
-		return false, fmt.Errorf("Error getting project")
-	}
-	if projectAsBytes == nil {
-		InfoLogger.Printf("project with id:", projectId, "not present")
-		return false, fmt.Errorf("project is not present")
-	}
-	projectState := Project{}
-	json.Unmarshal(projectAsBytes, &projectState)
+// 	//check if the project exists
+// 	projectAsBytes, err := ctx.GetStub().GetState(projectId)
+// 	if err != nil {
+// 		return false, fmt.Errorf("Error getting project")
+// 	}
+// 	if projectAsBytes == nil {
+// 		InfoLogger.Printf("project with id:", projectId, "not present")
+// 		return false, fmt.Errorf("project is not present")
+// 	}
+// 	projectState := Project{}
+// 	json.Unmarshal(projectAsBytes, &projectState)
 
-	//check if caller is the owner of project
-	if commonName != projectState.NGO {
-		InfoLogger.Printf(commonName, " doesn't owns the project")
-		return false, fmt.Errorf("ngo doesn't owns the project")
-	}
+// 	//check if caller is the owner of project
+// 	if commonName != projectState.NGO {
+// 		InfoLogger.Printf(commonName, " doesn't owns the project")
+// 		return false, fmt.Errorf("ngo doesn't owns the project")
+// 	}
 
-	if corporateName != "all" {
-		if projectState.NoOfUpdates != 0 {
-			InfoLogger.Printf("can't update any more!")
-			return false, fmt.Errorf("can't update any more!")
-		}
-		//check if someone has contributed already
-		if len(projectState.Contributors) != 0 {
-			InfoLogger.Printf("contributors is already set")
-			return false, fmt.Errorf("contributors is already set")
-		}
-		projectState.NoOfUpdates = 1
-		var corporateNames []string
-		corporateNames = append(corporateNames, corporateName)
-		projectState.VisibleTo = corporateNames
-	} else {
-		if projectState.NoOfUpdates != 1 {
-			InfoLogger.Printf("can't update any more!")
-			return false, fmt.Errorf("can't update any more!")
-		}
-		projectState.NoOfUpdates = 2
-		projectState.VisibleTo = nil
-	}
+// 	if corporateName != "all" {
+// 		if projectState.NoOfUpdates != 0 {
+// 			InfoLogger.Printf("can't update any more!")
+// 			return false, fmt.Errorf("can't update any more!")
+// 		}
+// 		//check if someone has contributed already
+// 		if len(projectState.Contributors) != 0 {
+// 			InfoLogger.Printf("contributors is already set")
+// 			return false, fmt.Errorf("contributors is already set")
+// 		}
+// 		projectState.NoOfUpdates = 1
+// 		var corporateNames []string
+// 		corporateNames = append(corporateNames, corporateName)
+// 		projectState.VisibleTo = corporateNames
+// 	} else {
+// 		if projectState.NoOfUpdates != 1 {
+// 			InfoLogger.Printf("can't update any more!")
+// 			return false, fmt.Errorf("can't update any more!")
+// 		}
+// 		projectState.NoOfUpdates = 2
+// 		projectState.VisibleTo = nil
+// 	}
 
-	projectAsBytes, _ = json.Marshal(projectState)
-	ctx.GetStub().PutState(projectId, projectAsBytes)
+// 	projectAsBytes, _ = json.Marshal(projectState)
+// 	ctx.GetStub().PutState(projectId, projectAsBytes)
 
-	//create a transaction
-	err = createTransaction(ctx, commonName, "All", 0.0, date, "AddVisibleTo", projectId, txId, -1)
-	if err != nil {
-		return false, fmt.Errorf("Failed to add a Tx: " + err.Error())
-	}
+// 	//create a transaction
+// 	err = createTransaction(ctx, commonName, "All", 0.0, date, "AddVisibleTo", projectId, txId, -1)
+// 	if err != nil {
+// 		return false, fmt.Errorf("Failed to add a Tx: " + err.Error())
+// 	}
 
-	InfoLogger.Printf("*************** UpdateVisibleTo Successful ***************")
-	return true, nil
-}
+// 	InfoLogger.Printf("*************** UpdateVisibleTo Successful ***************")
+// 	return true, nil
+// }

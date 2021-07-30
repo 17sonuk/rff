@@ -7,12 +7,6 @@ const phaseSchema = new Schema({
     description: { type: String, maxLength: 200 },
 })
 
-//to store communities on mongo
-const communitySchema = new Schema({
-    name: { type: String, maxLength: 50 },
-    place: { type: String, maxLength: 100 },
-})
-
 const projectSchema = new Schema({
     projectId: { type: String, required: true, unique: true },
     projectName: { type: String, required: true, maxLength: 50 },
@@ -61,8 +55,8 @@ const phoneSchema = new Schema({
 const bankDetailsSchema = new Schema({
     isUSBank: { type: Boolean, required: true },
     taxId: { type: String, required: true, maxLength: 100 },
-    // beneficiaryName: { type: String, required: true, maxLength: 34 },
-    // beneficiaryAddress: { type: String, required: true, maxLength: 35 },
+    beneficiaryName: { type: String, required: true, maxLength: 34 },
+    beneficiaryAddress: { type: String, required: true, maxLength: 35 },
     bankName: { type: String, required: true, maxLength: 50 },
     bankAddress: { type: addressSchema, required: true },
     bankPhone: phoneSchema,
@@ -73,12 +67,19 @@ const bankDetailsSchema = new Schema({
     IBANNo: { type: String, maxLength: 100 }
 })
 
-//ngo payment details
+//ngo/community payment details
 const paymentSchema = new Schema({
     paymentType: { type: String, enum: ['Paypal', 'Cryptocurrency', 'Bank'], required: true },
     paypalEmailId: { type: String, maxLength: 50 },
     cryptoAddress: { type: String, maxLength: 100 },
     bankDetails: bankDetailsSchema
+})
+
+//to store communities on mongo
+const communitySchema = new Schema({
+    name: { type: String, maxLength: 50 },
+    place: { type: String, maxLength: 100 },
+    paymentDetails: paymentSchema
 })
 
 //to store user data

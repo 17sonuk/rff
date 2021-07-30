@@ -6,7 +6,7 @@ const certificate = fs.readFileSync('./sslcert/server.crt', 'utf8'); // https
 const privateKey = fs.readFileSync('./sslcert/server.key', 'utf8'); // https
 
 require('dotenv').config();
-const { NODE_ENV, PORT, CA_EMAIL, IT_EMAIL, GUEST_EMAIL } = process.env;
+const { PORT, CA_EMAIL, GUEST_EMAIL } = process.env;
 
 const { connectionToMongo } = require('./model/connection')
 connectionToMongo();
@@ -46,4 +46,4 @@ const credentials = { key: privateKey, cert: certificate }; // https
 
 const httpsServer = https.createServer(credentials, app); // https
 
-httpsServer.listen(PORT, () => logger.info(`Server running on Port ${PORT}`)); //https
+httpsServer.listen(PORT, "0.0.0.0", () => logger.info(`Server running on Port ${PORT}`)); //https

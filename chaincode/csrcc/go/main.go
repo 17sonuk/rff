@@ -34,6 +34,16 @@ var (
 	ErrorLogger   *log.Logger
 )
 
+const NgoMSP = "NgoMSP"
+const CorporateMSP = "CorporateMSP"
+const CreditsAuthorityMSP = "CreditsAuthorityMSP"
+
+const corporate = "corporate"
+const ngo = "ngo"
+const creditsauthority = "creditsauthority"
+const domain = "csr.com"
+const guest = "guest"
+
 func main() {
 	//initialize custom loggers
 	InfoLogger = log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)

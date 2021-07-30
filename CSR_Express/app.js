@@ -1,7 +1,4 @@
 'use strict';
-const fs = require('fs'); // https
-const https = require('https'); // https
-
 const helmet = require("helmet");
 const authJson = require('./permissions.json');
 const fileUpload = require('express-fileupload') //Alternative of IPFS
@@ -16,7 +13,7 @@ const authMap = {
 };
 
 require('dotenv').config();
-const { NODE_ENV, PORT, CA_EMAIL, IT_EMAIL, GUEST_EMAIL } = process.env;
+const { NODE_ENV } = process.env;
 
 const cors = require('cors');
 const express = require('express');
@@ -51,11 +48,14 @@ const limiter = rateLimit({
 });
 //app.use(limiter);
 
+// app.options('*', cors());
+// app.use(cors({
+//     // origin: ['http://127.0.0.1:4200', 'https://127.0.0.1:4200', 'https://52.66.199.83:4000'],
+//     // credentials: true
+// }));
+
 app.options('*', cors());
-app.use(cors({
-    // origin: ['http://127.0.0.1:4200', 'https://127.0.0.1:4200', 'https://52.66.199.83:4000'],
-    // credentials: true
-}));
+app.use(cors());
 
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({
@@ -74,12 +74,12 @@ app.use((req, res, next) => {
 app.use(mainRouter);
 
 app.use((err, req, res, next) => {
-    console.log('some error!!!!!!!!!!!!!!!!!!!!!1')
     res.locals.message = err.message;
     res.locals.error = NODE_ENV === 'development' ? err : {};
 
     // add this line to include winston logging
-    logger.error(`${req.method} - ${req.ip} - ${req.originalUrl} - ${err.status || 500}\n${err.stack || err}`);
+    // logger.error(`${req.method} - ${req.ip} - ${req.originalUrl} - ${err.status || 500}\n${err.stack || err}`);
+    logger.error(err.stack || err.message || err);
 
     // render the error page
     return res.status(err.status).json(getMessage(false, (err.message)));

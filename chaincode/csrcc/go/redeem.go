@@ -19,6 +19,9 @@ type Redeem struct {
 	PaymentId         string         `json:"paymentId"`
 	RejectionComments string         `json:"rejectionComments"`
 	PaymentDetails    PaymentDetails `json:"paymentDetails"`
+	ProjectId         string         `json:"projectId"`
+	CommunityName     string         `json:"communityName"`
+	CommunityPlace    string         `json:"communityPlace"`
 }
 
 //ReceiverId        string         `json:"receiverId"`
@@ -67,7 +70,7 @@ func (s *SmartContract) RedeemRequest(ctx contractapi.TransactionContextInterfac
 		return false, fmt.Errorf("Error getting transaction creator: " + err.Error())
 	}
 	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
-	if mspId != "NgoMSP" {
+	if mspId != NgoMSP {
 		// InfoLogger.Printf("only ngo can initiate redeem request")
 		return false, fmt.Errorf("only ngo can initiate redeem request")
 	}
@@ -98,7 +101,7 @@ func (s *SmartContract) RedeemRequest(ctx contractapi.TransactionContextInterfac
 	date, _ := strconv.Atoi(args[2])
 	txId := args[3]
 	from := commonName
-	to := "ca.creditsauthority.csr.com"
+	to := "ca." + creditsauthority + "." + domain
 
 	//check if the redeemId incoming is already used
 	getUuidAsBytes, _ := ctx.GetStub().GetState(redeemId)
@@ -107,15 +110,33 @@ func (s *SmartContract) RedeemRequest(ctx contractapi.TransactionContextInterfac
 		return false, fmt.Errorf("This redeem id is already used")
 	}
 
+	//check if the project exists
+	projectAsBytes, err := ctx.GetStub().GetState(redeemObj.ProjectId)
+	if err != nil {
+		return false, fmt.Errorf("Error getting project")
+	}
+	if projectAsBytes == nil {
+		InfoLogger.Printf("project with id:", redeemObj.ProjectId, "not present")
+		return false, fmt.Errorf("project is not present")
+	}
+	projectState := Project{}
+	json.Unmarshal(projectAsBytes, &projectState)
+
 	//check if the qty requesting is less than or equal to his balance
 	getbalancebytes, _ := ctx.GetStub().GetState(from)
 	if getbalancebytes == nil {
 		return false, fmt.Errorf("error getting the balance of the ngo")
 	}
-	balance, _ := strconv.ParseFloat(string(getbalancebytes), 64)
+	ngoBalance, _ := strconv.ParseFloat(string(getbalancebytes), 64)
+	// if balance < redeemObj.Qty {
+	// 	// InfoLogger.Printf("Maximum amount to redeem is:", balance, "but requested amount is:", qty)
+	// 	return false, fmt.Errorf("redeem amount cannot be more than the balance")
+	// }
+
+	balance := math.Round((projectState.TotalReceived-projectState.TotalRedeemed)*100) / 100
 	if balance < redeemObj.Qty {
 		// InfoLogger.Printf("Maximum amount to redeem is:", balance, "but requested amount is:", qty)
-		return false, fmt.Errorf("redeem amount cannot be more than the balance")
+		return false, fmt.Errorf("redeem amount cannot be more than maximum allowed amount")
 	}
 
 	//payment details validations
@@ -130,8 +151,12 @@ func (s *SmartContract) RedeemRequest(ctx contractapi.TransactionContextInterfac
 	}
 
 	//reduce the equivalent amount from the wallet balance of ngo
-	remainingQty := math.Round((balance-redeemObj.Qty)*100) / 100
-	ctx.GetStub().PutState(from, []byte(fmt.Sprintf("%f", remainingQty)))
+	remainingBalance := math.Round((ngoBalance-redeemObj.Qty)*100) / 100
+	ctx.GetStub().PutState(from, []byte(fmt.Sprintf("%f", remainingBalance)))
+
+	projectState.TotalRedeemed = math.Round((projectState.TotalRedeemed+redeemObj.Qty)*100) / 100
+	projectAsBytes, _ = json.Marshal(projectState)
+	ctx.GetStub().PutState(redeemObj.ProjectId, projectAsBytes)
 
 	//create redeem state
 	redeemObj.ObjectType = "Redeem"
@@ -168,7 +193,7 @@ func (s *SmartContract) ApproveRedeemRequest(ctx contractapi.TransactionContextI
 		return false, fmt.Errorf("Error getting transaction creator: " + err.Error())
 	}
 	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
-	if mspId != "CreditsAuthorityMSP" {
+	if mspId != CreditsAuthorityMSP {
 		// InfoLogger.Printf("only creditsauthority can approve redeem request")
 		return false, fmt.Errorf("only creditsauthority can approve redeem request")
 	}
@@ -262,12 +287,12 @@ func (s *SmartContract) GetRedeemRequest(ctx contractapi.TransactionContextInter
 		return nil, fmt.Errorf("Error getting transaction creator: " + err.Error())
 	}
 	mspId, commanName, _ := getTxCreatorInfo(ctx, creator)
-	if mspId == "CorporateMSP" {
+	if mspId == CorporateMSP {
 		InfoLogger.Printf("corporate cannot access RedeemRequest")
 		return nil, fmt.Errorf("corporate cannot access RedeemRequest")
-	} else if mspId == "CreditsAuthorityMSP" {
+	} else if mspId == CreditsAuthorityMSP {
 		queryString = gqs([]string{"docType", "Redeem"})
-	} else if mspId == "NgoMSP" {
+	} else if mspId == NgoMSP {
 		queryString = gqs([]string{"docType", "Redeem", "from", commanName})
 	} else {
 		return nil, fmt.Errorf("Invalid user")
@@ -292,7 +317,7 @@ func (s *SmartContract) RejectRedeemRequest(ctx contractapi.TransactionContextIn
 		return false, fmt.Errorf("Error getting transaction creator: " + err.Error())
 	}
 	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
-	if mspId != "CreditsAuthorityMSP" {
+	if mspId != CreditsAuthorityMSP {
 		// InfoLogger.Printf("only creditsauthority can verify/approve redeem request")
 		return false, fmt.Errorf("only creditsauthority can verify/approve redeem request")
 	}
@@ -356,6 +381,22 @@ func (s *SmartContract) RejectRedeemRequest(ctx contractapi.TransactionContextIn
 	//add the redeem amount to the balance of ngo upon reject
 	updatedBal := math.Round((balance+redeemState.Qty)*100) / 100
 	ctx.GetStub().PutState(redeemState.From, []byte(fmt.Sprintf("%f", updatedBal)))
+
+	//check if the project exists
+	projectAsBytes, err := ctx.GetStub().GetState(redeemState.ProjectId)
+	if err != nil {
+		return false, fmt.Errorf("Error getting project")
+	}
+	if projectAsBytes == nil {
+		InfoLogger.Printf("project with id:", redeemState.ProjectId, "not present")
+		return false, fmt.Errorf("project is not present")
+	}
+	projectState := Project{}
+	json.Unmarshal(projectAsBytes, &projectState)
+
+	projectState.TotalRedeemed = math.Round((projectState.TotalRedeemed-redeemState.Qty)*100) / 100
+	projectAsBytes, _ = json.Marshal(projectState)
+	ctx.GetStub().PutState(redeemState.ProjectId, projectAsBytes)
 
 	//create a transaction
 	from := commonName

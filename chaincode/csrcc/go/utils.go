@@ -103,9 +103,9 @@ func createTransaction(ctx contractapi.TransactionContextInterface, fromAddress 
 func getTxCreatorInfo(ctx contractapi.TransactionContextInterface, creator []byte) (string, string, error) {
 	var mspMap map[string]string
 	mspMap = make(map[string]string)
-	mspMap["CorporateMSP"] = ".corporate.csr.com"
-	mspMap["NgoMSP"] = ".ngo.csr.com"
-	mspMap["CreditsAuthorityMSP"] = ".creditsauthority.csr.com"
+	mspMap[CorporateMSP] = "." + corporate + "." + domain
+	mspMap[NgoMSP] = "." + ngo + "." + domain
+	mspMap[CreditsAuthorityMSP] = "." + creditsauthority + "." + domain
 
 	identity := ctx.GetClientIdentity()
 
@@ -171,7 +171,7 @@ func (s *SmartContract) AddCorporateEmail(ctx contractapi.TransactionContextInte
 	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
 	InfoLogger.Printf("current logged in user:", commonName, "with mspId:", mspId)
 
-	if mspId != "CreditsAuthorityMSP" || !strings.HasPrefix(commonName, "ca") {
+	if mspId != CreditsAuthorityMSP || !strings.HasPrefix(commonName, "ca") {
 		InfoLogger.Printf("only creditsauthority can initiate addCorporateEmail")
 		return false, fmt.Errorf("only creditsauthority can initiate addCorporateEmail")
 	}

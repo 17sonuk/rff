@@ -12,11 +12,22 @@ const path = require('path');
 const logger = require('../loggers/logger');
 const userService = require('../service/userService');
 
+require('dotenv').config();
+const { ORG1_NAME, ORG2_NAME, ORG3_NAME, BLOCKCHAIN_DOMAIN } = process.env;
+
+let orgMap = {
+    'creditsauthority': ORG1_NAME,
+    'corporate': ORG2_NAME,
+    'ngo': ORG3_NAME
+}
+
 async function main(userName, orgName, functionName, chaincodeName, channelName, args) {
+    orgName = orgMap[orgName];
     let listener;
     logger.debug(userName + "," + orgName + "," + functionName + "," + chaincodeName + "," + channelName + "," + args);
     // load the network configuration
-    const ccpPath = path.resolve(__dirname, '..', '..', 'test-network', 'organizations', 'peerOrganizations', `${orgName}.csr.com`, `connection-${orgName}.json`);
+    const ccpPath = path.resolve(__dirname, '..', '..', 'test-network', 'organizations', 'peerOrganizations', `${orgName}.${BLOCKCHAIN_DOMAIN}.com`, `connection-${orgName}.json`);
+    // const ccpPath = path.resolve(__dirname, '..', '..', 'FabricMultiHostDeployment', 'setup1', 'vm1', 'api-2.0', 'config', `connection-${orgName}.json`);
     let ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf8'));
 
     // Create a new file system based wallet for managing identities.

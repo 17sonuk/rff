@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { CHAINCODE_NAME, CHANNEL_NAME } = process.env;
+const { CHAINCODE_NAME, CHANNEL_NAME, ORG1_NAME, ORG2_NAME, ORG3_NAME, BLOCKCHAIN_DOMAIN } = process.env;
 
 const express = require('express');
 const router = express.Router();
@@ -7,6 +7,12 @@ const router = express.Router();
 const logger = require('../../loggers/logger');
 const query = require('../../fabric-sdk/query');
 const { fieldErrorMessage, generateError, getMessage, splitOrgName } = require('../../utils/functions');
+
+let orgMap = {
+    'creditsauthority': ORG1_NAME,
+    'corporate': ORG2_NAME,
+    'ngo': ORG3_NAME
+}
 
 router.get('/parked-by-corporate', async (req, res, next) => {
 
@@ -18,7 +24,7 @@ router.get('/parked-by-corporate', async (req, res, next) => {
         return res.json(fieldErrorMessage('\'parked\''));
     }
 
-    let userDLTName = req.userName + "." + req.orgName.toLowerCase() + ".csr.com";
+    let userDLTName = req.userName + "." + orgMap[req.orgName.toLowerCase()] + "." + BLOCKCHAIN_DOMAIN + ".com";
 
     let queryString = {
         "selector": {
@@ -90,7 +96,7 @@ router.get('/transactions', async function (req, res, next) {
     let queryString = {
         "selector": {
             "docType": "Transaction",
-            "from": req.userName + '.creditsauthority.csr.com'
+            "from": req.userName + '.' + ORG1_NAME + '.' + BLOCKCHAIN_DOMAIN + ".com"
         }
     }
 

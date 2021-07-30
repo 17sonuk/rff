@@ -41,6 +41,10 @@ commonModel.getCommunities = () => {
     })
 }
 
+commonModel.getCommunity = (name, place) => {
+    return await communityModel.findOne({ $and: [{ name: name }, { place: place }] });
+}
+
 commonModel.deleteCommunities = async (communityIds) => {
     // let myquery = { _id: { $in: communityIds } };
     return communityModel.deleteMany({ _id: { $in: communityIds } })

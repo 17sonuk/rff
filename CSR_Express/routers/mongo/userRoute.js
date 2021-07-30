@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 require('dotenv').config();
-const { SMTP_EMAIL, APP_PASSWORD } = process.env;
+const { SMTP_EMAIL, APP_PASSWORD, ORG1_NAME, ORG2_NAME, ORG3_NAME, BLOCKCHAIN_DOMAIN } = process.env;
 
 const logger = require('../../loggers/logger');
 const { generateError, getMessage } = require('../../utils/functions');
@@ -25,6 +25,12 @@ const transporter = nodemailer.createTransport({
         pass: APP_PASSWORD,
     },
 });
+
+let orgMap = {
+    'creditsauthority': ORG1_NAME,
+    'corporate': ORG2_NAME,
+    'ngo': ORG3_NAME
+}
 
 //Onboarding of user
 router.post('/onboard', (req, res, next) => {
@@ -176,11 +182,11 @@ router.get('/profit-corporate', (req, res, next) => {
 router.get('/notification/:seen', (req, res, next) => {
     logger.debug("router-getNotification");
 
-    if (req.userName.startsWith('ca')) {
-        req.userName = 'ca';
-    }
+    // if (req.userName.startsWith('ca')) {
+    //     req.userName = 'ca';
+    // }
 
-    let name = req.userName + "." + req.orgName + ".csr.com";
+    let name = req.userName + "." + orgMap[req.orgName.toLowerCase()] + "." + BLOCKCHAIN_DOMAIN + ".com";
 
     userService.getNotifications(name, req.params.seen)
         .then((data) => {
@@ -191,11 +197,11 @@ router.get('/notification/:seen', (req, res, next) => {
 
 router.put('/notification', (req, res, next) => {
     logger.debug("router-updateNotification");
-    if (req.userName.startsWith('ca')) {
-        req.userName = 'ca';
-    }
+    // if (req.userName.startsWith('ca')) {
+    //     req.userName = 'ca';
+    // }
 
-    let name = req.userName + "." + req.orgName + ".csr.com";
+    let name = req.userName + "." + orgMap[req.orgName.toLowerCase()] + "." + BLOCKCHAIN_DOMAIN + ".com";
     userService.updateNotification(name, req.body.txId)
         .then((data) => {
             res.json(data)

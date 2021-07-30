@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { CHAINCODE_NAME, CHANNEL_NAME } = process.env;
+const { CHAINCODE_NAME, CHANNEL_NAME, ORG1_NAME, ORG2_NAME, ORG3_NAME, BLOCKCHAIN_DOMAIN, CA_USERNAME } = process.env;
 
 const express = require('express');
 const router = express.Router();
@@ -12,13 +12,19 @@ const { fieldErrorMessage, generateError, getMessage, splitOrgName } = require('
 
 const query = require('../../fabric-sdk/query');
 
+let orgMap = {
+    'creditsauthority': ORG1_NAME,
+    'corporate': ORG2_NAME,
+    'ngo': ORG3_NAME
+}
+
 // get fund raised and contributors for particular ngo
 router.get('/funds-raised-by-ngo', async function (req, res, next) {
 
     let queryString = {
         "selector": {
             "docType": "Project",
-            "ngo": req.userName + '.ngo.csr.com'
+            "ngo": req.userName + '.' + ORG3_NAME + '.' + BLOCKCHAIN_DOMAIN + ".com"
         },
         "fields": ["contributors", "phases"]
     }
@@ -133,16 +139,16 @@ router.get('/getRecord/:recordKey', async function (req, res, next) {
 });
 
 router.get('/total-locked-and-validity-of-corporate', async function (req, res, next) {
-    const corporate = req.query.corporate;
+    // const corporate = req.query.corporate;
 
-    if (!corporate) {
-        return res.json(fieldErrorMessage('\'corporate\''));
-    }
+    // if (!corporate) {
+    //     return res.json(fieldErrorMessage('\'corporate\''));
+    // }
 
     let queryString = {
         "selector": {
             "docType": "EscrowDetails",
-            "corporate": corporate
+            "corporate": req.userName + "." + ORG2_NAME + "." + BLOCKCHAIN_DOMAIN + ".com"
         },
         "fields": [
             "funds"
@@ -194,7 +200,7 @@ router.get('/total-locked-and-validity-of-corporate', async function (req, res, 
 // get fund raised and contributors for particular ngo
 router.get('/amount-parked', async function (req, res, next) {
     const projectId = req.query.projectId;
-    const userDLTName = req.userName + "." + req.orgName.toLowerCase() + ".csr.com";
+    const userDLTName = req.userName + "." + orgMap[req.orgName.toLowerCase()] + "." + BLOCKCHAIN_DOMAIN + ".com";
 
     if (!projectId) {
         return res.json(fieldErrorMessage('\'projectId\''));
@@ -387,8 +393,8 @@ router.get('/it-report', async function (req, res, next) {
                         ]
                     },
                     "$or": [
-                        { "from": corpList[i] + ".corporate.csr.com" },
-                        { "to": corpList[i] + ".corporate.csr.com" }
+                        { "from": corpList[i] + "." + ORG2_NAME + "." + BLOCKCHAIN_DOMAIN + ".com" },
+                        { "to": corpList[i] + "." + ORG2_NAME + "." + BLOCKCHAIN_DOMAIN + ".com" }
                     ],
                     "$and": [
                         {
@@ -439,7 +445,7 @@ router.get('/it-report', async function (req, res, next) {
                 // }
             })
 
-            let corNAme = corpList[i] + ".corporate.csr.com"
+            let corNAme = corpList[i] + "." + ORG2_NAME + "." + BLOCKCHAIN_DOMAIN + ".com"
             //let liabality = ItList.Record[i].totalLiability - creditsReceived
             // let creditsToGov = m.get(corNAme)
             // if (creditsToGov === undefined) {
@@ -564,7 +570,7 @@ router.get('/ngo-report', async function (req, res, next) {
         console.log(listOfNgos);
         for (let i = 0; i < listOfNgos.length; i++) {
             queryString["selector"]["txType"]["$in"] = ["TransferToken", "TransferToken_snapshot", "ReleaseFundsFromEscrow"];
-            queryString["selector"]["to"] = listOfNgos[i] + ".ngo.csr.com";
+            queryString["selector"]["to"] = listOfNgos[i] + "." + ORG3_NAME + "." + BLOCKCHAIN_DOMAIN + ".com";
 
             let args = JSON.stringify(queryString);
             logger.debug(`query string:\n ${args}`);
@@ -669,7 +675,7 @@ router.get('/ngo-contribution-details', async function (req, res, next) {
     let queryString = {
         "selector": {
             "docType": "Transaction",
-            "to": ngoName + ".ngo.csr.com",
+            "to": ngoName + "." + ORG3_NAME + "." + BLOCKCHAIN_DOMAIN + ".com",
             "txType": {
                 "$in": ["TransferToken", "TransferToken_snapshot", "FundsToEscrowAccount", "FundsToEscrowAccount_snapshot"]
             },
@@ -724,7 +730,7 @@ router.get('/ngo-contribution-details', async function (req, res, next) {
 
 // get balance
 router.get('/balance', async function (req, res, next) {
-    let userDLTName = req.userName + "." + req.orgName + ".csr.com";
+    let userDLTName = req.userName + "." + orgMap[req.orgName.toLowerCase()] + "." + BLOCKCHAIN_DOMAIN + ".com";
 
     let response = {
         'balance': 0,
@@ -801,7 +807,7 @@ router.get('/corporate-names', async function (req, res, next) {
     let filenames = fs.readdirSync(directoryPath);
     logger.debug("\nCurrent directory filenames:");
     let listOfCorporates = filenames.filter(function (value, index, arr) {
-        return (value != 'admin.id' && value != 'ca.id');
+        return (value != 'admin.id' && value != CA_USERNAME + ".id");
     }).map(_ => _ = _.split('.')[0]);
 
     return res.json(getMessage(true, listOfCorporates));
@@ -813,7 +819,7 @@ async function getCorporateNames() {
     let filenames = fs.readdirSync(directoryPath);
     logger.debug("\nCurrent directory filenames:");
     let listOfCorporates = filenames.filter(function (value, index, arr) {
-        return (value != 'admin.id' && value != 'ca.id');
+        return (value != 'admin.id' && value != CA_USERNAME + ".id");
     }).map(_ => _ = _.split('.')[0]);
 
     return listOfCorporates;
@@ -844,7 +850,7 @@ router.get('/corporate-contributions', async function (req, res, next) {
 
         for (let i = 0; i < corporateList.length; i++) {
             // for (let corporate of corporateList) {
-            let corporate = corporateList[i] + ".corporate.csr.com"
+            let corporate = corporateList[i] + "." + ORG2_NAME + "." + BLOCKCHAIN_DOMAIN + ".com"
 
             let resultObject = new Object()
 

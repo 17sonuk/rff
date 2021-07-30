@@ -33,6 +33,20 @@ commonService.getCommunities = () => {
     })
 }
 
+commonService.getCommunity = (name, place) => {
+    return commonModel.getCommunity(name, place).then(data => {
+        if (data) {
+            if (data.paymentDetails.paymentType === 'Paypal') {
+                return data.paymentDetails.paypalEmailId
+            }
+            return data.paymentDetails.bankDetails
+        }
+        let err = new Error("Bad Connection")
+        err.status = 500
+        throw err
+    })
+}
+
 commonService.deleteCommunities = (communityIds) => {
     return commonModel.deleteCommunities(communityIds).then(data => {
         if (data) return data;

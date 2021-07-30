@@ -29,7 +29,7 @@ router.post('/create', (req, res, next) => {
 router.get('/projects-ngo', (req, res, next) => {
     logger.debug("router-getProjectNGO");
 
-    projectService.getProjectsNGO(req.query.userName)
+    projectService.getProjectsNGO(req.userName)
         .then((data) => {
             res.json(data)
         })
@@ -39,7 +39,7 @@ router.get('/projects-ngo', (req, res, next) => {
 router.get('/projects-corporate', (req, res, next) => {
     logger.debug("router-getProjectsCorporate");
 
-    projectService.getProjectsCorporate(req.query.userName)
+    projectService.getProjectsCorporate(req.userName)
         .then((data) => {
             res.json(data)
         })

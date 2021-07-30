@@ -6,8 +6,12 @@ const logger = require('../loggers/logger');
 const dbHost = process.env.DB_HOST || 'localhost';
 const dbPort = process.env.DB_PORT || '27017';
 const dbName = process.env.DB_NAME || 'CSR';
+const dbUsername = process.env.DB_USERNAME || '';
+let dbPassword = process.env.DB_PASSWORD || '';
+dbPassword = encodeURIComponent(dbPassword);
 
-const url = `mongodb://${dbHost}:${dbPort}/${dbName}`;
+const url = process.env.NODE_ENV === 'development' ? `mongodb://${dbHost}:${dbPort}/${dbName}` : `mongodb://${dbUsername}:${dbPassword}@${dbHost}:${dbPort}/${dbName}?authSource=admin`;
+
 const mongooseOptions = {
     useCreateIndex: true,
     useNewUrlParser: true,
@@ -34,7 +38,6 @@ function connectToMongo(db_Name = '') {
                 if (err) {
                     return reject(err);
                 }
-                logger.debug('Mongo connection established.............');
                 logger.debug('Mongo connection established.............');
                 console.log(res.connections);
                 resolve(res);

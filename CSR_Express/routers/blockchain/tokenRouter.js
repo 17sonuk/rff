@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { CHAINCODE_NAME, CHANNEL_NAME } = process.env;
+const { CHAINCODE_NAME, CHANNEL_NAME, ORG1_NAME, ORG2_NAME, ORG3_NAME, BLOCKCHAIN_DOMAIN } = process.env;
 const express = require('express');
 const router = express.Router();
 const { v4: uuid } = require('uuid');
@@ -11,6 +11,12 @@ const { fieldErrorMessage, generateError, getMessage, splitOrgName } = require('
 
 const invoke = require('../../fabric-sdk/invoke');
 const query = require('../../fabric-sdk/query');
+
+let orgMap = {
+    'creditsauthority': ORG1_NAME,
+    'corporate': ORG2_NAME,
+    'ngo': ORG3_NAME
+}
 
 // Request Token transaction on chaincode on target peers.- done
 router.post('/request', async (req, res, next) => {
@@ -145,16 +151,18 @@ router.post('/transfer', async (req, res, next) => {
     if (!donorDetails)
         return res.json(fieldErrorMessage('\'donorDetails\''));
     if (req.userName !== 'guest') {
-        if (!donorDetails.email)
-            return res.json(fieldErrorMessage('\'donor email id\''));
-        if (!donorDetails.name)
-            return res.json(fieldErrorMessage('\'donor name\''));
+        // if (!donorDetails.email)
+        donorDetails.email = req.email
+        //return res.json(fieldErrorMessage('\'donor email id\''));
+        // if (!donorDetails.name)
+        donorDetails.name = req.name
+        // return res.json(fieldErrorMessage('\'donor name\''));
     }
     if (req.userName === 'guest' && !donorDetails.paymentId) {
         return res.json(fieldErrorMessage('\'paymentId\''));
     }
     if (req.userName === 'guest') {
-        notes = donorDetails.email + " " + "PaymentId - " + donorDetails.paymentId + " " + notes
+        notes = donorDetails.email + "\n" + "PaymentId - " + donorDetails.paymentId + "\n" + notes
     }
 
     logger.debug(notes)
@@ -198,7 +206,7 @@ router.post('/transfer', async (req, res, next) => {
 // get All TokenRequests - done
 router.get('/all-requests', async (req, res, next) => {
     logger.debug('==================== QUERY BY CHAINCODE: getAllTokenRequests ==================');
-    const userDLTName = req.userName + "." + req.orgName.toLowerCase() + ".csr.com";
+    const userDLTName = req.userName + "." + orgMap[req.orgName.toLowerCase()] + "." + BLOCKCHAIN_DOMAIN + ".com";
 
     const pageSize = req.query.pageSize;
     let bookmark = req.query.bookmark;

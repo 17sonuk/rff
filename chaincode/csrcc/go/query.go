@@ -108,42 +108,42 @@ func (s *SmartContract) CommonQueryPagination(ctx contractapi.TransactionContext
 	return commonResponsePaginated, nil
 }
 
-func (s *SmartContract) QueryForSnapshot(ctx contractapi.TransactionContextInterface, arg string) ([]byte, error) {
+// func (s *SmartContract) QueryForSnapshot(ctx contractapi.TransactionContextInterface, arg string) ([]byte, error) {
 
-	var args []string
+// 	var args []string
 
-	err := json.Unmarshal([]byte(arg), &args)
-	if err != nil {
-		return nil, fmt.Errorf(err.Error())
-	}
+// 	err := json.Unmarshal([]byte(arg), &args)
+// 	if err != nil {
+// 		return nil, fmt.Errorf(err.Error())
+// 	}
 
-	corporates := getCorporates(ctx)
+// 	corporates := getCorporates(ctx)
 
-	var buffer bytes.Buffer
-	buffer.WriteString("[")
-	bArrayMemberAlreadyWritten := false
+// 	var buffer bytes.Buffer
+// 	buffer.WriteString("[")
+// 	bArrayMemberAlreadyWritten := false
 
-	for _, corporate := range corporates {
-		qtyBytes, err := ctx.GetStub().GetState(corporate + "_snapshot")
-		if err != nil {
-			return nil, fmt.Errorf("Failed to get snapshot: " + err.Error())
-		}
-		tokenBalance := string(qtyBytes)
+// 	for _, corporate := range corporates {
+// 		qtyBytes, err := ctx.GetStub().GetState(corporate + "_snapshot")
+// 		if err != nil {
+// 			return nil, fmt.Errorf("Failed to get snapshot: " + err.Error())
+// 		}
+// 		tokenBalance := string(qtyBytes)
 
-		if bArrayMemberAlreadyWritten == true {
-			buffer.WriteString(",")
-		}
-		buffer.WriteString("{\"corporateName\":\"")
-		buffer.WriteString(corporate)
-		buffer.WriteString("\", \"balance\":")
-		buffer.WriteString(tokenBalance)
-		buffer.WriteString("}")
-		bArrayMemberAlreadyWritten = true
-	}
-	buffer.WriteString("]")
+// 		if bArrayMemberAlreadyWritten == true {
+// 			buffer.WriteString(",")
+// 		}
+// 		buffer.WriteString("{\"corporateName\":\"")
+// 		buffer.WriteString(corporate)
+// 		buffer.WriteString("\", \"balance\":")
+// 		buffer.WriteString(tokenBalance)
+// 		buffer.WriteString("}")
+// 		bArrayMemberAlreadyWritten = true
+// 	}
+// 	buffer.WriteString("]")
 
-	return buffer.Bytes(), nil
-}
+// 	return buffer.Bytes(), nil
+// }
 
 //returns all transactions between 2 dates.
 func (s *SmartContract) QueryForTransactionRange(ctx contractapi.TransactionContextInterface, arg string) ([]byte, error) {

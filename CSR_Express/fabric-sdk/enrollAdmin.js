@@ -12,14 +12,29 @@ const fs = require('fs');
 const path = require('path');
 const logger = require('../loggers/logger');
 
+require('dotenv').config();
+const { ORG1_NAME, ORG2_NAME, ORG3_NAME, BLOCKCHAIN_DOMAIN } = process.env;
+
+console.log('org 2:', ORG2_NAME)
+let orgMap = {
+    'creditsauthority': ORG1_NAME,
+    'corporate': ORG2_NAME,
+    'ngo': ORG3_NAME
+}
+
 async function main(orgName) {
+    console.log('orgName', orgName)
+    orgName = orgMap[orgName];
     // load the network configuration
-    const ccpPath = path.resolve(__dirname, '..', '..', 'test-network', 'organizations', 'peerOrganizations', `${orgName}.csr.com`, `connection-${orgName}.json`);
+    const ccpPath = path.resolve(__dirname, '..', '..', 'test-network', 'organizations', 'peerOrganizations', `${orgName}.${BLOCKCHAIN_DOMAIN}.com`, `connection-${orgName}.json`);
+    // const ccpPath = path.resolve(__dirname, '..', '..', 'FabricMultiHostDeployment', 'setup1', 'vm1', 'api-2.0', 'config', `connection-${orgName}.json`);
+    ///FabricMultiHostDeployment/setup1/vm1/api-2.0/config
     const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf8'));
 
     // Create a new CA client for interacting with the CA.
-    const caInfo = ccp.certificateAuthorities[`ca.${orgName}.csr.com`];
+    const caInfo = ccp.certificateAuthorities[`ca.${orgName}.${BLOCKCHAIN_DOMAIN}.com`];
     const caTLSCACerts = caInfo.tlsCACerts.pem;
+
     const ca = new FabricCAServices(caInfo.url, { trustedRoots: caTLSCACerts, verify: false }, caInfo.caName);
 
     // Create a new file system based wallet for managing identities.
@@ -35,12 +50,13 @@ async function main(orgName) {
     }
 
     let mspId;
-    if (orgName === 'creditsauthority') {
-        mspId = 'CreditsAuthorityMSP';
+    if (orgName === 'org1') {
+        mspId = 'Org1MSP';
     } else {
         mspId = `${orgName[0].toUpperCase() + orgName.slice(1)}MSP`;
     }
 
+    console.log('mspId:', mspId)
     // Enroll the admin user, and import the new identity into the wallet.
     const enrollment = await ca.enroll({ enrollmentID: 'admin', enrollmentSecret: 'adminpw' });
     const x509Identity = {

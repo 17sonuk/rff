@@ -218,7 +218,8 @@ userService.login = (email) => {
                     'message': 'Login successful',
                     'userName': data.userName,
                     'role': data.role,
-                    'name': ''
+                    'name': '',
+                    'email': data.email
                 };
                 if ((data['role'] === 'Corporate' && data['subRole'] === 'Institution') || data['role'] === 'Ngo') {
                     finalResponse['name'] = data.orgName;

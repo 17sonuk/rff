@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { CHAINCODE_NAME, CHANNEL_NAME } = process.env;
+const { CHAINCODE_NAME, CHANNEL_NAME, ORG1_NAME, ORG2_NAME, ORG3_NAME, BLOCKCHAIN_DOMAIN, CA_USERANME } = process.env;
 
 const express = require('express');
 const router = express.Router();
@@ -10,6 +10,12 @@ const { fieldErrorMessage, generateError, getMessage, splitOrgName } = require('
 
 const invoke = require('../../fabric-sdk/invoke');
 const query = require('../../fabric-sdk/query');
+
+let orgMap = {
+    'creditsauthority': ORG1_NAME,
+    'corporate': ORG2_NAME,
+    'ngo': ORG3_NAME
+}
 
 //****************************** Create Project *******************************
 // Create Project transaction on chaincode on target peers. - done but errors
@@ -192,7 +198,7 @@ router.post('/add-document-hash', async (req, res, next) => {
 router.get('/all', async (req, res, next) => {
     logger.debug('==================== QUERY BY CHAINCODE: getAllProjects ==================');
 
-    const orgDLTName = req.userName + "." + req.orgName.toLowerCase() + ".csr.com";
+    const orgDLTName = req.userName + "." + orgMap[req.orgName.toLowerCase()] + "." + BLOCKCHAIN_DOMAIN + ".com";
     const self = req.query.self;
     const ongoing = req.query.ongoing;
     const newRecords = req.query.newRecords;
@@ -234,7 +240,7 @@ router.get('/all', async (req, res, next) => {
     if (req.orgName === "creditsauthority" || self !== "true") {
         logger.debug("Get all Projects");
         if (ngoName.length != 0) {
-            queryString["selector"]["ngo"] = ngoName + ".ngo.csr.com"
+            queryString["selector"]["ngo"] = ngoName + "." + ORG3_NAME + "." + BLOCKCHAIN_DOMAIN + ".com"
         }
 
         if (self !== "true") {
@@ -421,7 +427,7 @@ router.get('/corporate-project-details', async (req, res, next) => {
     }
 
     //let contributor = 'contributors.' + corporate + '\\.corporate\\.csr\\.com'
-    let queryString = '{"selector":{"docType":"Project","contributors.' + corporate + '\\\\.corporate\\\\.csr\\\\.com":{"$exists":true}},"fields":["_id","ngo","projectName"]}'
+    let queryString = '{"selector":{"docType":"Project","contributors.' + corporate + '\\\\.' + ORG2_NAME + '\\\\.' + BLOCKCHAIN_DOMAIN + '\\\\.com":{"$exists":true}},"fields":["_id","ngo","projectName"]}'
 
     let args = queryString;
 
@@ -451,7 +457,7 @@ router.get('/corporate-project-details', async (req, res, next) => {
 //getCorporateProjectTransaction
 router.get('/corporate-project-transactions', async (req, res, next) => {
     logger.debug('==================== QUERY BY CHAINCODE: getCorporateProjectTransaction ==================');
-    let corporate = req.query.corporate
+    let corporate = req.orgName === ORG1_NAME ? req.query.corporate : req.userName;
     const projectId = req.query.projectId
 
     logger.debug('corporate : ' + corporate);
@@ -470,7 +476,7 @@ router.get('/corporate-project-transactions', async (req, res, next) => {
         return res.json(fieldErrorMessage('\'projectId\''));
     }
 
-    corporate += '.corporate.csr.com';
+    corporate += '.' + ORG2_NAME + '.' + BLOCKCHAIN_DOMAIN + ".com";
 
     let queryString = {
         "selector": {
@@ -589,7 +595,7 @@ router.get('/locked-details', async (req, res, next) => {
 //getOngoing project count for csr : 
 router.get('/total-corporate-ongoing-projects', async (req, res, next) => {
     logger.debug('==================== QUERY BY CHAINCODE: getCorporateProjectOngoingCount ==================');
-    const corporate = req.query.corporate;
+    // const corporate = req.query.corporate;
 
     logger.debug('corporate : ' + corporate);
 
@@ -604,7 +610,7 @@ router.get('/total-corporate-ongoing-projects', async (req, res, next) => {
     }
 
     // let contributor = 'contributors.' + corporate + '\\.corporate\\.csr\\.com'
-    let args = '{"selector":{"docType":"Project","projectState": {"$ne": "Completed"} ,"contributors.' + corporate + '\\\\.corporate\\\\.csr\\\\.com":{"$exists":true}},"fields":["_id"]}'
+    let args = '{"selector":{"docType":"Project","projectState": {"$ne": "Completed"} ,"contributors.' + req.userName + '\\\\.' + ORG2_NAME + '\\\\.' + BLOCKCHAIN_DOMAIN + '\\\\.com":{"$exists":true}},"fields":["_id"]}'
 
     logger.debug('args : ' + args);
 
@@ -685,9 +691,9 @@ router.get('/total-project-locked-amount', async (req, res, next) => {
 //getCorporateProjectTransaction
 router.get('/ngo-project-and-locked-details', async (req, res, next) => {
     logger.debug('==================== QUERY BY CHAINCODE: getNgoProjectAndLockedAmountDetails ==================');
-    const ngo = req.query.ngo
+    // const ngo = req.query.ngo
 
-    logger.debug('ngo : ' + ngo);
+    // logger.debug('ngo : ' + ngo);
 
     if (!CHAINCODE_NAME) {
         return res.json(fieldErrorMessage('\'chaincodeName\''));
@@ -695,14 +701,14 @@ router.get('/ngo-project-and-locked-details', async (req, res, next) => {
     if (!CHANNEL_NAME) {
         return res.json(fieldErrorMessage('\'channelName\''));
     }
-    if (!ngo) {
-        return res.json(fieldErrorMessage('\'ngo\''));
-    }
+    // if (!ngo) {
+    //     return res.json(fieldErrorMessage('\'ngo\''));
+    // }
 
     let queryString = {
         "selector": {
             "docType": "Project",
-            "ngo": ngo
+            "ngo": req.userName + "." + ORG3_NAME + "." + BLOCKCHAIN_DOMAIN + ".com"
         },
         "fields": [
             "_id",
@@ -805,7 +811,7 @@ router.get('/ngo-project-transactions', async (req, res, next) => {
     logger.debug('==================== QUERY BY CHAINCODE: getNgoProjectTx ==================')
 
     const projectId = req.query.projectId
-    const orgDLTName = req.userName + "." + req.orgName.toLowerCase() + ".csr.com"
+    const orgDLTName = req.userName + "." + orgMap[req.orgName.toLowerCase()] + "." + BLOCKCHAIN_DOMAIN + ".com"
 
     logger.debug('projectId : ' + projectId);
 
@@ -913,7 +919,7 @@ router.get('/transactions', async (req, res, next) => {
 router.get('/getCorporateProjectDetails', async (req, res, next) => {
     logger.debug('==================== QUERY BY CHAINCODE: getCorporateProjectDetails ==================');
     const corporate = req.query.args
-    const orgDLTName = req.query.args + '.corporate.csr.com'
+    const orgDLTName = req.query.args + '.' + ORG2_NAME + '.' + BLOCKCHAIN_DOMAIN + ".com"
 
     logger.debug('corporate : ' + corporate);
 
@@ -927,7 +933,7 @@ router.get('/getCorporateProjectDetails', async (req, res, next) => {
         return res.json(fieldErrorMessage('\'corporate\''));
     }
 
-    let args = '{"selector":{"docType":"Project","contributors.' + corporate + '\\\\.corporate\\\\.csr\\\\.com":{"$exists":true}}}'
+    let args = '{"selector":{"docType":"Project","contributors.' + corporate + '\\\\.' + ORG2_NAME + '\\\\.' + BLOCKCHAIN_DOMAIN + '\\\\.com":{"$exists":true}}}'
     logger.debug('args : ' + args);
 
     try {

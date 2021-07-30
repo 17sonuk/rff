@@ -42,6 +42,23 @@ router.get('/community/all', (req, res, next) => {
         })
 })
 
+router.get('/community', (req, res, next) => {
+    // return project data object from service
+    logger.debug('router-getcommunities');
+
+    commonService.getCommunities(req.query.name, req.query.place)
+        .then((data) => {
+            res.json(data)
+        })
+        .catch(err => {
+            if (err['_message']) {
+                err.status = 400
+                err.message = err['_message'];
+            }
+            next(err)
+        })
+})
+
 router.put('/community', (req, res, next) => {
     // return project data object from service
     logger.debug('router-deleteCommunities', req.body);

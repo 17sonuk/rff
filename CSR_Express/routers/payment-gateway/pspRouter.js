@@ -20,14 +20,25 @@ router.post('/coinbase/charge', async (req, res, next) => {
     if (!req.body.requestType) {
         return res.json(fieldErrorMessage('\'request type\''));
     }
-    if (!req.body.payload.amount) {
-        return res.json(fieldErrorMessage('\'amount\''));
-    }
     if (!req.body.payload) {
         return res.json(fieldErrorMessage('\'payload\''));
     }
-    if (req.body.requestType === 'FundRequest' && !req.body.userName) {
-        return res.json(fieldErrorMessage('\'userName\''));
+    if (!req.body.payload.amount) {
+        return res.json(fieldErrorMessage('\'amount\''));
+    }
+    if (req.body.requestType === 'FundRequest') {
+        if (!req.body.userName)
+            return res.json(fieldErrorMessage('\'userName\''));
+        if (!req.body.payload.projectId)
+            return res.json(fieldErrorMessage('\'projectId\''));
+        if (req.body.payload.phaseNumber === undefined || typeof req.body.payload.phaseNumber !== "number")
+            return res.json(fieldErrorMessage('\'phaseNumber\''));
+        if (!req.body.payload.donorDetails)
+            return res.json(fieldErrorMessage('\'donorDetails\''));
+        if (!req.body.payload.donorDetails.email)
+            return res.json(fieldErrorMessage('\'email\''));
+        if (!req.body.payload.donorDetails.name)
+            return res.json(fieldErrorMessage('\'name\''));
     }
 
     const chargeData = {
@@ -61,16 +72,18 @@ router.use('/coinbase/chargeStatus', async (req, res, next) => {
     logger.debug('header................ ' + req.headers);
 
     try {
+        // if (body.event.type === 'charge:created') {
+        //     console.log('charge created');
+        //     //const response = await paymentService.saveTx(body.event.data, next);
+        //     return res.send(response)
+        // }
+
         const isVerified = Webhook.verifySigHeader(JSON.stringify(body), signature, COINBASE_WEBHOOK_SECRET);
         console.log(isVerified);
         if (isVerified) {
-            // if (body.event.type === 'charge:created') {
-            //     console.log('charge created');
-            //     const response = await paymentService.saveTx(body.event.data, next);
-            //     return res.send(response)
-            // }
-            if (body.event.type === 'charge:confirmed') {
-                console.log('charge confirmed');
+
+            if (body.event.type === 'charge:created') {
+                console.log('charge created');
                 const response = await paymentService.saveTx(body.event.data, next);
                 return res.send(response)
             }

@@ -8,23 +8,44 @@
 
 const { Wallets } = require('fabric-network');
 const FabricCAServices = require('fabric-ca-client');
+const IdentityService = require('fabric-ca-client');
+
 const fs = require('fs');
 const path = require('path');
 const enrollAdmin = require('./enrollAdmin');
 const logger = require('../loggers/logger');
 
-async function main(userName, orgName, checkWallet = false) {
+require('dotenv').config();
+const { ORG1_NAME, ORG2_NAME, ORG3_NAME, BLOCKCHAIN_DOMAIN } = process.env;
 
+let orgMap = {
+    'creditsauthority': ORG1_NAME,
+    'corporate': ORG2_NAME,
+    'ngo': ORG3_NAME
+}
+
+let reverseOrgMap = {
+}
+
+reverseOrgMap[ORG1_NAME] = 'creditsauthority'
+reverseOrgMap[ORG2_NAME] = 'corporate'
+reverseOrgMap[ORG3_NAME] = 'ngo'
+
+async function main(userName, orgName, checkWallet = false) {
+    orgName = orgMap[orgName];
     // load the network configuration
-    const ccpPath = path.resolve(__dirname, '..', '..', 'test-network', 'organizations', 'peerOrganizations', `${orgName}.csr.com`, `connection-${orgName}.json`);
+    const ccpPath = path.resolve(__dirname, '..', '..', 'test-network', 'organizations', 'peerOrganizations', `${orgName}.${BLOCKCHAIN_DOMAIN}.com`, `connection-${orgName}.json`);
+    // const ccpPath = path.resolve(__dirname, '..', '..', 'FabricMultiHostDeployment', 'setup1', 'vm1', 'api-2.0', 'config', `connection-${orgName}.json`);
     const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf8'));
 
     // Create a new CA client for interacting with the CA.
-    const caURL = ccp.certificateAuthorities[`ca.${orgName}.csr.com`].url;
+    const caURL = ccp.certificateAuthorities[`ca.${orgName}.${BLOCKCHAIN_DOMAIN}.com`].url;
+
     const ca = new FabricCAServices(caURL);
 
     // Create a new file system based wallet for managing identities.
     const walletPath = path.join(process.cwd(), `wallet-${orgName}`);
+    console.log('wallet path:', walletPath)
     const wallet = await Wallets.newFileSystemWallet(walletPath);
     logger.debug(`Wallet path: ${walletPath}`);
 
@@ -53,7 +74,7 @@ async function main(userName, orgName, checkWallet = false) {
         logger.debug('An identity for the admin user "admin" does not exist in the wallet');
         logger.debug('Run the enrollAdmin.js application before retrying');
         try {
-            adminIdentity = await enrollAdmin(orgName);
+            adminIdentity = await enrollAdmin(reverseOrgMap[orgName]);
         }
         catch (e) {
             console.log(e, "-------------")
@@ -72,18 +93,36 @@ async function main(userName, orgName, checkWallet = false) {
     const adminUser = await provider.getUserContext(adminIdentity, 'admin');
 
     let mspId;
-    if (orgName === 'creditsauthority') {
-        mspId = 'CreditsAuthorityMSP';
+    if (orgName === 'org1') {
+        mspId = 'Org1MSP';
     } else {
         mspId = `${orgName[0].toUpperCase() + orgName.slice(1)}MSP`;
     }
 
     // Register the user, enroll the user, and import the new identity into the wallet.
+
+    //DELETE CA USER
+    // let client = ca._fabricCAClient
+    // console.log('client: ', client)
+    // let identityService = new IdentityService(client)
+    // identityService.delete(userName, adminUser, false)
+
+    // const identityService = ca.newIdentityService();
+
+    // const retrieveIdentity = await identityService.getOne("ca", adminIdentity)
+    // console.log("user attributes: ", retrieveIdentity.result.attrs)
+
+    const caUser = await provider.getUserContext(adminIdentity, 'ca');
+    console.log('ca', caUser)
+
+    console.log('register')
     const secret = await ca.register({
         affiliation: `${orgName}.department1`,
         enrollmentID: userName,
         role: 'client'
     }, adminUser);
+
+    console.log('enrol')
     const enrollment = await ca.enroll({
         enrollmentID: userName,
         enrollmentSecret: secret
@@ -98,6 +137,7 @@ async function main(userName, orgName, checkWallet = false) {
     };
     await wallet.put(userName, x509Identity);
     logger.debug(`Successfully registered and enrolled admin user ${userName} and imported it into the wallet`);
+
 }
 
 // main("corp203", "corporate");

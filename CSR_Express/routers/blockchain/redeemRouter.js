@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { CHAINCODE_NAME, CHANNEL_NAME } = process.env;
+const { CHAINCODE_NAME, CHANNEL_NAME, ORG1_NAME, ORG2_NAME, ORG3_NAME, BLOCKCHAIN_DOMAIN } = process.env;
 const express = require('express');
 const router = express.Router();
 const { v4: uuid } = require('uuid');
@@ -9,6 +9,12 @@ const { fieldErrorMessage, generateError, getMessage, splitOrgName } = require('
 
 const invoke = require('../../fabric-sdk/invoke');
 const query = require('../../fabric-sdk/query');
+
+let orgMap = {
+    'creditsauthority': ORG1_NAME,
+    'corporate': ORG2_NAME,
+    'ngo': ORG3_NAME
+}
 
 //****************************** RedeemRequest *******************************
 router.post('/request', async (req, res, next) => {
@@ -124,7 +130,7 @@ router.post('/reject', async (req, res, next) => {
 // get All Redeem Requests
 router.get('/request/all', async (req, res, next) => {
     logger.debug('==================== QUERY BY CHAINCODE: getAllRedeemRequests ==================');
-    const userDLTName = req.userName + "." + req.orgName.toLowerCase() + ".csr.com";
+    const userDLTName = req.userName + "." + orgMap[req.orgName.toLowerCase()] + "." + BLOCKCHAIN_DOMAIN + ".com";
 
     const pageSize = req.query.pageSize;
     const bookmark = req.query.bookmark;

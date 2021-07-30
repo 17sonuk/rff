@@ -1,6 +1,6 @@
 const { v4: uuid } = require('uuid');
 
-const { CHAINCODE_NAME, CHANNEL_NAME } = process.env;
+const { CHAINCODE_NAME, CHANNEL_NAME, ORG2_NAME } = process.env;
 
 const logger = require('../../loggers/logger');
 const projectService = require('../../service/projectService');
@@ -27,13 +27,43 @@ paymentService.saveTx = async (event, next) => {
         const paymentStatus = "COMPLETED";
         const comments = payload.comments;
 
-        const args = JSON.stringify([amount, paymentId, paymentStatus, comments, Date.now().toString(), uuid().toString()]);
+        let args = JSON.stringify([amount, paymentId, paymentStatus, comments, Date.now().toString(), uuid().toString()]);
         logger.debug('args  : ' + args);
 
         try {
-            await invoke.main(event.metadata.userName, 'corporate', "RequestTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
-            return getMessage(true, 'Successfully credited funds');
-        } catch (e) {
+            await invoke.main(event.metadata.userName, ORG2_NAME, "RequestTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
+            //return getMessage(true, 'Successfully credited funds');
+
+            const projectId = payload.projectId
+            const phaseNumber = payload.phaseNumber.toString();
+            const donorDetails = payload.donorDetails;
+            args = [amount, projectId, phaseNumber, comments, Date.now().toString(), uuid().toString()]
+            args = JSON.stringify(args);
+            logger.debug('args  : ' + args);
+
+            await invoke.main(event.metadata.userName, ORG2_NAME, "TransferTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
+            logger.debug('Blockchain transfer success')
+
+            projectService.addContributor(projectId, event.metadata.userName)
+                .then((data) => {
+                    logger.debug('Mongo add contributors success')
+                    // return res.json(getMessage(true, "Transferred succesfully"))
+                })
+                .catch(err => {
+                    generateError(err, next, 500, 'Failed to add contributor in mongo');
+                });
+
+            return commonService.saveDonor(donorDetails)
+                .then((data) => {
+                    logger.debug('saved donor details')
+                    logger.debug(data)
+                    return getMessage(true, "Transferred succesfully")
+                })
+                .catch(err => {
+                    generateError(err, next, 500, 'Failed to save donor details');
+                })
+        }
+        catch (e) {
             generateError(e, next);
         }
     }
@@ -50,7 +80,7 @@ paymentService.saveTx = async (event, next) => {
         logger.debug('args  : ' + args);
 
         try {
-            await invoke.main('guest', 'corporate', "TransferTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
+            await invoke.main('guest', ORG2_NAME, "TransferTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
             logger.debug('Blockchain transfer success')
 
             let response = {}
@@ -65,7 +95,7 @@ paymentService.saveTx = async (event, next) => {
 
             //save donor details
             if (donorDetails.email) {
-                commonService.saveDonor(donorDetails)
+                return commonService.saveDonor(donorDetails)
                     .then((data) => {
                         logger.debug('saved donor details')
                         logger.debug(data)
