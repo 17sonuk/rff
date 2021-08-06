@@ -46,4 +46,4 @@ const credentials = { key: privateKey, cert: certificate }; // https
 
 const httpsServer = https.createServer(credentials, app); // https
 
-httpsServer.listen(PORT, "0.0.0.0", () => logger.info(`Server running on Port ${PORT}`)); //https
+httpsServer.listen(PORT, () => logger.info(`Server running on Port ${PORT}`)); //https

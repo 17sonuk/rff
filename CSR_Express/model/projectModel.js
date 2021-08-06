@@ -100,14 +100,17 @@ projectModelObj.updateProjectForApproval = async (projectId, projectObj) => {
         const opts = { session };
 
         const deleteResult = await projectModel.deleteOne({ projectId: projectId }, opts);
+        console.log('deleted', deleteResult)
 
-        const saveResult = await projectModel.create(projectData, opts);
+        const saveResult = await projectModel.create(projectObj, opts);
+        console.log('approved', saveResult)
         // const saveResult = await projectModel(projectData).save(opts);
 
         await session.commitTransaction();
         session.endSession();
         return { success: true, message: 'project successfully approved' }
-    } catch (error) {
+    }
+    catch (error) {
         // If an error occurred, abort the whole transaction and
         // undo any changes that might have happened
         await session.abortTransaction();

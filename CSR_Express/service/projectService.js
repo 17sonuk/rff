@@ -121,23 +121,15 @@ projectService.deleteProjectById = (projectId) => {
 }
 
 //updateProjectForApproval
-// projectService.updateProjectForApproval = async (projectId, projectObj) => {
-
-//     try {
-//         await projectModel.deleteProjectById(projectId, projectObj)
-//     }
-//     catch (err) {
-
-//     }
-
-//     return .then(data => {
-//         if (data) {
-//             return data;
-//         } else {
-//             let err = new Error("Bad Connection")
-//             err.status = 500
-//             throw err
-//         }
-//     })
-// }
+projectService.updateProjectForApproval = async (projectId, projectObj) => {
+    try {
+        return await projectModel.deleteProjectById(projectId, projectObj)
+    }
+    catch (error) {
+        console.log(error)
+        let err = new Error("Approval failed!")
+        err.status = 500
+        throw err
+    }
+}
 module.exports = projectService;

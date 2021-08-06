@@ -30,7 +30,8 @@
         "/query/funds-raised-by-ngo",
         "/project/ngo-project-and-locked-details",
         "/mongo/file/upload",
-        "/mongo/file/getFile"
+        "/mongo/file/getFile",
+        "/project/get-allprojects"
     ],
     "corporate": [
         "/users",
@@ -90,9 +91,10 @@
         "/psp/razorpay/payment",
         "/mongo/file/getFile",
         "/utils/yearly-report",
-        "/project/reject",
+        "/project/abandon",
         "/project/delete",
-        "/project/get-allprojects"
+        "/project/get-allprojects",
+        "/project/approve"
     ],
     "guest": [
         "/mongo/file/getFile",

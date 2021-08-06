@@ -18,7 +18,8 @@ type Project struct {
 	Phases           []Phase           `json:"phases"`
 	CreationDate     int               `json:"creationDate"`
 	TotalProjectCost float64           `json:"totalProjectCost"`
-	ProjectState     string            `json:"projectState"` //Created(old), UnApproved, Approved, Rejected, PartlyFunded, FullyFunded, Completed, Abandoned
+	ProjectState     string            `json:"projectState"`  //Created(old), UnApproved, Approved, Rejected, PartlyFunded, FullyFunded, Completed, Abandoned
+	ApprovalState    string            `json:"approvalState"` //Approved , Abandon,UnApproved
 	NGO              string            `json:"ngo"`
 	Contributors     map[string]string `json:"contributors"`
 	VisibleTo        []string          `json:"visibleTo"`
@@ -129,7 +130,8 @@ func (s *SmartContract) CreateProject(ctx contractapi.TransactionContextInterfac
 	//set extra attributes
 	projectObj.NGO = commonName
 	projectObj.ObjectType = "Project"
-	projectObj.ProjectState = "UnApproved"
+	projectObj.ProjectState = "Created"
+	projectObj.ApprovalState = "UnApproved"
 	projectObj.Place = strings.ToLower(projectObj.Place)
 	projectObj.Contributors = make(map[string]string)
 
@@ -152,7 +154,7 @@ func (s *SmartContract) CreateProject(ctx contractapi.TransactionContextInterfac
 		}
 	}
 
-	projectObj.Phases[0].PhaseState = "Open For Funding"
+	//projectObj.Phases[0].PhaseState = "Open For Funding"
 	projectObj.TotalProjectCost = allPhaseCosts
 	// if allPhaseCosts != projectObj.TotalProjectCost {
 	// 	return false, fmt.Errorf("sum of all phase costs do not match with total project cost!")
@@ -172,6 +174,13 @@ func (s *SmartContract) CreateProject(ctx contractapi.TransactionContextInterfac
 	if err != nil {
 		return false, fmt.Errorf("Failed to add a Tx: " + err.Error())
 	}
+
+	eventPayload := "A new project '" + projectObj.ProjectName + "' is waiting for your approval."
+
+	notification := &Notification{TxId: txId, Description: eventPayload, Users: []string{"ca." + creditsauthority + "." + domain}}
+	// InfoLogger.Printf("notification:", eventPayload)
+	notificationtAsBytes, err := json.Marshal(notification)
+	ctx.GetStub().SetEvent("Notification", notificationtAsBytes)
 
 	//InfoLogger.Printf("*************** createProject Successful ***************")
 	return true, nil
@@ -255,7 +264,7 @@ func (s *SmartContract) ApproveProject(ctx contractapi.TransactionContextInterfa
 	//set extra attributes
 	newProjectObj.NGO = projectState.NGO
 	newProjectObj.ObjectType = "Project"
-	newProjectObj.ProjectState = "Approved"
+	newProjectObj.ApprovalState = "Approved"
 	newProjectObj.Place = strings.ToLower(newProjectObj.Place)
 	newProjectObj.Contributors = make(map[string]string)
 
@@ -742,7 +751,7 @@ func (s *SmartContract) DeleteProject(ctx contractapi.TransactionContextInterfac
 
 	json.Unmarshal(projectAsBytes, &projectState)
 
-	if projectState.ProjectState != "UnApproved" {
+	if projectState.ApprovalState != "UnApproved" {
 		return false, fmt.Errorf("Only UnApproved project can be deleted!")
 	}
 
@@ -767,8 +776,8 @@ func (s *SmartContract) DeleteProject(ctx contractapi.TransactionContextInterfac
 	return true, nil
 }
 
-//reject the project
-func (s *SmartContract) RejectProject(ctx contractapi.TransactionContextInterface, arg string) (bool, error) {
+//abandon the project
+func (s *SmartContract) AbandonProject(ctx contractapi.TransactionContextInterface, arg string) (bool, error) {
 
 	creator, err := ctx.GetStub().GetCreator()
 	if err != nil {
@@ -777,7 +786,7 @@ func (s *SmartContract) RejectProject(ctx contractapi.TransactionContextInterfac
 	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
 	if mspId != CreditsAuthorityMSP {
 
-		return false, fmt.Errorf("only Regulator can initiate RejectProject")
+		return false, fmt.Errorf("only Regulator can initiate AbandonProject")
 	}
 	// InfoLogger.Printf("current logged in user:", commonName, "with mspId:", mspId)
 
@@ -820,26 +829,27 @@ func (s *SmartContract) RejectProject(ctx contractapi.TransactionContextInterfac
 
 	json.Unmarshal(projectAsBytes, &projectState)
 
-	if projectState.ProjectState != "UnApproved" {
-		return false, fmt.Errorf("Only UnApproved project can be rejected!")
+	if projectState.ApprovalState != "Approved" {
+		return false, fmt.Errorf("Only Approved project can be abandoned!")
 	}
-	projectState.ProjectState = "Rejected"
+	projectState.ApprovalState = "Abandon"
 
 	projectAsBytes, _ = json.Marshal(projectState)
 	ctx.GetStub().PutState(projectId, projectAsBytes)
 
 	//create a transaction
-	err = createTransaction(ctx, commonName, projectState.NGO, 0.0, date, "RejectProject", projectId, txId, -1)
+	err = createTransaction(ctx, commonName, projectState.NGO, 0.0, date, "AbandonProject", projectId, txId, -1)
 	if err != nil {
 		return false, fmt.Errorf("Failed to add a Tx: " + err.Error())
 	}
 
-	eventPayload := projectState.ProjectName + " project has been rejected by Rainforest Foundation US. " + "Comments: " + comments
+	eventPayload := projectState.ProjectName + " project has been abandoned by Rainforest Foundation US. " + "Comments: " + comments
 
 	notification := &Notification{TxId: txId, Description: eventPayload, Users: []string{projectState.NGO}}
 	notificationtAsBytes, err := json.Marshal(notification)
 	ctx.GetStub().SetEvent("Notification", notificationtAsBytes)
-	// InfoLogger.Printf("*************** DeleteProject Successfull ***************")
+
+	// InfoLogger.Printf("*************** AbandonProject Successfull ***************")
 	return true, nil
 }
 

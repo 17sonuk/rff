@@ -52,8 +52,8 @@ router.post('/create', async (req, res, next) => {
     }
 });
 
-//****************************** Create Project *******************************
-// Create Project transaction on chaincode on target peers. - done but errors
+//****************************** Approve Project *******************************
+// Approve Project transaction on chaincode on target peers. - done but errors
 router.put('/approve', async (req, res, next) => {
     logger.debug('==================== INVOKE CREATE PROJECT ON CHAINCODE ==================');
 
@@ -65,21 +65,25 @@ router.put('/approve', async (req, res, next) => {
     args = JSON.stringify(args);
     logger.debug('args  : ' + args);
 
+    let successBlockchain = false;
+
     try {
         await invoke.main(req.userName, req.orgName, "ApproveProject", CHAINCODE_NAME, CHANNEL_NAME, args);
+        successBlockchain = true
+        let result = await projectService.updateProject(projectId, req.body.mongo)
+        console.log(result)
+        logger.debug('Mongo approve project success')
+        return res.json(getMessage(true, "Project Approved succesfully"))
 
-        //     projectService.updateProject(projectId, req.body.blockchain["creationDate"] = Date.now();)
-        // .then((data) => {
-        //     logger.debug('Mongo add contributors success')
-        //     return res.json(getMessage(true, "Transferred succesfully"))
-        // })
-        // .catch(err => {
-        //     generateError(err, next, 500, 'Failed to add contributor in mongo');
-        // });
-        return res.json({ ...getMessage(true, 'Successfully invoked ApproveProject'), 'projectId': projectId });
+        //return res.json({ ...getMessage(true, 'Successfully invoked ApproveProject'), 'projectId': projectId });
     }
     catch (e) {
-        generateError(e, next)
+        if (successBlockchain) {
+            generateError(err, next, 500, 'Failed to add contributor in mongo');
+        }
+        else {
+            generateError(e, next)
+        }
     }
 });
 
@@ -264,7 +268,8 @@ router.get('/all', async (req, res, next) => {
 
     let queryString = {
         "selector": {
-            "docType": "Project"
+            "docType": "Project",
+            "approvalState": "Approved"
         },
         "sort": [{ "creationDate": "desc" }]
     }
@@ -1096,10 +1101,13 @@ router.get('/get-allprojects', async (req, res, next) => {
     let queryString = {
         "selector": {
             "docType": "Project",
-            "projectState": status
+            "approvalState": status
         }
     }
 
+    if (orgMap[req.orgName.toLowerCase()] === ORG3_NAME) {
+        queryString["selector"]["ngo"] = orgDLTName
+    }
 
     logger.debug('queryString: ' + JSON.stringify(queryString));
 
@@ -1189,8 +1197,10 @@ router.get('/get-allprojects', async (req, res, next) => {
     }
 });
 
-//reject a project by id
-router.put('/reject', async (req, res, next) => {
+
+
+//abandon a project by id
+router.put('/abandon', async (req, res, next) => {
 
     //extract parameters from request body.
     const projectId = req.body.projectId;
@@ -1213,13 +1223,14 @@ router.put('/reject', async (req, res, next) => {
 
     try {
 
-        await invoke.main(req.userName, req.orgName, "RejectProject", CHAINCODE_NAME, CHANNEL_NAME, args);
-        logger.debug('Successfully invoked RejectProject')
-        return res.json(getMessage(true, "Rejected project successfully"))
+        await invoke.main(req.userName, req.orgName, "AbandonProject", CHAINCODE_NAME, CHANNEL_NAME, args);
+        logger.debug('Successfully invoked AbandonProject')
+        return res.json(getMessage(true, "Abandoned project successfully"))
     }
     catch (e) {
         generateError(e, next)
     }
 });
+
 
 module.exports = router;
