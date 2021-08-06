@@ -33,19 +33,30 @@ commonService.getCommunities = () => {
     })
 }
 
-commonService.getCommunity = (name, place) => {
-    return commonModel.getCommunity(name, place).then(data => {
+commonService.getCommunity = async (communityId) => {
+    return commonModel.getCommunity(communityId).then(data => {
         if (data) {
-            if (data.paymentDetails.paymentType === 'Paypal') {
-                return data.paymentDetails.paypalEmailId
-            }
-            return data.paymentDetails.bankDetails
+            return data;
+        } else {
+            let err = new Error("No community")
+            err.status = 500
+            throw err
         }
-        let err = new Error("Bad Connection")
-        err.status = 500
-        throw err
+    }).catch(er=>{
+        throw er
     })
 }
+// commonService.getCommunity = (name, place) => {
+//     return commonModel.getCommunity(name, place).then(data => {
+//         if (data) {
+//             return data;
+//         } else {
+//             let err = new Error("No payment details stored for this community")
+//             err.status = 500
+//             throw err
+//         }
+//     })
+// }
 
 commonService.deleteCommunities = (communityIds) => {
     return commonModel.deleteCommunities(communityIds).then(data => {
@@ -75,6 +86,36 @@ commonService.getDonors = () => {
         err.status = 500
         throw err
     })
+}
+
+commonService.updateCommunity= (communityId,name,place,paymentDetails)=>{
+    return commonModel.updateCommunity(communityId,name,place,paymentDetails).then(data=>{
+        console.log("data in service :",data)
+        if (data) return data;
+
+        let err = new Error("Bad Connection")
+        err.status = 500
+        throw err
+    })
+
+}
+
+commonService.getListedCommunity= (communityIds, orgName)=>{
+    return commonModel.getListedCommunity(communityIds, orgName).then(data=>{
+        console.log("data in service :",data)
+        if (data) return data;
+
+        let err = new Error("No data found")
+        err.status = 500
+        throw err
+        
+    }).catch(er=>{
+        console.log(er)
+        let err = new Error("Bad Connection")
+        err.status = 500
+        throw err
+    })
+
 }
 
 module.exports = commonService;

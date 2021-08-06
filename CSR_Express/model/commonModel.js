@@ -41,9 +41,36 @@ commonModel.getCommunities = () => {
     })
 }
 
-commonModel.getCommunity = (name, place) => {
-    return await communityModel.findOne({ $and: [{ name: name }, { place: place }] });
+commonModel.getCommunity = async (communityId) => {
+    return communityModel.findOne({ _id: communityId }).then(data => {
+        console.log("data: ", data)
+        if (data) return data
+
+        let err = new Error("Community does not exist")
+        err.status = 500
+        throw err
+
+    }).catch(error => {
+        console.log(error)
+        let err = new Error("Bad Connection")
+        err.status = 500
+        throw err
+    })
 }
+// commonModel.getCommunity = async (name, place) => {
+//     let res = await communityModel.findOne({ $and: [{ name: name }, { place: place }] });
+//     if (res) {
+//         if (res.paymentDetails) {
+//             return res.paymentDetails
+//         } else {
+//             return null
+//         }
+//     } else {
+//         let err = new Error("Community does not exist")
+//         err.status = 500
+//         throw err
+//     }
+// }
 
 commonModel.deleteCommunities = async (communityIds) => {
     // let myquery = { _id: { $in: communityIds } };
@@ -77,6 +104,28 @@ commonModel.getDonors = () => {
     return donorModel.find().then(data => {
         return data ? data : null
     })
+}
+
+commonModel.updateCommunity = (communityId, name, place, paymentDetails) => {
+    console.log("communityId, paymentDetails: ", communityId, paymentDetails)
+    return communityModel.updateOne({ _id: communityId }, { $set: { name: name, place: place, paymentDetails: paymentDetails } }).then(data => {
+        console.log("Data: ", data)
+        return data
+    }).catch((er) => {
+        console.log("error: ", er)
+        return nil
+    })
+}
+
+
+commonModel.getListedCommunity = async (communityIds, orgName) => {
+    console.log("communityIds : ", communityIds, orgName)
+    if (orgName === 'ngo') {
+        var res = await communityModel.find({ _id: { $in: communityIds } })
+    } else {
+        res = await communityModel.find({ _id: { $in: communityIds } }, { paymentDetails: 0 })
+    }
+    return res
 }
 
 module.exports = commonModel;

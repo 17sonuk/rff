@@ -10,6 +10,7 @@ const { fieldErrorMessage, generateError, getMessage, splitOrgName } = require('
 
 const invoke = require('../../fabric-sdk/invoke');
 const query = require('../../fabric-sdk/query');
+const projectService = require('../../service/projectService')
 
 let orgMap = {
     'creditsauthority': ORG1_NAME,
@@ -45,6 +46,37 @@ router.post('/create', async (req, res, next) => {
     try {
         await invoke.main(req.userName, req.orgName, "CreateProject", CHAINCODE_NAME, CHANNEL_NAME, args);
         return res.json({ ...getMessage(true, 'Successfully invoked CreateProject'), 'projectId': projectId });
+    }
+    catch (e) {
+        generateError(e, next)
+    }
+});
+
+//****************************** Create Project *******************************
+// Create Project transaction on chaincode on target peers. - done but errors
+router.put('/approve', async (req, res, next) => {
+    logger.debug('==================== INVOKE CREATE PROJECT ON CHAINCODE ==================');
+
+    //set extra attributes in request body.
+    req.body.blockchain["creationDate"] = Date.now();
+    const projectId = uuid().toString()
+
+    let args = [JSON.stringify(req.body.blockchain), projectId, uuid().toString()];
+    args = JSON.stringify(args);
+    logger.debug('args  : ' + args);
+
+    try {
+        await invoke.main(req.userName, req.orgName, "ApproveProject", CHAINCODE_NAME, CHANNEL_NAME, args);
+
+        //     projectService.updateProject(projectId, req.body.blockchain["creationDate"] = Date.now();)
+        // .then((data) => {
+        //     logger.debug('Mongo add contributors success')
+        //     return res.json(getMessage(true, "Transferred succesfully"))
+        // })
+        // .catch(err => {
+        //     generateError(err, next, 500, 'Failed to add contributor in mongo');
+        // });
+        return res.json({ ...getMessage(true, 'Successfully invoked ApproveProject'), 'projectId': projectId });
     }
     catch (e) {
         generateError(e, next)
@@ -990,6 +1022,200 @@ router.get('/getCorporateProjectDetails', async (req, res, next) => {
             result.push(response)
         });
         return res.json({ ...getMessage(true, 'CommonQuery successful'), 'records': result })
+    }
+    catch (e) {
+        generateError(e, next)
+    }
+});
+
+
+//delete a project by id
+router.post('/delete', async (req, res, next) => {
+
+    //extract parameters from request body.
+    const projectId = req.body.projectId;
+    const comments = req.body.comments;
+
+    if (!CHAINCODE_NAME) {
+        return res.json(fieldErrorMessage('\'chaincodeName\''));
+    } else if (!CHANNEL_NAME) {
+        return res.json(fieldErrorMessage('\'CHANNEL_NAME\''));
+    } else if (!projectId) {
+        return res.json(fieldErrorMessage('\'projectId\''));
+    } else if (!comments) {
+        return res.json(fieldErrorMessage('\'comments\''));
+    }
+
+
+    let args = [projectId, comments, Date.now().toString(), uuid().toString()];
+    args = JSON.stringify(args);
+    logger.debug('args  : ' + args);
+
+    try {
+
+        await invoke.main(req.userName, req.orgName, "DeleteProject", CHAINCODE_NAME, CHANNEL_NAME, args);
+        logger.debug('Successfully invoked DeleteProject')
+
+        projectService.deleteProjectById(projectId)
+            .then((data) => {
+                console.log(data)
+                logger.debug('Mongo delete project success')
+                return res.json(getMessage(true, "Deleted project successfully"))
+            })
+            .catch(err => {
+                generateError(err, next, 500, 'Failed to delete project in mongo');
+            });
+    }
+    catch (e) {
+        generateError(e, next)
+    }
+});
+
+// get all projects by status
+router.get('/get-allprojects', async (req, res, next) => {
+    logger.debug('==================== QUERY BY CHAINCODE: getAllProjects ==================');
+
+    const orgDLTName = req.userName + "." + orgMap[req.orgName.toLowerCase()] + "." + BLOCKCHAIN_DOMAIN + ".com";
+    const pageSize = req.query.pageSize;
+    const bookmark = req.query.bookmark;
+    const status = req.query.projectStatus;
+
+    if (!CHAINCODE_NAME) {
+        return res.json(fieldErrorMessage('\'chaincodeName\''));
+    }
+    if (!CHANNEL_NAME) {
+        return res.json(fieldErrorMessage('\'channelName\''));
+    }
+    if (!pageSize) {
+        return res.json(fieldErrorMessage('\'pageSize\''));
+    }
+    if (!status) {
+        return res.json(fieldErrorMessage('\'status\''));
+    }
+
+    let queryString = {
+        "selector": {
+            "docType": "Project",
+            "projectState": status
+        }
+    }
+
+
+    logger.debug('queryString: ' + JSON.stringify(queryString));
+
+    let args = [JSON.stringify(queryString), pageSize, bookmark];
+    args = JSON.stringify(args);
+
+    try {
+        let message = await query.main(req.userName, req.orgName, "CommonQueryPagination", CHAINCODE_NAME, CHANNEL_NAME, args);
+        message = JSON.parse(message.toString());
+        if (message.toString().includes("Error:")) {
+            let errorMessage = message.toString().split("Error:")[1].trim()
+            return res.json(getMessage(false, errorMessage))
+        }
+        else {
+            // let responseMetaObj = new Object()
+            message['Results'].forEach(elem => {
+                elem['Record'] = JSON.parse(elem['Record'])
+            })
+            let newObject = message['Results'];
+            // newObject.success = true
+
+            let finalResponse = {}
+            let allRecords = []
+
+            //populate the MetaData
+            finalResponse["metaData"] = {}
+            finalResponse["metaData"]["recordsCount"] = message["RecordsCount"];
+            finalResponse["metaData"]["bookmark"] = message["Bookmark"];
+
+            //loop over the projects
+            for (let i = 0; i < newObject.length; i++) {
+
+                let response = {}
+                response["totalReceived"] = 0;
+                response["ourContribution"] = 0;
+
+                let record = newObject[i]["Record"];
+                logger.debug(`Project ${i} : ${JSON.stringify(record, null, 2)}`);
+
+                let currentPhase = 0;
+                for (let f = 0; f < record.phases.length; f++) {
+                    let phaseQty = record.phases[f]["qty"];
+                    let phaseOutstandingQty = record.phases[f]["outstandingQty"]
+
+                    response["totalReceived"] += (phaseQty - phaseOutstandingQty)
+
+                    // if (record.phases[f]["phaseState"] !== "Created" && record.phases[f]["phaseState"] !== "Complete") {
+                    if (record.phases[f]["phaseState"] !== "Created") {
+                        currentPhase = f
+                    }
+
+                    if (record.phases[f]["contributions"][orgDLTName] !== undefined) {
+                        response["ourContribution"] += record.phases[f]["contributions"][orgDLTName]["contributionQty"];
+                    }
+                }
+
+                response['currentPhase'] = currentPhase + 1;
+                response['currentPhaseStatus'] = record.phases[currentPhase]['phaseState'];
+                response['currentPhaseTarget'] = record.phases[currentPhase]['qty'];
+                response['currentPhaseOutstandingAmount'] = record.phases[currentPhase]['outstandingQty'];
+
+                response['projectId'] = newObject[i]['Key']
+                response['contributors'] = Object.keys(record['contributors']).map(splitOrgName)
+                response['ngo'] = splitOrgName(record['ngo'])
+                response['totalProjectCost'] = record['totalProjectCost']
+                response['projectName'] = record['projectName']
+                response['projectType'] = record['projectType']
+                response['totalPhases'] = record.phases.length
+                response["percentageFundReceived"] = (response["totalReceived"] / record['totalProjectCost']) * 100;
+
+                let endDate = record.phases[record.phases.length - 1]['endDate']
+                let timeDifference = endDate - Date.now()
+                if (timeDifference < 0) {
+                    timeDifference = 0
+                }
+                response['daysLeft'] = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
+                allRecords.push(response);
+            }
+
+            logger.debug(`All : ${JSON.stringify(allRecords, null, 2)}`);
+            finalResponse["records"] = allRecords
+            return res.json(getMessage(true, finalResponse))
+        }
+    }
+    catch (e) {
+        generateError(e, next);
+    }
+});
+
+//reject a project by id
+router.put('/reject', async (req, res, next) => {
+
+    //extract parameters from request body.
+    const projectId = req.body.projectId;
+    const comments = req.body.comments;
+
+    if (!CHAINCODE_NAME) {
+        return res.json(fieldErrorMessage('\'chaincodeName\''));
+    } else if (!CHANNEL_NAME) {
+        return res.json(fieldErrorMessage('\'CHANNEL_NAME\''));
+    } else if (!projectId) {
+        return res.json(fieldErrorMessage('\'projectId\''));
+    } else if (!comments) {
+        return res.json(fieldErrorMessage('\'comments\''));
+    }
+
+
+    let args = [projectId, comments, Date.now().toString(), uuid().toString()];
+    args = JSON.stringify(args);
+    logger.debug('args  : ' + args);
+
+    try {
+
+        await invoke.main(req.userName, req.orgName, "RejectProject", CHAINCODE_NAME, CHANNEL_NAME, args);
+        logger.debug('Successfully invoked RejectProject')
+        return res.json(getMessage(true, "Rejected project successfully"))
     }
     catch (e) {
         generateError(e, next)

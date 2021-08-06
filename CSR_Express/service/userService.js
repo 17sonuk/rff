@@ -70,6 +70,11 @@ userService.registerUser = (obj) => {
     //obj['date'] = new Date().getTime();
     return userModel.registerUser(obj).then(data => {
         if (data) {
+            if (data.success === false) {
+                err.message = data.message
+                err.status = 500
+                throw err
+            }
             console.log('use added!!!!')
             return data;
         }

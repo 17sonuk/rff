@@ -13,7 +13,7 @@ const path = require('path');
 const logger = require('../loggers/logger');
 
 require('dotenv').config();
-const { ORG1_NAME, ORG2_NAME, ORG3_NAME, BLOCKCHAIN_DOMAIN } = process.env;
+const { ORG1_NAME, ORG2_NAME, ORG3_NAME, BLOCKCHAIN_DOMAIN, Org1MSP } = process.env;
 
 console.log('org 2:', ORG2_NAME)
 let orgMap = {
@@ -50,8 +50,8 @@ async function main(orgName) {
     }
 
     let mspId;
-    if (orgName === 'org1') {
-        mspId = 'Org1MSP';
+    if (orgName === ORG1_NAME) {
+        mspId = Org1MSP;
     } else {
         mspId = `${orgName[0].toUpperCase() + orgName.slice(1)}MSP`;
     }

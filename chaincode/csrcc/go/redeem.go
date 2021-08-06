@@ -44,6 +44,8 @@ type BankDetails struct {
 	ABAorRoutingNo             string  `json:"ABAorRoutingNo"`
 	BICSwiftorCHIPSUISSortCode string  `json:"BICSwiftorCHIPSUISSortCode"`
 	IBANNo                     string  `json:"IBANNo"`
+	BeneficiaryName            string  `json:"beneficiaryName"`
+	BeneficiaryAddress         string  `json:"beneficiaryAddress"`
 }
 
 type Address struct {

@@ -244,7 +244,6 @@ router.get('/yearly-report', async function (req, res, next) {
         }
 
         return res.json(getMessage(true, result));
-
     }
     catch (e) {
         generateError(e, next)

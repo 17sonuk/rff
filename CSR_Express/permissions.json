@@ -1,5 +1,6 @@
 {
     "common": [
+	"/mongo/common/community/listed",
         "/mongo/project",
         "/mongo/user/notification",
         "/mongo/user/checkUserNameValidity",
@@ -58,6 +59,7 @@
     "creditsauthority": [
         "/mongo/common/community",
         "/mongo/common/community/all",
+        "/mongo/common/update-community",
         "/mongo/user/approve-user",
         "/mongo/user/reject-user",
         "/mongo/user/unapproved-users",
@@ -87,7 +89,10 @@
         "/psp/razorpay",
         "/psp/razorpay/payment",
         "/mongo/file/getFile",
-        "/utils/yearly-report"
+        "/utils/yearly-report",
+        "/project/reject",
+        "/project/delete",
+        "/project/get-allprojects"
     ],
     "guest": [
         "/mongo/file/getFile",

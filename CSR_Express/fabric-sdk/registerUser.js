@@ -16,7 +16,7 @@ const enrollAdmin = require('./enrollAdmin');
 const logger = require('../loggers/logger');
 
 require('dotenv').config();
-const { ORG1_NAME, ORG2_NAME, ORG3_NAME, BLOCKCHAIN_DOMAIN } = process.env;
+const { ORG1_NAME, ORG2_NAME, ORG3_NAME, BLOCKCHAIN_DOMAIN, Org1MSP } = process.env;
 
 let orgMap = {
     'creditsauthority': ORG1_NAME,
@@ -40,7 +40,6 @@ async function main(userName, orgName, checkWallet = false) {
 
     // Create a new CA client for interacting with the CA.
     const caURL = ccp.certificateAuthorities[`ca.${orgName}.${BLOCKCHAIN_DOMAIN}.com`].url;
-
     const ca = new FabricCAServices(caURL);
 
     // Create a new file system based wallet for managing identities.
@@ -93,28 +92,13 @@ async function main(userName, orgName, checkWallet = false) {
     const adminUser = await provider.getUserContext(adminIdentity, 'admin');
 
     let mspId;
-    if (orgName === 'org1') {
-        mspId = 'Org1MSP';
+    if (orgName === ORG1_NAME) {
+        mspId = Org1MSP;
     } else {
         mspId = `${orgName[0].toUpperCase() + orgName.slice(1)}MSP`;
     }
 
     // Register the user, enroll the user, and import the new identity into the wallet.
-
-    //DELETE CA USER
-    // let client = ca._fabricCAClient
-    // console.log('client: ', client)
-    // let identityService = new IdentityService(client)
-    // identityService.delete(userName, adminUser, false)
-
-    // const identityService = ca.newIdentityService();
-
-    // const retrieveIdentity = await identityService.getOne("ca", adminIdentity)
-    // console.log("user attributes: ", retrieveIdentity.result.attrs)
-
-    const caUser = await provider.getUserContext(adminIdentity, 'ca');
-    console.log('ca', caUser)
-
     console.log('register')
     const secret = await ca.register({
         affiliation: `${orgName}.department1`,

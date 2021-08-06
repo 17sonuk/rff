@@ -44,9 +44,9 @@ router.get('/community/all', (req, res, next) => {
 
 router.get('/community', (req, res, next) => {
     // return project data object from service
-    logger.debug('router-getcommunities');
+    logger.debug('router-getcommunity');
 
-    commonService.getCommunities(req.query.name, req.query.place)
+    commonService.getCommunity(req.query.communityId)
         .then((data) => {
             res.json(data)
         })
@@ -59,12 +59,67 @@ router.get('/community', (req, res, next) => {
         })
 })
 
+// router.get('/community', (req, res, next) => {
+//     // return project data object from service
+//     logger.debug('router-getcommunity');
+
+//     commonService.getCommunity(decodeURIComponent(req.query.name), decodeURIComponent(req.query.place))
+//         .then((data) => {
+//             res.json(data)
+//         })
+//         .catch(err => {
+//             if (err['_message']) {
+//                 err.status = 400
+//                 err.message = err['_message'];
+//             }
+//             next(err)
+//         })
+// })
+
+//delete community
 router.put('/community', (req, res, next) => {
     // return project data object from service
     logger.debug('router-deleteCommunities', req.body);
 
     console.log(req.body)
     commonService.deleteCommunities(req.body)
+        .then((data) => {
+            res.json(data)
+        })
+        .catch(err => {
+            if (err['_message']) {
+                err.status = 400
+                err.message = err['_message'];
+            }
+            next(err)
+        })
+})
+
+
+//update
+router.put('/update-community', (req, res, next) => {
+    // return project data object from service
+    logger.debug('router-updateCommunities', req.body);
+
+    console.log(req.body)
+    commonService.updateCommunity(req.body.communityId,req.body.name,req.body.place,req.body.paymentDetails)
+        .then((data) => {
+            res.json(data)
+        })
+        .catch(err => {
+            if (err['_message']) {
+                err.status = 400
+                err.message = err['_message'];
+            }
+            next(err)
+        })
+})
+
+//get all communites from list
+router.post('/community/listed', (req, res, next) => {
+    logger.debug('router get-allcommunity');
+
+    commonService.getListedCommunity(req.body, req.orgName)
         .then((data) => {
             res.json(data)
         })

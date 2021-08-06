@@ -107,4 +107,37 @@ projectService.addContributor = (projectId, contributor) => {
     })
 }
 
+//delete project by Id
+projectService.deleteProjectById = (projectId) => {
+    return projectModel.deleteProjectById(projectId).then(data => {
+        if (data) {
+            return data;
+        } else {
+            let err = new Error("Bad Connection")
+            err.status = 500
+            throw err
+        }
+    })
+}
+
+//updateProjectForApproval
+// projectService.updateProjectForApproval = async (projectId, projectObj) => {
+
+//     try {
+//         await projectModel.deleteProjectById(projectId, projectObj)
+//     }
+//     catch (err) {
+
+//     }
+
+//     return .then(data => {
+//         if (data) {
+//             return data;
+//         } else {
+//             let err = new Error("Bad Connection")
+//             err.status = 500
+//             throw err
+//         }
+//     })
+// }
 module.exports = projectService;
