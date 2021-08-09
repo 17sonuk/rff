@@ -18,7 +18,7 @@ type Project struct {
 	Phases           []Phase           `json:"phases"`
 	CreationDate     int               `json:"creationDate"`
 	TotalProjectCost float64           `json:"totalProjectCost"`
-	ProjectState     string            `json:"projectState"`  //Created(old), UnApproved, Approved, Rejected, PartlyFunded, FullyFunded, Completed, Abandoned
+	ProjectState     string            `json:"projectState"`  //Created(old), PartlyFunded, FullyFunded, Seeking Validation, Completed
 	ApprovalState    string            `json:"approvalState"` //Approved , Abandon,UnApproved
 	NGO              string            `json:"ngo"`
 	Contributors     map[string]string `json:"contributors"`
@@ -231,8 +231,6 @@ func (s *SmartContract) ApproveProject(ctx contractapi.TransactionContextInterfa
 		return false, fmt.Errorf("Project type is mandatory!")
 	} else if len(newProjectObj.Phases) < 1 {
 		return false, fmt.Errorf("please specify atleast one phase!")
-	} else if newProjectObj.CreationDate <= 0 {
-		return false, fmt.Errorf("Creation Date is mandatory!")
 	} else if newProjectObj.Contributors != nil {
 		return false, fmt.Errorf("Contributors should be none!")
 	}
@@ -267,6 +265,8 @@ func (s *SmartContract) ApproveProject(ctx contractapi.TransactionContextInterfa
 	newProjectObj.ApprovalState = "Approved"
 	newProjectObj.Place = strings.ToLower(newProjectObj.Place)
 	newProjectObj.Contributors = make(map[string]string)
+	newProjectObj.CreationDate = projectState.CreationDate
+	newProjectObj.ProjectState = "Created"
 
 	//TODO: move it to UI
 	allPhaseCosts := 0.0
@@ -389,13 +389,32 @@ func (s *SmartContract) ValidatePhase(ctx contractapi.TransactionContextInterfac
 	projectObj.Phases[phaseNumber].CAValidation = validationObj
 	if validated {
 		projectObj.Phases[phaseNumber].PhaseState = "Validated"
+
+		if phaseNumber == 0 && projectObj.Phases[phaseNumber].OutstandingQty == projectObj.Phases[phaseNumber].Qty {
+			projectObj.ProjectState = "Created"
+
+		} else if phaseNumber == len(projectObj.Phases)-1 && projectObj.Phases[phaseNumber].OutstandingQty <= 0.0 {
+			projectObj.ProjectState = "Fully Funded"
+		} else {
+			projectObj.ProjectState = "Partially Funded"
+		}
+
 	} else {
+		if phaseNumber == 0 && projectObj.Phases[phaseNumber].OutstandingQty == projectObj.Phases[phaseNumber].Qty {
+			projectObj.ProjectState = "Created"
+
+		}
 		if projectObj.Phases[phaseNumber].OutstandingQty == projectObj.Phases[phaseNumber].Qty {
 			projectObj.Phases[phaseNumber].PhaseState = "Open For Funding"
+
 		} else if projectObj.Phases[phaseNumber].OutstandingQty <= 0.0 {
 			projectObj.Phases[phaseNumber].PhaseState = "Fully Funded"
+			if phaseNumber == len(projectObj.Phases)-1 {
+				projectObj.ProjectState = "Fully Funded"
+			}
 		} else {
 			projectObj.Phases[phaseNumber].PhaseState = "Partially Funded"
+			projectObj.ProjectState = "Partially Funded"
 		}
 	}
 
@@ -622,6 +641,7 @@ func (s *SmartContract) UpdateProject(ctx contractapi.TransactionContextInterfac
 		//TODO: check if documents are uploaded for each validation criteria
 		if currentPhaseState == "Open For Funding" || currentPhaseState == "Partially Funded" || currentPhaseState == "Fully Funded" {
 			projectState.Phases[phaseNumber].PhaseState = "Seeking Validation"
+			projectState.ProjectState = "Seeking Validation"
 		} else {
 			// InfoLogger.Printf("current phase is not yet fully funded to seek validation")
 			return false, fmt.Errorf("current phase is in an invalid state to seek validation")

@@ -123,7 +123,7 @@ projectService.deleteProjectById = (projectId) => {
 //updateProjectForApproval
 projectService.updateProjectForApproval = async (projectId, projectObj) => {
     try {
-        return await projectModel.deleteProjectById(projectId, projectObj)
+        return await projectModel.updateProjectForApproval(projectId, projectObj)
     }
     catch (error) {
         console.log(error)

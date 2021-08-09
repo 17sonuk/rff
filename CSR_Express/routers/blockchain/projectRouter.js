@@ -56,11 +56,11 @@ router.post('/create', async (req, res, next) => {
 // Approve Project transaction on chaincode on target peers. - done but errors
 router.put('/approve', async (req, res, next) => {
     logger.debug('==================== INVOKE CREATE PROJECT ON CHAINCODE ==================');
-
+    console.log('body approve: ', req.body)
     //set extra attributes in request body.
-    req.body.blockchain["creationDate"] = Date.now();
-    const projectId = uuid().toString()
-
+    //req.body.blockchain["creationDate"] = Date.now();
+    const projectId = req.body.projectId
+    req.body.mongo.projectId = projectId
     let args = [JSON.stringify(req.body.blockchain), projectId, uuid().toString()];
     args = JSON.stringify(args);
     logger.debug('args  : ' + args);
@@ -70,7 +70,7 @@ router.put('/approve', async (req, res, next) => {
     try {
         await invoke.main(req.userName, req.orgName, "ApproveProject", CHAINCODE_NAME, CHANNEL_NAME, args);
         successBlockchain = true
-        let result = await projectService.updateProject(projectId, req.body.mongo)
+        let result = await projectService.updateProjectForApproval(projectId, req.body.mongo)
         console.log(result)
         logger.debug('Mongo approve project success')
         return res.json(getMessage(true, "Project Approved succesfully"))
@@ -79,7 +79,7 @@ router.put('/approve', async (req, res, next) => {
     }
     catch (e) {
         if (successBlockchain) {
-            generateError(err, next, 500, 'Failed to add contributor in mongo');
+            generateError(e, next, 500, 'Failed to add contributor in mongo');
         }
         else {
             generateError(e, next)
@@ -1084,6 +1084,7 @@ router.get('/get-allprojects', async (req, res, next) => {
     const pageSize = req.query.pageSize;
     const bookmark = req.query.bookmark;
     const status = req.query.projectStatus;
+    const validated = req.query.validated
 
     if (!CHAINCODE_NAME) {
         return res.json(fieldErrorMessage('\'chaincodeName\''));
@@ -1096,6 +1097,13 @@ router.get('/get-allprojects', async (req, res, next) => {
     }
     if (!status) {
         return res.json(fieldErrorMessage('\'status\''));
+    }
+
+    let queryS = {
+        "selector": {
+            "docType": "Project",
+            "projectState": "Seeking Validation"
+        }
     }
 
     let queryString = {
@@ -1113,6 +1121,11 @@ router.get('/get-allprojects', async (req, res, next) => {
 
     let args = [JSON.stringify(queryString), pageSize, bookmark];
     args = JSON.stringify(args);
+
+    if (validated === true) {
+        args = [JSON.stringify(queryS), pageSize, bookmark];
+        args = JSON.stringify(args);
+    }
 
     try {
         let message = await query.main(req.userName, req.orgName, "CommonQueryPagination", CHAINCODE_NAME, CHANNEL_NAME, args);
