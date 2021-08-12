@@ -14,7 +14,30 @@ const projectSchema = new Schema({
     contributorsList: [String],
     ngo: { type: String, required: true },
     place: { type: String, maxLength: 50 },
+    projectSummary: { type: String, required: true, maxLength: 200 },
     description: { type: String, maxLength: 2500 },
+
+    // 1) Who benefits from this project?
+    question1: { type: String, required: true, maxLength: 500 },
+
+    // 2) What environmental challenges are faced by the targeted population and how can we help them?
+    question2: { type: String, required: true, maxLength: 500 },
+
+    // 3) What activities will be conducted under this project?
+    question3: { type: String, required: true, maxLength: 500 },
+
+    // 4) What are the expected results from this project?
+    question4: { type: String, required: true, maxLength: 500 },
+
+    // 5) What evidence will be submitted to verify the expected results?
+    question5: { type: String, required: true, maxLength: 500 },
+
+    // 6) How does the community plan to reinvest the proceeds from this project?
+    question6: { type: String, required: true, maxLength: 500 },
+
+    // 7) Comments on the timeline (if any) (optional field)
+    question7: { type: String, maxLength: 500 },
+
     images: { type: [String], validate: [imageLimit, 'max 3 images allowed!'] },
     phases: { type: [phaseSchema], validate: [phaseLimit, 'Number of phases should be greater than or equal to 1'] },
     communities: { type: [String] },
@@ -47,7 +70,7 @@ const fileSchema = new Schema({
 })
 
 const phoneSchema = new Schema({
-    countryCode: { type: String, maxLength: 4 },
+    countryCode: { type: String, maxLength: 20 },
     phoneNumber: { type: String, maxLength: 10 }
 })
 

@@ -94,12 +94,13 @@ router.get('/getRecord/:recordKey', async function (req, res, next) {
             if (message[0]['Record']['docType'] === 'Project') {
                 message = message[0]
                 message['Record']['ngo'] = splitOrgName(message['Record']['ngo'])
-                message['Record']['totalReceived'] = 0;
+                // message['Record']['totalReceived'] = 0;
+                message['Record']['totalReceived'] = message['Record'].totalReceived;
                 let fundReceived = 0
 
                 for (let f = 0; f < message['Record'].phases.length; f++) {
                     fundReceived = (message['Record'].phases[f]['qty'] - message['Record'].phases[f]['outstandingQty'])
-                    message['Record']['totalReceived'] += fundReceived
+                    //message['Record']['totalReceived'] += fundReceived
                     message['Record'].phases[f]['fundReceived'] = fundReceived
                     message['Record'].phases[f]['percentageFundReceived'] = (fundReceived / message['Record'].phases[f]['qty']) * 100
 
@@ -107,11 +108,11 @@ router.get('/getRecord/:recordKey', async function (req, res, next) {
                         message["Record"]["currentPhase"] = f + 1;
                     }
 
-                    Object.keys(message["Record"].phases[f]['contributions']).forEach(function (key) {
+                    Object.keys(message["Record"]['contributions']).forEach(function (key) {
                         let newkey = key.split(".")[0];
-                        message["Record"].phases[f]['contributions'][newkey] = message["Record"].phases[f]['contributions'][key];
-                        delete message["Record"].phases[f]['contributions'][key];
-                        message["Record"].phases[f]['contributions'][newkey]['donatorAddress'] = splitOrgName(message["Record"].phases[f]['contributions'][newkey]['donatorAddress'])
+                        message["Record"]['contributions'][newkey] = message["Record"]['contributions'][key];
+                        delete message["Record"]['contributions'][key];
+                        //message["Record"]['contributions'][newkey]['donatorAddress'] = splitOrgName(message["Record"]['contributions'][newkey]['donatorAddress'])
                     });
                 }
 

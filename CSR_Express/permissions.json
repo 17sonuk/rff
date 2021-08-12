@@ -1,6 +1,6 @@
 {
     "common": [
-	"/mongo/common/community/listed",
+        "/mongo/common/community/listed",
         "/mongo/project",
         "/mongo/user/notification",
         "/mongo/user/checkUserNameValidity",
@@ -16,6 +16,7 @@
         "/users",
         "/mongo/user/onboard",
         "/mongo/user/profile",
+        "/mongo/user/update",
         "/mongo/user/redeemAccount",
         "/mongo/project/projects-ngo",
         "/project/create",
@@ -37,6 +38,7 @@
         "/users",
         "/mongo/user/onboard",
         "/mongo/user/profile",
+        "/mongo/user/update",
         "/mongo/user/profit-corporate",
         "/mongo/project/projects-corporate",
         "/mongo/project/all",

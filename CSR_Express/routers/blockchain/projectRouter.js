@@ -280,21 +280,21 @@ router.get('/all', async (req, res, next) => {
             queryString["selector"]["ngo"] = ngoName + "." + ORG3_NAME + "." + BLOCKCHAIN_DOMAIN + ".com"
         }
 
-        if (self !== "true") {
-            queryString["selector"]["$or"] = [
-                {
-                    "visibleTo": null
-                    // {"$exists": false}
-                },
-                {
-                    "visibleTo": {
-                        "$in": [
-                            req.userName
-                        ]
-                    }
-                }
-            ]
-        }
+        // if (self !== "true") {
+        //     queryString["selector"]["$or"] = [
+        //         {
+        //             "visibleTo": null
+        //             // {"$exists": false}
+        //         },
+        //         {
+        //             "visibleTo": {
+        //                 "$in": [
+        //                     req.userName
+        //                 ]
+        //             }
+        //         }
+        //     ]
+        // }
     } else if (req.orgName === "corporate") {
         queryString["selector"]["contributors"] = {}
         queryString["selector"]["contributors"][orgDLTName.replace(/\./g, "\\\\.")] = "exists";
@@ -351,27 +351,28 @@ router.get('/all', async (req, res, next) => {
             //loop over the projects
             for (let i = 0; i < newObject.length; i++) {
 
-                let response = {}
-                response["totalReceived"] = 0;
-                response["ourContribution"] = 0;
-
                 let record = newObject[i]["Record"];
                 logger.debug(`Project ${i} : ${JSON.stringify(record, null, 2)}`);
 
+                let response = {}
+                // response["totalReceived"] = 0;
+                response["totalReceived"] = record.totalReceived;
+                response["ourContribution"] = 0;
+
+                if (record["contributions"][orgDLTName] !== undefined) {
+                    response["ourContribution"] += record["contributions"][orgDLTName]["contributionQty"];
+                }
+
                 let currentPhase = 0;
                 for (let f = 0; f < record.phases.length; f++) {
-                    let phaseQty = record.phases[f]["qty"];
-                    let phaseOutstandingQty = record.phases[f]["outstandingQty"]
+                    // let phaseQty = record.phases[f]["qty"];
+                    // let phaseOutstandingQty = record.phases[f]["outstandingQty"]
 
-                    response["totalReceived"] += (phaseQty - phaseOutstandingQty)
+                    //response["totalReceived"] += (phaseQty - phaseOutstandingQty)
 
                     // if (record.phases[f]["phaseState"] !== "Created" && record.phases[f]["phaseState"] !== "Complete") {
                     if (record.phases[f]["phaseState"] !== "Created") {
                         currentPhase = f
-                    }
-
-                    if (record.phases[f]["contributions"][orgDLTName] !== undefined) {
-                        response["ourContribution"] += record.phases[f]["contributions"][orgDLTName]["contributionQty"];
                     }
                 }
 
@@ -387,7 +388,7 @@ router.get('/all', async (req, res, next) => {
                 response['projectName'] = record['projectName']
                 response['projectType'] = record['projectType']
                 response['totalPhases'] = record.phases.length
-                response["percentageFundReceived"] = (response["totalReceived"] / record['totalProjectCost']) * 100;
+                response["percentageFundReceived"] = (record["totalReceived"] / record['totalProjectCost']) * 100;
 
                 let endDate = record.phases[record.phases.length - 1]['endDate']
                 let timeDifference = endDate - Date.now()
@@ -989,10 +990,16 @@ router.get('/getCorporateProjectDetails', async (req, res, next) => {
             let response = {}
             logger.debug(e["Record"]);
             let endDate = 0;
-            response["totalReceived"] = 0;
+            // response["totalReceived"] = 0;
+            response["totalReceived"] = e["Record"]["totalReceived"]
             response["ourContribution"] = 0;
+
+            if (e["Record"]["contributions"][orgDLTName.toString()] !== undefined) {
+                response["ourContribution"] += e["Record"]["contributions"][orgDLTName.toString()]["contributionQty"]
+            }
+
             for (let f = 0; f < e["Record"].phases.length; f++) {
-                response["totalReceived"] += (e["Record"].phases[f]["qty"] - e["Record"].phases[f]["outstandingQty"])
+                //response["totalReceived"] += (e["Record"].phases[f]["qty"] - e["Record"].phases[f]["outstandingQty"])
 
                 // if (e["Record"].phases[f]["phaseState"] !== "Created" && e["Record"].phases[f]["phaseState"] !== "Complete") {
                 if (e["Record"].phases[f]["phaseState"] !== "Created") {
@@ -1001,10 +1008,6 @@ router.get('/getCorporateProjectDetails', async (req, res, next) => {
                     response["currentPhaseTarget"] = e["Record"].phases[f]["qty"];
                     response["currentPhaseOutstandingAmount"] = e["Record"].phases[f]["outstandingQty"];
                     response["percentageFundReceived"] = ((e["Record"].phases[f]["qty"] - e["Record"].phases[f]["outstandingQty"]) / e["Record"].phases[f]["qty"]) * 100
-                }
-
-                if (e["Record"].phases[f]["contributions"][orgDLTName.toString()] !== undefined) {
-                    response["ourContribution"] += e["Record"].phases[f]["contributions"][orgDLTName.toString()]["contributionQty"]
                 }
 
                 if (f === e["Record"].phases.length - 1) {
@@ -1153,12 +1156,17 @@ router.get('/get-allprojects', async (req, res, next) => {
             //loop over the projects
             for (let i = 0; i < newObject.length; i++) {
 
-                let response = {}
-                response["totalReceived"] = 0;
-                response["ourContribution"] = 0;
-
                 let record = newObject[i]["Record"];
                 logger.debug(`Project ${i} : ${JSON.stringify(record, null, 2)}`);
+
+                let response = {}
+                // response["totalReceived"] = 0;
+                response["totalReceived"] = record.totalReceived;
+                response["ourContribution"] = 0;
+
+                if (record["contributions"][orgDLTName] !== undefined) {
+                    response["ourContribution"] += record["contributions"][orgDLTName]["contributionQty"];
+                }
 
                 let currentPhase = 0;
                 for (let f = 0; f < record.phases.length; f++) {
@@ -1170,10 +1178,6 @@ router.get('/get-allprojects', async (req, res, next) => {
                     // if (record.phases[f]["phaseState"] !== "Created" && record.phases[f]["phaseState"] !== "Complete") {
                     if (record.phases[f]["phaseState"] !== "Created") {
                         currentPhase = f
-                    }
-
-                    if (record.phases[f]["contributions"][orgDLTName] !== undefined) {
-                        response["ourContribution"] += record.phases[f]["contributions"][orgDLTName]["contributionQty"];
                     }
                 }
 

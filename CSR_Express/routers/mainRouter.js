@@ -73,7 +73,7 @@ mainRouter.use((req, res, next) => {
 });
 
 // Auth0
-mainRouter.use(checkJwt);
+//mainRouter.use(checkJwt);
 
 mainRouter.use((req, res, next) => {
 

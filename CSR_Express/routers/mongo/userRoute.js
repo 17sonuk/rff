@@ -209,4 +209,10 @@ router.put('/notification', (req, res, next) => {
         .catch(err => next(err))
 })
 
+router.put('/update', (req, res, next) => {
+    logger.debug("We  are trying to update the user Profile");
+    userService.updateUserProfile(req.userName, req.body).then((data) => {
+        res.json(data)
+    }).catch(err => next(err))
+})
 module.exports = router;

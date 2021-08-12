@@ -11,32 +11,32 @@ import (
 )
 
 type Project struct {
-	ObjectType       string            `json:"docType"`
-	ProjectName      string            `json:"projectName"`
-	ProjectType      string            `json:"projectType"`
-	Place            string            `json:"place"`
-	Phases           []Phase           `json:"phases"`
-	CreationDate     int               `json:"creationDate"`
-	TotalProjectCost float64           `json:"totalProjectCost"`
-	ProjectState     string            `json:"projectState"`  //Created(old), PartlyFunded, FullyFunded, Seeking Validation, Completed
-	ApprovalState    string            `json:"approvalState"` //Approved , Abandon,UnApproved
-	NGO              string            `json:"ngo"`
-	Contributors     map[string]string `json:"contributors"`
-	VisibleTo        []string          `json:"visibleTo"`
-	TotalReceived    float64           `json:"totalReceived"`
-	TotalRedeemed    float64           `json:"totalRedeemed"`
-	Comments         string            `json:"comments"`
+	ObjectType       string                  `json:"docType"`
+	ProjectName      string                  `json:"projectName"`
+	ProjectType      string                  `json:"projectType"`
+	Place            string                  `json:"place"`
+	Phases           []Phase                 `json:"phases"`
+	CreationDate     int                     `json:"creationDate"`
+	TotalProjectCost float64                 `json:"totalProjectCost"`
+	ProjectState     string                  `json:"projectState"`  //Created, Open For Funding, PartlyFunded, FullyFunded, Seeking Validation, Completed
+	ApprovalState    string                  `json:"approvalState"` //Approved, Abandoned, UnApproved
+	NGO              string                  `json:"ngo"`
+	Contributors     map[string]string       `json:"contributors"`
+	Contributions    map[string]Contribution `json:"contributions"`
+	TotalReceived    float64                 `json:"totalReceived"`
+	TotalRedeemed    float64                 `json:"totalRedeemed"`
+	Comments         string                  `json:"comments"`
+	Balance          float64                 `json:"balance"`
 }
 
 type Phase struct {
-	Qty                float64                 `json:"qty"`
-	OutstandingQty     float64                 `json:"outstandingQty"`
-	PhaseState         string                  `json:"phaseState"` //Created, Open For Funding, PartlyFunded, FullyFunded, Seeking Validation, Validated, Complete
-	Contributions      map[string]Contribution `json:"contributions"`
-	StartDate          int                     `json:"startDate"`
-	EndDate            int                     `json:"endDate"`
-	ValidationCriteria map[string][]Criterion  `json:"validationCriteria"`
-	CAValidation       Validation              `json:"caValidation"`
+	Qty                float64                `json:"qty"`
+	OutstandingQty     float64                `json:"outstandingQty"`
+	PhaseState         string                 `json:"phaseState"` //Created, Open For Funding, PartlyFunded, FullyFunded, Seeking Validation, Validated, Complete
+	StartDate          int                    `json:"startDate"`
+	EndDate            int                    `json:"endDate"`
+	ValidationCriteria map[string][]Criterion `json:"validationCriteria"`
+	CAValidation       Validation             `json:"caValidation"`
 }
 
 //for CA validation
@@ -127,6 +127,10 @@ func (s *SmartContract) CreateProject(ctx contractapi.TransactionContextInterfac
 		return false, fmt.Errorf("A project with the same name already exists!")
 	}
 	fmt.Println("project -------------------")
+	if projectObj.Contributions != nil {
+		return false, fmt.Errorf("No contributions expected!")
+	}
+	projectObj.Contributions = make(map[string]Contribution)
 	//set extra attributes
 	projectObj.NGO = commonName
 	projectObj.ObjectType = "Project"
@@ -134,6 +138,7 @@ func (s *SmartContract) CreateProject(ctx contractapi.TransactionContextInterfac
 	projectObj.ApprovalState = "UnApproved"
 	projectObj.Place = strings.ToLower(projectObj.Place)
 	projectObj.Contributors = make(map[string]string)
+	projectObj.Balance = 0.0
 
 	//TODO: move it to UI
 	allPhaseCosts := 0.0
@@ -145,10 +150,7 @@ func (s *SmartContract) CreateProject(ctx contractapi.TransactionContextInterfac
 		if projectObj.Phases[i].StartDate >= projectObj.Phases[i].EndDate {
 			return false, fmt.Errorf("end date must be ahead of start date!")
 		}
-		if projectObj.Phases[i].Contributions != nil {
-			return false, fmt.Errorf("No phase contributions expected!")
-		}
-		projectObj.Phases[i].Contributions = make(map[string]Contribution)
+
 		if projectObj.Phases[i].ValidationCriteria == nil {
 			return false, fmt.Errorf("Please provide atleast one validation criteria!")
 		}
@@ -259,14 +261,21 @@ func (s *SmartContract) ApproveProject(ctx contractapi.TransactionContextInterfa
 	}
 
 	fmt.Println("project -------------------")
+
+	if newProjectObj.Contributions != nil {
+		return false, fmt.Errorf("No contributions expected!")
+	}
+
 	//set extra attributes
 	newProjectObj.NGO = projectState.NGO
 	newProjectObj.ObjectType = "Project"
-	newProjectObj.ApprovalState = "Approved"
 	newProjectObj.Place = strings.ToLower(newProjectObj.Place)
 	newProjectObj.Contributors = make(map[string]string)
+	newProjectObj.Contributions = make(map[string]Contribution)
 	newProjectObj.CreationDate = projectState.CreationDate
-	newProjectObj.ProjectState = "Created"
+	newProjectObj.ApprovalState = "Approved"
+	newProjectObj.ProjectState = "Open For Funding"
+	newProjectObj.Balance = 0.0
 
 	//TODO: move it to UI
 	allPhaseCosts := 0.0
@@ -278,10 +287,7 @@ func (s *SmartContract) ApproveProject(ctx contractapi.TransactionContextInterfa
 		if newProjectObj.Phases[i].StartDate >= newProjectObj.Phases[i].EndDate {
 			return false, fmt.Errorf("end date must be ahead of start date, for each phase!")
 		}
-		if newProjectObj.Phases[i].Contributions != nil {
-			return false, fmt.Errorf("No phase contributions expected!")
-		}
-		newProjectObj.Phases[i].Contributions = make(map[string]Contribution)
+
 		if newProjectObj.Phases[i].ValidationCriteria == nil || len(newProjectObj.Phases[i].ValidationCriteria) <= 0 {
 			return false, fmt.Errorf("Please provide atleast one validation criteria!")
 		}
@@ -387,34 +393,44 @@ func (s *SmartContract) ValidatePhase(ctx contractapi.TransactionContextInterfac
 		Comments: comments,
 	}
 	projectObj.Phases[phaseNumber].CAValidation = validationObj
+
+	if projectObj.TotalReceived == 0.0 {
+		projectObj.ProjectState = "Open For Funding"
+	} else if projectObj.TotalReceived < projectObj.TotalProjectCost {
+		projectObj.ProjectState = "Partially Funded"
+	} else {
+		projectObj.ProjectState = "Fully Funded"
+	}
+
 	if validated {
 		projectObj.Phases[phaseNumber].PhaseState = "Validated"
-
-		if phaseNumber == 0 && projectObj.Phases[phaseNumber].OutstandingQty == projectObj.Phases[phaseNumber].Qty {
-			projectObj.ProjectState = "Created"
-
-		} else if phaseNumber == len(projectObj.Phases)-1 && projectObj.Phases[phaseNumber].OutstandingQty <= 0.0 {
-			projectObj.ProjectState = "Fully Funded"
+		if phaseNumber == len(projectObj.Phases)-1 {
+			projectObj.ProjectState = "Validated"
 		} else {
-			projectObj.ProjectState = "Partially Funded"
+			//change the state of next phase accordingly
+			if projectObj.Balance == 0.0 {
+				projectObj.Phases[phaseNumber+1].PhaseState = "Open For Funding"
+			} else if projectObj.Phases[phaseNumber+1].OutstandingQty > projectObj.Balance {
+				projectObj.Phases[phaseNumber+1].OutstandingQty = math.Round((projectObj.Phases[phaseNumber+1].OutstandingQty-projectObj.Balance)*100) / 100
+				projectObj.Balance = 0.0
+				projectObj.Phases[phaseNumber+1].PhaseState = "Partially Funded"
+			} else if projectObj.Phases[phaseNumber+1].OutstandingQty == projectObj.Balance {
+				projectObj.Phases[phaseNumber+1].OutstandingQty = math.Round((projectObj.Phases[phaseNumber+1].OutstandingQty-projectObj.Balance)*100) / 100
+				projectObj.Balance = 0.0
+				projectObj.Phases[phaseNumber+1].PhaseState = "Fully Funded"
+			} else {
+				projectObj.Balance = math.Round((projectObj.Balance-projectObj.Phases[phaseNumber+1].OutstandingQty)*100) / 100
+				projectObj.Phases[phaseNumber+1].OutstandingQty = 0.0
+				projectObj.Phases[phaseNumber+1].PhaseState = "Fully Funded"
+			}
 		}
-
 	} else {
-		if phaseNumber == 0 && projectObj.Phases[phaseNumber].OutstandingQty == projectObj.Phases[phaseNumber].Qty {
-			projectObj.ProjectState = "Created"
-
-		}
 		if projectObj.Phases[phaseNumber].OutstandingQty == projectObj.Phases[phaseNumber].Qty {
 			projectObj.Phases[phaseNumber].PhaseState = "Open For Funding"
-
 		} else if projectObj.Phases[phaseNumber].OutstandingQty <= 0.0 {
 			projectObj.Phases[phaseNumber].PhaseState = "Fully Funded"
-			if phaseNumber == len(projectObj.Phases)-1 {
-				projectObj.ProjectState = "Fully Funded"
-			}
 		} else {
 			projectObj.Phases[phaseNumber].PhaseState = "Partially Funded"
-			projectObj.ProjectState = "Partially Funded"
 		}
 	}
 
@@ -547,8 +563,8 @@ func (s *SmartContract) AddDocumentHash(ctx contractapi.TransactionContextInterf
 		return false, fmt.Errorf(err.Error())
 	}
 
-	tmpList := make([]string, 0, len(projectObj.Phases[phaseNumber].Contributions))
-	for k := range projectObj.Phases[phaseNumber].Contributions {
+	tmpList := make([]string, 0, len(projectObj.Contributions))
+	for k := range projectObj.Contributions {
 		tmpList = append(tmpList, k)
 	}
 
@@ -671,8 +687,8 @@ func (s *SmartContract) UpdateProject(ctx contractapi.TransactionContextInterfac
 	}
 
 	//list of users who will receive the notification.
-	tmpList := make([]string, 0, len(projectState.Phases[phaseNumber].Contributions))
-	for k := range projectState.Phases[phaseNumber].Contributions {
+	tmpList := make([]string, 0, len(projectState.Contributions))
+	for k := range projectState.Contributions {
 		tmpList = append(tmpList, k)
 	}
 
@@ -852,7 +868,8 @@ func (s *SmartContract) AbandonProject(ctx contractapi.TransactionContextInterfa
 	if projectState.ApprovalState != "Approved" {
 		return false, fmt.Errorf("Only Approved project can be abandoned!")
 	}
-	projectState.ApprovalState = "Abandon"
+	projectState.ApprovalState = "Abandoned"
+	projectState.Comments = comments
 
 	projectAsBytes, _ = json.Marshal(projectState)
 	ctx.GetStub().PutState(projectId, projectAsBytes)

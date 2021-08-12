@@ -95,7 +95,7 @@ userModel.registerUser = async (obj) => {
                     return null
                 }
             } catch (createError) {
-                // console.log(createError.errors)
+                console.log('create error.........', createError)
                 // console.log(createError._message)
                 return mongoError(createError)
             }
@@ -254,6 +254,17 @@ userModel.getNgoOrgName = (userName) => {
         } else {
             return x == y
         }
+    })
+}
+
+userModel.updateUserProfile = (userN, profileData) => {
+    console.log(profileData)
+    return orgModel.update({ userName: userN }, { $set: profileData }).then((data) => {
+        return data;
+    }).catch((error) => {
+        let err = new Error("Connection Failed")
+        err.status = 500
+        throw err
     })
 }
 

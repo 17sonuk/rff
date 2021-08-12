@@ -134,7 +134,7 @@ router.post('/transfer', async (req, res, next) => {
     //extract parameters from request body.
     const amount = req.body.amount.toString();
     const projectId = req.body.projectId;
-    const phaseNumber = req.body.phaseNumber.toString();
+    //const phaseNumber = req.body.phaseNumber.toString();
     let notes = req.body.notes ? req.body.notes : "";
     const donorDetails = req.body.donorDetails;
 
@@ -146,8 +146,8 @@ router.post('/transfer', async (req, res, next) => {
         return res.json(fieldErrorMessage('\'amount\''));
     if (!projectId)
         return res.json(fieldErrorMessage('\'projectId\''));
-    if (!phaseNumber)
-        return res.json(fieldErrorMessage('\'phaseNumber\''));
+    // if (!phaseNumber)
+    //     return res.json(fieldErrorMessage('\'phaseNumber\''));
     if (!donorDetails)
         return res.json(fieldErrorMessage('\'donorDetails\''));
     if (req.userName !== 'guest') {
@@ -166,9 +166,9 @@ router.post('/transfer', async (req, res, next) => {
     }
 
     logger.debug(notes)
-    let args = [amount, projectId, phaseNumber, notes, Date.now().toString(), uuid().toString()]
+    let args = [amount, projectId, notes, Date.now().toString(), uuid().toString()]
     if (req.userName === 'guest') {
-        args[5] = donorDetails.paymentId;
+        args[4] = donorDetails.paymentId;
     }
     args = JSON.stringify(args);
     logger.debug('args  : ' + args);

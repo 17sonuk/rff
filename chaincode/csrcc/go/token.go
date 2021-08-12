@@ -348,17 +348,15 @@ func (s *SmartContract) TransferTokens(ctx contractapi.TransactionContextInterfa
 		return false, fmt.Errorf(err.Error())
 	}
 
-	if len(args) != 6 {
-		return false, fmt.Errorf("Incorrect number of arguments. Expecting 6")
+	if len(args) != 5 {
+		return false, fmt.Errorf("Incorrect number of arguments. Expecting 5")
 	} else if len(args[0]) <= 0 {
 		return false, fmt.Errorf("amount must be a non-empty string")
 	} else if len(args[1]) <= 0 {
 		return false, fmt.Errorf("project id must be a non-empty string")
-	} else if len(args[2]) <= 0 {
-		return false, fmt.Errorf("phase number must be a non-empty string")
-	} else if len(args[4]) <= 0 {
+	} else if len(args[3]) <= 0 {
 		return false, fmt.Errorf("date must be a non-empty string")
-	} else if len(args[5]) <= 0 {
+	} else if len(args[4]) <= 0 {
 		return false, fmt.Errorf("tx id must be a non-empty string")
 	}
 
@@ -375,17 +373,17 @@ func (s *SmartContract) TransferTokens(ctx contractapi.TransactionContextInterfa
 
 	pId := args[1]
 	fromAddress := commonName
-	phaseNumber, err := strconv.Atoi(args[2])
-	if err != nil || phaseNumber < 0.0 {
-		return false, fmt.Errorf("Invalid phase Number!")
-	}
+	// phaseNumber, err := strconv.Atoi(args[2])
+	// if err != nil || phaseNumber < 0.0 {
+	// 	return false, fmt.Errorf("Invalid phase Number!")
+	// }
 
-	notes := args[3]
-	date, err := strconv.Atoi(args[4])
+	notes := args[2]
+	date, err := strconv.Atoi(args[3])
 	if err != nil {
 		return false, fmt.Errorf("date is not an integer! " + err.Error())
 	}
-	txId1 := args[5]
+	txId1 := args[4]
 
 	//fetch the project
 	projectAsBytes, _ := ctx.GetStub().GetState(pId)
@@ -399,8 +397,39 @@ func (s *SmartContract) TransferTokens(ctx contractapi.TransactionContextInterfa
 	}
 	// InfoLogger.Printf("A project found...")
 
+	phaseNumber := -1
+	for i := 0; i < len(projectObj.Phases); i++ {
+		if projectObj.Phases[i].PhaseState == "Open For Funding" || projectObj.Phases[i].PhaseState == "Partially Funded" {
+			phaseNumber = i
+			break
+		}
+	}
+
+	if phaseNumber == -1 {
+		//add amount in project balance
+		projectObj.Balance = math.Round((projectObj.Balance+qty)*100) / 100
+	} else {
+		if projectObj.Phases[phaseNumber].OutstandingQty > qty {
+			projectObj.Phases[phaseNumber].OutstandingQty = math.Round((projectObj.Phases[phaseNumber].OutstandingQty-qty)*100) / 100
+			projectObj.Phases[phaseNumber].PhaseState = "Partially Funded"
+		} else if projectObj.Phases[phaseNumber].OutstandingQty == qty {
+			projectObj.Phases[phaseNumber].OutstandingQty = math.Round((projectObj.Phases[phaseNumber].OutstandingQty-qty)*100) / 100
+			projectObj.Phases[phaseNumber].PhaseState = "Fully Funded"
+		} else {
+			projectObj.Balance = math.Round((qty-projectObj.Phases[phaseNumber].OutstandingQty)*100) / 100
+			projectObj.Phases[phaseNumber].OutstandingQty = 0.0
+			projectObj.Phases[phaseNumber].PhaseState = "Fully Funded"
+		}
+	}
+
+	if projectObj.TotalReceived < projectObj.TotalProjectCost {
+		projectObj.ProjectState = "Partially Funded"
+	} else {
+		projectObj.ProjectState = "Fully Funded"
+	}
+
 	//funds can be transferred only if phase is open or partially funded
-	currentPhaseState := projectObj.Phases[phaseNumber].PhaseState
+	// currentPhaseState := projectObj.Phases[phaseNumber].PhaseState
 	// if currentPhaseState != "Created" {
 	// 	qtyToTransfer = projectObj.Phases[phaseNumber].OutstandingQty
 	// 	qty = qtyToTransfer
@@ -408,34 +437,36 @@ func (s *SmartContract) TransferTokens(ctx contractapi.TransactionContextInterfa
 	// } else {
 	// 	return false, fmt.Errorf("Funding is not allowed to this phase!")
 	// }
-	if currentPhaseState != "Created" {
-		// InfoLogger.Printf("FUNDING IS ALLOWED...")
-		if projectObj.Phases[phaseNumber].OutstandingQty <= qty {
-			// qtyToTransfer = projectObj.Phases[phaseNumber].OutstandingQty
-			// qty = qtyToTransfer
-			projectObj.Phases[phaseNumber].PhaseState = "Fully Funded"
-			if phaseNumber == len(projectObj.Phases)-1 {
-				projectObj.ProjectState = "Fully Funded"
-			} else {
-				projectObj.ProjectState = "Partially Funded"
-			}
-		} else {
-			if currentPhaseState == "Open For Funding" {
-				projectObj.Phases[phaseNumber].PhaseState = "Partially Funded"
-				projectObj.ProjectState = "Partially Funded"
-			}
-		}
-		projectObj.Phases[phaseNumber].OutstandingQty = math.Round((projectObj.Phases[phaseNumber].OutstandingQty-qty)*100) / 100
-	} else {
-		// InfoLogger.Printf("FUNDING NOT ALLOWED...")
-		return false, fmt.Errorf("Funding is not allowed to this phase!")
-	}
+
+	//10-aug-2021 commented
+	// if currentPhaseState != "Created" {
+	// 	// InfoLogger.Printf("FUNDING IS ALLOWED...")
+	// 	if projectObj.Phases[phaseNumber].OutstandingQty <= qty {
+	// 		// qtyToTransfer = projectObj.Phases[phaseNumber].OutstandingQty
+	// 		// qty = qtyToTransfer
+	// 		projectObj.Phases[phaseNumber].PhaseState = "Fully Funded"
+	// 		if phaseNumber == len(projectObj.Phases)-1 {
+	// 			projectObj.ProjectState = "Fully Funded"
+	// 		} else {
+	// 			projectObj.ProjectState = "Partially Funded"
+	// 		}
+	// 	} else {
+	// 		if currentPhaseState == "Open For Funding" {
+	// 			projectObj.Phases[phaseNumber].PhaseState = "Partially Funded"
+	// 			projectObj.ProjectState = "Partially Funded"
+	// 		}
+	// 	}
+	// 	projectObj.Phases[phaseNumber].OutstandingQty = math.Round((projectObj.Phases[phaseNumber].OutstandingQty-qty)*100) / 100
+	// } else {
+	// 	// InfoLogger.Printf("FUNDING NOT ALLOWED...")
+	// 	return false, fmt.Errorf("Funding is not allowed to this phase!")
+	// }
 
 	//update the phase contribution and contributors
-	contributionObj := projectObj.Phases[phaseNumber].Contributions[fromAddress]
+	contributionObj := projectObj.Contributions[fromAddress]
 	contributionObj.Contributor = fromAddress
 	contributionObj.ContributionQty = math.Round((contributionObj.ContributionQty+qty)*100) / 100
-	projectObj.Phases[phaseNumber].Contributions[fromAddress] = contributionObj
+	projectObj.Contributions[fromAddress] = contributionObj
 	projectObj.Contributors[fromAddress] = "exists"
 	projectObj.TotalReceived = math.Round((projectObj.TotalReceived+qty)*100) / 100
 
@@ -449,47 +480,6 @@ func (s *SmartContract) TransferTokens(ctx contractapi.TransactionContextInterfa
 	// InfoLogger.Printf("PROJECT UPDATED...")
 
 	if commonName != guest+"."+corporate+"."+domain {
-		// NOT RELEVANT FOR RAINFOREST
-		// snapshotExistsBytes, _ := ctx.GetStub().GetState("snapshot_exists")
-		// if snapshotExistsBytes == nil {
-		// 	InfoLogger.Printf("SNAPSHOT EXISTS: nil...")
-		// 	return false, fmt.Errorf("Failed to get snapshot_exists: " + err.Error())
-		// }
-		// //check if there is a snapshot (flag = true) and if there are any funds in snapshot
-		// if string(snapshotExistsBytes) == "1" {
-		// 	InfoLogger.Printf("SNAPSHOT = 1...")
-		// 	snapshotKey := fromAddress + "_snapshot"
-
-		// 	snapshotBalance := 0.0
-
-		// 	//Get the balance in Snapshot for corporate
-		// 	snapShotBalanceInBytes, _ := ctx.GetStub().GetState(snapshotKey)
-		// 	if snapShotBalanceInBytes != nil {
-		// 		snapshotBalance, _ = strconv.ParseFloat(string(snapShotBalanceInBytes), 64)
-		// 		InfoLogger.Printf("SNAPSHOT BALANCE = ", snapshotBalance)
-		// 	}
-
-		// 	if snapshotBalance > 0.0 {
-		// 		flagSnapshot = true
-		// 		if snapshotBalance >= qty {
-		// 			//use the snapshot funds and then use the current fund
-		// 			balance := fmt.Sprintf("%0.2f", snapshotBalance-qty)
-
-		// 			//take account of how much snapshot account is used to create transaction
-		// 			snapshotTokenUsed = qty
-		// 			InfoLogger.Printf("SNAPSHOT IS MORE THAN QTY...", qty)
-		// 			ctx.GetStub().PutState(snapshotKey, []byte(balance))
-		// 			qty = 0.0
-		// 		} else {
-		// 			qty -= snapshotBalance
-		// 			//take account of how much snapshot account is used to create transaction
-		// 			snapshotTokenUsed = snapshotBalance
-		// 			InfoLogger.Printf("SNAPSHOT IS LESS THAN QTY...", snapshotBalance)
-		// 			ctx.GetStub().PutState(snapshotKey, []byte("0.0"))
-		// 		}
-		// 	}
-		// }
-
 		//if qty is still remaining, use the current account
 		if qty > 0.0 {
 			//reduce token balance from sender
@@ -531,7 +521,7 @@ func (s *SmartContract) TransferTokens(ctx contractapi.TransactionContextInterfa
 		TxType:      "TransferToken",
 		Date:        date,
 		ObjRef:      pId,
-		PhaseNumber: phaseNumber,
+		PhaseNumber: -1,
 	}
 
 	if len(notes) > 0 {
