@@ -422,6 +422,7 @@ func (s *SmartContract) TransferTokens(ctx contractapi.TransactionContextInterfa
 		}
 	}
 
+	projectObj.TotalReceived = math.Round((projectObj.TotalReceived+qty)*100) / 100
 	if projectObj.TotalReceived < projectObj.TotalProjectCost {
 		projectObj.ProjectState = "Partially Funded"
 	} else {
@@ -468,7 +469,7 @@ func (s *SmartContract) TransferTokens(ctx contractapi.TransactionContextInterfa
 	contributionObj.ContributionQty = math.Round((contributionObj.ContributionQty+qty)*100) / 100
 	projectObj.Contributions[fromAddress] = contributionObj
 	projectObj.Contributors[fromAddress] = "exists"
-	projectObj.TotalReceived = math.Round((projectObj.TotalReceived+qty)*100) / 100
+	//projectObj.TotalReceived = math.Round((projectObj.TotalReceived+qty)*100) / 100
 
 	//save the updated project
 	updatedProjectAsBytes, _ := json.Marshal(projectObj)
