@@ -359,39 +359,46 @@ function isPhoneValid(data) {
 
 userService.updateUserProfile = async (userName, profileData) => {
     let user = await userModel.getUserDetails(userName, 'userName')
+
     if (!user) {
         let err = new Error("User does not exist")
         err.status = 401
         throw err
     }
+
     if (profileData.role || profileData.subRole || profileData.email || profileData.userName || profileData.orgName || profileData.status) {
         let err = new Error("These fields cannot be updated: Email, User Name, Organisation Name, Status")
         err.status = 401
         throw err
     }
+
     if (user.subRole == "Individual" && (profileData.website || profileData.paymentDetails)) {
-        let err = new Error("Individual Donor does not have, website, payment details")
+        let err = new Error("Individual Donor can not have Website, Payment Details")
         err.status = 401
         throw err
     }
-    if (user.subRole == "Institution" && (profileData.paymentDetails)) {
-        let err = new Error("Institution Donor does not have payment details")
+
+    if (user.subRole == "Institution" && profileData.paymentDetails) {
+        let err = new Error("Institution Donor can not have Payment Details")
         err.status = 401
         throw err
     }
-    if (user.role == "Ngo" && (profileData.website)) {
-        let err = new Error("Beneficiary does not have website")
+
+    if (user.role == "Ngo" && profileData.website) {
+        let err = new Error("Beneficiary can not have Website")
         err.status = 401
         throw err
     }
-    if (profileData.address && user.role == 'Ngo') {
+
+    if (user.role == 'Ngo' && profileData.address) {
         if (!isAddressValid(profileData.address)) {
             let err = new Error("Some address fields are empty")
             err.status = 401
             throw err
         }
     }
-    if (profileData.phone && user.role == 'Ngo') {
+
+    if (user.role == 'Ngo' && profileData.phone) {
         for (let phone of profileData.phone) {
             if (!isPhoneValid(phone)) {
                 let err = new Error("Some phone fields are empty")
@@ -401,22 +408,38 @@ userService.updateUserProfile = async (userName, profileData) => {
         }
 
     }
-    if (!profileData.paymentDetails && user.role == "Ngo") {
+
+    if (user.role == 'Ngo' && !profileData.paymentDetails) {
         let err = new Error("Please select a payment mode")
         err.status = 401
         throw err
     }
+
     if (user.role == 'Ngo') {
         if (!['Paypal', 'Cryptocurrency', 'Bank'].includes(profileData.paymentDetails.paymentType)) {
             let err = new Error("Invalid payment mode")
             err.status = 401
             throw err
         }
-        if (!((profileData.paymentDetails.paymentType === 'Paypal' && profileData.paymentDetails.paypalEmailId) || (profileData.paymentDetails.paymentType === 'Cryptocurrency' && profileData.paymentDetails.cryptoAddress) || (profileData.paymentDetails.paymentType === 'Bank' && profileData.paymentDetails.bankDetails))) {
-            let err = new Error("Please select a payment mode")
+
+        if (profileData.paymentDetails.paymentType === 'Paypal' && !profileData.paymentDetails.paypalEmailId) {
+            let err = new Error("PayPal email is empty")
             err.status = 401
             throw err
         }
+
+        if (profileData.paymentDetails.paymentType === 'Cryptocurrency' && !profileData.paymentDetails.Cryptocurrency) {
+            let err = new Error("Cryto address is empty")
+            err.status = 401
+            throw err
+        }
+
+        if (profileData.paymentDetails.paymentType === 'Bank' && !profileData.paymentDetails.bankDetails) {
+            let err = new Error("Bank details is empty")
+            err.status = 401
+            throw err
+        }
+
         if (profileData.paymentDetails.paymentType === 'Bank' && profileData.paymentDetails.bankDetails.bankAddress) {
             if (!isAddressValid(profileData.paymentDetails.bankDetails.bankAddress)) {
                 let err = new Error("Some bank address details are empty")
@@ -424,6 +447,7 @@ userService.updateUserProfile = async (userName, profileData) => {
                 throw err
             }
         }
+
         if (profileData.paymentDetails.paymentType === 'Bank' && profileData.paymentDetails.bankDetails.bankPhone) {
             if (!isPhoneValid(profileData.paymentDetails.bankDetails.bankPhone)) {
                 let err = new Error("Some phone details are empty")
@@ -431,6 +455,7 @@ userService.updateUserProfile = async (userName, profileData) => {
                 throw err
             }
         }
+        
         if (profileData.paymentDetails.paymentType === 'Bank' && !([true, false].includes(profileData.paymentDetails.bankDetails.isUSBank) && profileData.paymentDetails.bankDetails.taxId && profileData.paymentDetails.bankDetails.beneficiaryName && profileData.paymentDetails.bankDetails.beneficiaryAddress && profileData.paymentDetails.bankDetails.bankName && profileData.paymentDetails.bankDetails.currencyType && profileData.paymentDetails.bankDetails.bankAccountNo)) {
             let err = new Error("Some bank details are empty")
             err.status = 401
