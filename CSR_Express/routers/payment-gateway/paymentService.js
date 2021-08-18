@@ -35,9 +35,9 @@ paymentService.saveTx = async (event, next) => {
             //return getMessage(true, 'Successfully credited funds');
 
             const projectId = payload.projectId
-            const phaseNumber = payload.phaseNumber.toString();
+            //const phaseNumber = payload.phaseNumber.toString();
             const donorDetails = payload.donorDetails;
-            args = [amount, projectId, phaseNumber, comments, Date.now().toString(), uuid().toString()]
+            args = [amount, projectId, comments, Date.now().toString(), uuid().toString()]
             args = JSON.stringify(args);
             logger.debug('args  : ' + args);
 
@@ -71,12 +71,12 @@ paymentService.saveTx = async (event, next) => {
         console.log('inside GuestTransfer...')
         const amount = payload.amount.toString();
         const projectId = payload.projectId;
-        const phaseNumber = payload.phaseNumber.toString();
+        // const phaseNumber = payload.phaseNumber.toString();
         const donorDetails = payload.donorDetails;
         const notes = donorDetails.email + " " + "PaymentId - " + event.id + " " + payload.notes;
 
         logger.debug(notes)
-        const args = JSON.stringify([amount, projectId, phaseNumber, notes, Date.now().toString(), event.id]);
+        const args = JSON.stringify([amount, projectId, notes, Date.now().toString(), event.id]);
         logger.debug('args  : ' + args);
 
         try {

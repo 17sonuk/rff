@@ -890,6 +890,114 @@ func (s *SmartContract) AbandonProject(ctx contractapi.TransactionContextInterfa
 	return true, nil
 }
 
+func (s *SmartContract) EditProject(ctx contractapi.TransactionContextInterface, arg string) (bool, error) {
+
+	creator, err := ctx.GetStub().GetCreator()
+	if err != nil {
+		return false, fmt.Errorf("Error getting transaction creator: " + err.Error())
+	}
+	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
+	if mspId != CreditsAuthorityMSP {
+
+		return false, fmt.Errorf("only Regulator can initiate EditProject")
+	}
+
+	var args []string
+
+	err = json.Unmarshal([]byte(arg), &args)
+	if err != nil {
+		return false, fmt.Errorf(err.Error())
+	}
+
+	if len(args) != 4 {
+		return false, fmt.Errorf("Incorrect number of arguments. Expecting 4")
+	} else if len(args[0]) <= 0 {
+		return false, fmt.Errorf("project id must be a non-empty json string")
+	} else if len(args[1]) <= 0 {
+		return false, fmt.Errorf("project must be a non-empty json string")
+	} else if len(args[2]) <= 0 {
+		return false, fmt.Errorf("date must be a non-empty string")
+	} else if len(args[3]) <= 0 {
+		return false, fmt.Errorf("tx Id must be a non-empty string")
+	}
+
+	projectId := strings.ToLower(args[0])
+	projtoEdit := args[1]
+
+	date, err := strconv.Atoi(args[2])
+	if err != nil {
+		return false, fmt.Errorf("date should be numeric.")
+	}
+	txId := args[3]
+	projectEdit := Project{}
+	json.Unmarshal([]byte(projtoEdit), &projectEdit)
+
+	projGonnaEdit := Project{}
+	//check if the project exists
+	projectAsBytes, err := ctx.GetStub().GetState(projectId)
+	if err != nil {
+		return false, fmt.Errorf("Error getting project")
+	}
+	if projectAsBytes == nil {
+		return false, fmt.Errorf("project is not present")
+	}
+
+	json.Unmarshal(projectAsBytes, &projGonnaEdit)
+
+	var currentPhaseNum = -1
+	if projGonnaEdit.ApprovalState == "Approved" {
+		for i := 0; i < len(projGonnaEdit.Phases); i++ {
+			if projGonnaEdit.Phases[i].PhaseState != "Validated" {
+				currentPhaseNum = i
+				break
+			}
+		}
+
+		if currentPhaseNum != -1 {
+			for j := 0; j < len(projectEdit.Phases); j++ {
+				if currentPhaseNum == j {
+					projGonnaEdit.Phases[j].StartDate = projectEdit.Phases[j].StartDate
+					projGonnaEdit.Phases[j].EndDate = projectEdit.Phases[j].EndDate
+				} else if j > currentPhaseNum {
+
+					projGonnaEdit.Phases[j].StartDate = projectEdit.Phases[j].StartDate
+					projGonnaEdit.Phases[j].EndDate = projectEdit.Phases[j].EndDate
+
+					for k, v := range projectEdit.Phases[j].ValidationCriteria {
+						if _, ok := projGonnaEdit.Phases[j].ValidationCriteria[k]; !ok {
+							projGonnaEdit.Phases[j].ValidationCriteria[k] = v
+						}
+
+					}
+
+				}
+
+			}
+		}
+
+	} else {
+		return false, fmt.Errorf("project is not approved")
+	}
+
+	projectAsBytes, _ = json.Marshal(projGonnaEdit)
+	ctx.GetStub().PutState(projectId, projectAsBytes)
+
+	//create a transaction
+	err = createTransaction(ctx, commonName, projGonnaEdit.NGO, 0.0, date, "EditProject", projectId, txId, -1)
+	if err != nil {
+		return false, fmt.Errorf("Failed to add a Tx: " + err.Error())
+	}
+
+	eventPayload := projGonnaEdit.ProjectName + " project has been edited by Rainforest Foundation US. "
+
+	notification := &Notification{TxId: txId, Description: eventPayload, Users: []string{projGonnaEdit.NGO}}
+	notificationtAsBytes, err := json.Marshal(notification)
+	ctx.GetStub().SetEvent("Notification", notificationtAsBytes)
+
+	// InfoLogger.Printf("*************** EditProject Successfull ***************")
+	return true, nil
+}
+
 //added extra feature - dont test
 // func (s *SmartContract) UpdateVisibleTo(ctx contractapi.TransactionContextInterface, arg string) (bool, error) {
 // 	InfoLogger.Printf("*************** UpdateVisibleTo Started ***************")

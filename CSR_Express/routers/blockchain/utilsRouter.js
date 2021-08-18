@@ -143,18 +143,20 @@ router.post('/upload-excel', async (req, res, next) => {
 router.get('/yearly-report', async function (req, res, next) {
 
     const year = req.query.year
+    const responseType = req.header('responseType');
 
+    if (!responseType) {
+        return res.json(fieldErrorMessage('\'responseType\''));
+    }
     if (!year) {
         return res.json(fieldErrorMessage('\'year\''));
     }
-
 
     let startYear = "January 1, " + year + " 00:00:00"
     let endYear = "December 31, " + year + " 00:00:00"
 
     let date1 = new Date(startYear)
     let date2 = new Date(endYear)
-
 
     let result = {}
 
@@ -166,12 +168,10 @@ router.get('/yearly-report', async function (req, res, next) {
         "fields": ["projectName", "contributors", "phases"]
     }
 
-
     let args = JSON.stringify(queryProject)
     logger.debug(`query string:\n ${args}`);
 
     try {
-
         let message = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
         let projectList = JSON.parse(message.toString())
 
@@ -234,7 +234,6 @@ router.get('/yearly-report', async function (req, res, next) {
                     }
                     totalReceived += e.qty
                 }
-
             }
 
             let newResultObject = {}
@@ -243,11 +242,66 @@ router.get('/yearly-report', async function (req, res, next) {
             result[projName] = newResultObject
         }
 
-        return res.json(getMessage(true, result));
+        if (responseType === 'json') {
+            return res.json(getMessage(true, result));
+        }
+        else if (responseType === 'excel') {
+            let excelResponse = convertToExcel(result, 'report');
+            return res.json(getMessage(true, excelResponse));
+        }
+        else {
+            generateError(e, next, 400, 'Type should be json or excel');
+        }
     }
     catch (e) {
         generateError(e, next)
     }
 });
+
+//get in excel format
+let convertToExcel = (jsonData, fileName) => {
+
+    console.log("jsonData:", jsonData)
+    // jsonData={ 'Test Project 101': { donors: { gaurav: 700 ,Anurag: 300}, totalReceived: 700 },
+    // 'Test Project 102': { donors: { guest: 100}, totalReceived: 100 } }
+
+
+    let res = []
+    for (let project in jsonData) {
+        let temp = []
+        for (let donor in jsonData[project]['donors']) {
+
+            let obj = {}
+
+            if (temp.length == 0) {
+                obj["Project Name"] = project
+                obj["Total Recieved"] = jsonData[project]["totalReceived"]
+            } else {
+                obj["Project Name"] = ""
+                obj["Total Recieved"] = ""
+            }
+            obj["Donor"] = donor
+            obj["Amount"] = jsonData[project]['donors'][donor]
+            temp.push(obj)
+
+        }
+        res.push(...temp)
+
+
+    }
+    console.log("res data: ", res)
+    const ws = XLSX.utils.json_to_sheet(res);
+
+    //var f={E1: { t: 's', v: 'compliant' }};
+    const wb = { Sheets: { 'data': ws }, SheetNames: ['data'] };
+    // const excelBuffer = XLSX.write(wb, { bookType: 'xlsx',bookSST: true, cellStyles: true, type: 'base64' })
+
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' })
+    logger.debug(`excelBuffer: ${excelBuffer}`)
+    // let fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
+    // const data = new Blob([excelBuffer], {type: fileType});
+    return ({ fileData: excelBuffer, fileName: fileName })
+    // return excelBuffer;
+}
 
 module.exports = router;

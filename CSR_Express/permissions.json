@@ -48,6 +48,7 @@
         "/escrow/fund/reserve",
         "/escrow/fund/release",
         "/project/all",
+	"/project/get-allprojects",
         "/project/total-corporate-ongoing-projects",
         "/project/corporate-project-transactions",
         "/tx/parked-by-corporate",
@@ -63,6 +64,8 @@
         "/mongo/common/community",
         "/mongo/common/community/all",
         "/mongo/common/update-community",
+        "/mongo/user/initiate-project",
+        "/mongo/user/project-completed",
         "/mongo/user/approve-user",
         "/mongo/user/reject-user",
         "/mongo/user/unapproved-users",
@@ -96,7 +99,8 @@
         "/project/abandon",
         "/project/delete",
         "/project/get-allprojects",
-        "/project/approve"
+        "/project/approve",
+        "/project/edit"
     ],
     "guest": [
         "/mongo/file/getFile",

@@ -122,6 +122,20 @@ router.get('/getRecord/:recordKey', async function (req, res, next) {
                     timeDifference = 0
                 }
                 message['Record']['daysPassed'] = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+
+                let startDate = message['Record'].phases[0]['startDate']
+                let timeDiff = startDate - Date.now()
+                if (timeDiff < 0) {
+                    timeDiff = 0
+                }
+                message['Record']['daysLeftToStart'] = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+
+                timeDiff = Date.now() - startDate
+                if (timeDiff < 0) {
+                    timeDiff = 0
+                }
+                message['Record']['daysPassed'] = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+
             } else {
                 return res.json(getMessage(true, message[0]));
             }
@@ -510,6 +524,7 @@ let convertToExcel = (jsonData, fileName) => {
     const ws = XLSX.utils.json_to_sheet(jsonData);
 
     //var f={E1: { t: 's', v: 'compliant' }};
+    console.log("JsonData in it report: ",jsonData)
     const wb = { Sheets: { 'data': ws }, SheetNames: ['data'] };
     const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' })
     logger.debug(`excelBuffer: ${excelBuffer}`)

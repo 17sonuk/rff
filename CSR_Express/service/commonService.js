@@ -1,5 +1,17 @@
 const logger = require('../loggers/logger');
 const commonModel = require('../model/commonModel');
+const donorEmailTemplate = require('../email-templates/donorEmail');
+const nodemailer = require('nodemailer');
+const { SMTP_EMAIL, APP_PASSWORD} = process.env;
+
+const transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 587,
+    auth: {
+        user: SMTP_EMAIL,
+        pass: APP_PASSWORD,
+    },
+});
 
 const commonService = {};
 
@@ -116,6 +128,30 @@ commonService.getListedCommunity= (communityIds, orgName)=>{
         throw err
     })
 
+}
+
+commonService.getOrgDetails = (userName) => {
+    return commonModel.getOrgDetails(userName).then(data => {
+        if (data) return data;
+
+        let err = new Error("No data found")
+        err.status = 500
+        throw err
+    })
+}
+
+commonService.sendEmailToDonor = async (email,name,amount) => {
+    let htmlBody= await donorEmailTemplate.donorEmail(name, amount)
+    transporter.verify().then(() => {
+        transporter.sendMail({
+            from: '"CSR Test Mail" <csr.rainforest@gmail.com', // sender address
+            to: email, //receiver address'
+            subject: "Donation Received", // Subject line
+            html:htmlBody, // html body
+        }).then(info => {
+            return { info };
+        }).catch(console.error);
+    }).catch(console.error);
 }
 
 module.exports = commonService;

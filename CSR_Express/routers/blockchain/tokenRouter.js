@@ -197,6 +197,40 @@ router.post('/transfer', async (req, res, next) => {
                     generateError(err, next, 500, 'Failed to save donor details');
                 })
         }
+        //call a service that sends email to donor
+        if (req.userName !== '') {
+            if (req.userName === 'guest' && donorDetails.email != "") {
+                commonService.sendEmailToDonor(donorDetails.email, '', amount)
+                    .then((data) => {
+                        logger.debug('email sent to donor')
+                        logger.debug(data)
+                    })
+                    .catch(err => {
+                        generateError(err, next, 500, 'Failed to send email to donor');
+                    })
+            }
+            else if (req.userName !== 'guest') {
+                let orgDetails = await commonService.getOrgDetails(req.userName);
+                if (orgDetails && orgDetails.email) {
+                    let donorName = orgDetails.firstName;
+                    if (orgDetails.subRole === 'Institution') {
+                        donorName = orgDetails.orgName;
+                    }
+                    commonService.sendEmailToDonor(orgDetails.email, donorName, amount)
+                        .then((data) => {
+                            logger.debug('email send to donor')
+                            logger.debug(data)
+                        })
+                        .catch(err => {
+                            generateError(err, next, 500, 'Failed to send email to donor');
+                        })
+                }
+
+            }else{
+                logger.debug("No email is sent since no email is provided by guest user")
+            }
+        }
+
     }
     catch (e) {
         generateError(e, next);

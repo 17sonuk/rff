@@ -9,6 +9,8 @@ const { generateError, getMessage } = require('../../utils/functions');
 
 const userService = require('../../service/userService');
 
+const mongoProjectService = require('../../service/projectService');
+
 const registerUser = require('../../fabric-sdk/registerUser');
 
 const { orgModel } = require('../../model/models')
@@ -41,6 +43,22 @@ router.post('/onboard', (req, res, next) => {
             if ((req.body['role'] === 'Corporate' && req.body['subRole'] === 'Individual') || req.body['role'] === 'Ngo') {
                 try {
                     await registerUser(req.body.userName, req.body['role'].toLowerCase());
+                    if(req.body['role'] === 'Corporate') {
+                        let emailList = req.body.email
+                        transporter.verify().then((data) => {
+                            console.log(data);
+                            console.log('sending email to :' + emailList);
+                            transporter.sendMail({
+                                from: '"CSR Test Mail" <csr.rainforest@gmail.com', // sender address
+                                to: emailList, // list of receivers
+                                subject: `Successful Registration`, // Subject line
+                                text: `Thankyou for registring `, // plain text body
+                                //html: "<b>You have successfully onboarded to the CSR platform</b>", // html body
+                            }).then(info => {
+                                console.log({ info });
+                            }).catch(console.error);
+                        }).catch(console.error);
+                    }
                     return res.json(getMessage(true, "User onboarded successfully!"));
                 } catch (registerError) {
                     if (registerError.status === 400) {
@@ -129,7 +147,7 @@ router.post('/approve-user', async (req, res, next) => {
                             console.log('sending email to :' + receiverEmail.email);
                             transporter.sendMail({
                                 from: '"CSR Test Mail" <csr.rainforest@gmail.com', // sender address
-                                to: receiverEmail.email, // list of receivers
+                                to: receiverEmail.email, // list of receivers // 'c1@gmail.com, c2@outlook.com'
                                 subject: "Testing csr mail", // Subject line
                                 text: "Congrats " + req.body.userName + ", You have successfully onboarded to the CSR platform!", // plain text body
                                 //html: "<b>You have successfully onboarded to the CSR platform</b>", // html body
@@ -153,6 +171,74 @@ router.post('/approve-user', async (req, res, next) => {
         }
     } catch (approveErr) {
         return generateError(approveErr, next);
+    }
+})
+
+//Project Initiation
+
+router.post('/initiate-project', async (req, res, next) => {
+    logger.debug('router-initiateProject');
+
+    try {
+        let projectData = await mongoProjectService.getProjectById(req.body.projectId)
+        try {
+            let emailList = orgModel.find({ role: "Corporate" }, { _id: 0, email: 1 })
+            let eList = emailList.join(", ")
+            transporter.verify().then((data) => {
+                console.log(data);
+                console.log('sending email to :' + emailList);
+                transporter.sendMail({
+                    from: '"CSR Test Mail" <csr.rainforest@gmail.com', // sender address
+                    bcc: eList, // list of receivers
+                    subject: `${projectData.projectName} is open for funding!`, // Subject line
+                    text: `${projectData.projectName} is open for funding, your contribution would be appreciated `, // plain text body
+                    //html: "<b>You have successfully onboarded to the CSR platform</b>", // html body
+                }).then(info => {
+                    console.log({ info });
+                }).catch(console.error);
+            }).catch(console.error);
+            return res.json(getMessage(true, "Project has been initiated and donors have been notified!"));
+        } catch (err1) {
+            return generateError(err1, next);
+        }
+    } catch (err2) {
+        return generateError(err2, next);
+    }
+})
+
+//project completed
+
+router.post('/project-completed', async (req, res, next) => {
+    logger.debug('router-projectCompleted');
+
+    try {
+        let projectData = await mongoProjectService.getProjectById(req.body.projectId)
+        try {
+            let emailList = orgModel.find({ userName: { $in: contributorsList } }, { _id: 0, email: 1 })
+            for (let i = 0; i < emailList.length; i++) {
+                if (i != 0) {
+                    emailList += ', '
+                }
+            }
+            transporter.verify().then((data) => {
+                console.log(data);
+                console.log('sending email to :' + emailList);
+                transporter.sendMail({
+                    from: '"CSR Test Mail" <csr.rainforest@gmail.com', // sender address
+                    bcc: emailList, // list of receivers
+                    subject: `${projectData.projectName} is now completed`, // Subject line
+                    text: ` Hi ${donorList.name}, ${projectData.projectName} is now completed, thanks for your contribution `, // plain text body
+                    //html: "<b>You have successfully onboarded to the CSR platform</b>", // html body
+                }).then(info => {
+                    console.log({ info });
+                }).catch(console.error);
+            }).catch(console.error);
+            return res.json(getMessage(true, "Project has been completed and donors have been notified!"));
+        } catch (err3) {
+            return generateError(err3, next);
+        }
+    } catch (err4) {
+        return generateError(err4, next);
     }
 })
 

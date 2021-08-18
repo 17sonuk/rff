@@ -128,4 +128,10 @@ commonModel.getListedCommunity = async (communityIds, orgName) => {
     return res
 }
 
+commonModel.getOrgDetails = (userName) => {
+    return orgModel.findOne({ userName },{_id:0,firstName:1,orgName:1,subRole:1,email:1}).then(data => {
+        return data ? data : null
+    })
+}
+
 module.exports = commonModel;

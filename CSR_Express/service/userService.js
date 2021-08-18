@@ -448,14 +448,21 @@ userService.updateUserProfile = async (userName, profileData) => {
             }
         }
 
-        if (profileData.paymentDetails.paymentType === 'Bank' && profileData.paymentDetails.bankDetails.bankPhone) {
-            if (!isPhoneValid(profileData.paymentDetails.bankDetails.bankPhone)) {
-                let err = new Error("Some phone details are empty")
-                err.status = 401
-                throw err
-            }
+        // use if phone number is mandatory
+        // if (profileData.paymentDetails.paymentType === 'Bank' && profileData.paymentDetails.bankDetails.bankPhone) {
+        //     if (!isPhoneValid(profileData.paymentDetails.bankDetails.bankPhone)) {
+        //     let err = new Error("Some phone details are empty")
+        //     err.status = 401
+        //     throw err
+        //     }
+        // }
+
+        if (profileData.paymentDetails.paymentType === 'Bank' && !profileData.paymentDetails.bankDetails.bankPhone) {
+            let err = new Error("Some phone details are empty")
+            err.status = 401
+            throw err
         }
-        
+
         if (profileData.paymentDetails.paymentType === 'Bank' && !([true, false].includes(profileData.paymentDetails.bankDetails.isUSBank) && profileData.paymentDetails.bankDetails.taxId && profileData.paymentDetails.bankDetails.beneficiaryName && profileData.paymentDetails.bankDetails.beneficiaryAddress && profileData.paymentDetails.bankDetails.bankName && profileData.paymentDetails.bankDetails.currencyType && profileData.paymentDetails.bankDetails.bankAccountNo)) {
             let err = new Error("Some bank details are empty")
             err.status = 401

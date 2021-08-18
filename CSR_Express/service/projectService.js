@@ -132,4 +132,19 @@ projectService.updateProjectForApproval = async (projectId, projectObj) => {
         throw err
     }
 }
+
+//edit project
+projectService.editProject = async (projectId, projectObj, currentPhaseNum) => {
+    try {
+
+        return await projectModel.editProject(projectId, projectObj, currentPhaseNum)
+    }
+    catch (error) {
+        console.log(error)
+        let err = new Error("Edit failed!")
+        err.status = 500
+        throw err
+    }
+}
+
 module.exports = projectService;

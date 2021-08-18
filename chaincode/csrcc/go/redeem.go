@@ -20,8 +20,12 @@ type Redeem struct {
 	RejectionComments string         `json:"rejectionComments"`
 	PaymentDetails    PaymentDetails `json:"paymentDetails"`
 	ProjectId         string         `json:"projectId"`
+	ProjectName       string         `json:"projectName"`
 	CommunityName     string         `json:"communityName"`
 	CommunityPlace    string         `json:"communityPlace"`
+	ForBeneficiary    bool           `json:"forBeneficiary"`
+	DocHash           string         `json:"docHash"`
+	DocName           string         `json:"docName"`
 }
 
 //ReceiverId        string         `json:"receiverId"`
@@ -152,6 +156,16 @@ func (s *SmartContract) RedeemRequest(ctx contractapi.TransactionContextInterfac
 		return false, fmt.Errorf("bank account details of beneficiary is missing")
 	}
 
+	//check beneficiary proof
+	if redeemObj.ForBeneficiary {
+		if len(redeemObj.CommunityName) <= 0 || len(redeemObj.CommunityPlace) <= 0 {
+			return false, fmt.Errorf("community name and/or place is missing")
+		}
+		if len(redeemObj.DocHash) <= 0 || len(redeemObj.DocName) <= 0 {
+			return false, fmt.Errorf("payment proof is missing")
+		}
+	}
+
 	//reduce the equivalent amount from the wallet balance of ngo
 	remainingBalance := math.Round((ngoBalance-redeemObj.Qty)*100) / 100
 	ctx.GetStub().PutState(from, []byte(fmt.Sprintf("%f", remainingBalance)))
@@ -165,6 +179,7 @@ func (s *SmartContract) RedeemRequest(ctx contractapi.TransactionContextInterfac
 	redeemObj.From = from
 	redeemObj.Status = "Requested"
 	redeemObj.Date = date
+	redeemObj.ProjectName = projectState.ProjectName
 
 	redeemReqAsBytes, _ := json.Marshal(redeemObj)
 	ctx.GetStub().PutState(redeemId, redeemReqAsBytes)

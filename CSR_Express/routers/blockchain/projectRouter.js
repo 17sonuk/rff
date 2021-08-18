@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { CHAINCODE_NAME, CHANNEL_NAME, ORG1_NAME, ORG2_NAME, ORG3_NAME, BLOCKCHAIN_DOMAIN, CA_USERANME } = process.env;
+const { SMTP_EMAIL, APP_PASSWORD, CHAINCODE_NAME, CHANNEL_NAME, ORG1_NAME, ORG2_NAME, ORG3_NAME, BLOCKCHAIN_DOMAIN, CA_USERANME } = process.env;
 
 const express = require('express');
 const router = express.Router();
@@ -17,6 +17,18 @@ let orgMap = {
     'corporate': ORG2_NAME,
     'ngo': ORG3_NAME
 }
+
+const { orgModel } = require('../../model/models')
+const nodemailer = require('nodemailer');
+
+const transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 587,
+    auth: {
+        user: SMTP_EMAIL,
+        pass: APP_PASSWORD,
+    },
+});
 
 //****************************** Create Project *******************************
 // Create Project transaction on chaincode on target peers. - done but errors
@@ -183,7 +195,75 @@ router.post('/validate-phase', async (req, res, next) => {
 
     try {
         await invoke.main(req.userName, req.orgName, "ValidatePhase", CHAINCODE_NAME, CHANNEL_NAME, args);
-        return res.json(getMessage(true, 'Successfully invoked ValidatePhase'));
+        // return res.json(getMessage(true, 'Successfully invoked ValidatePhase'));
+        logger.debug('Successfully invoked ValidatePhase')
+
+        let queryString = {
+            "selector": {
+                "_id": projectId
+            }
+        }
+        args = JSON.stringify(queryString)
+        logger.debug(`query string:\n ${args}`);
+
+        let message = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
+        message = JSON.parse(message.toString());
+
+        message.forEach(elem => {
+            elem['Record'] = JSON.parse(elem['Record'])
+        })
+
+        if (message.length > 0) {
+            if (message[0]['Record']['docType'] === 'Project') {
+                message = message[0]
+                if (message['Record']['projectState'] === "Validated") {
+
+                    let contributorsObj = message['Record']['contributors']
+                    // console.log('contributorsObj ', contributorsObj)
+                    let contributors = []
+                    for (let key in contributorsObj) {
+                        if (!key.startsWith("guest")) {
+                            // console.log('key', key)
+                            contributors.push(splitOrgName(key))
+                        }
+                    }
+                    // console.log('contributors: ', contributors)
+
+                    let emailList = await orgModel.find({ userName: { $in: contributors } }, { _id: 0, email: 1 })
+                    // console.log('emailList: ', emailList)
+
+                    let emails = ""
+                    for (let i = 0; i < emailList.length; i++) {
+                        emails += emailList[i]
+                        if (i !== emailList.length - 1) {
+                            emails += ", "
+                        }
+                    }
+                    // console.log('emails: ', emails)
+
+                    transporter.verify().then((data) => {
+                        console.log(data);
+                        console.log('sending email to :', emails);
+                        transporter.sendMail({
+                            from: '"CSR Test Mail" <csr.rainforest@gmail.com', // sender address
+                            bcc: emails, // list of receivers
+                            subject: `${message['Record']['projectName']} is now completed`, // Subject line
+                            text: ` Hi, ${message['Record']['projectName']} is now completed, thanks for your contribution `, // plain text body
+                            //html: "<b>You have successfully onboarded to the CSR platform</b>", // html body
+                        }).then(info => {
+                            console.log({ info });
+                        }).catch(console.error);
+                    }).catch(console.error);
+
+                    return res.json(getMessage(true, "Project has been completed and donors have been notified!"));
+
+                }
+                else {
+                    return res.json(getMessage(true, "Successfully validated the phase"))
+                }
+            }
+        }
+
     }
     catch (e) {
         generateError(e, next);
@@ -304,10 +384,10 @@ router.get('/all', async (req, res, next) => {
 
     queryString["selector"]["projectState"] = {};
     if (ongoing === "true") {
-        queryString["selector"]["projectState"]["$ne"] = "Completed"
+        queryString["selector"]["projectState"]["$ne"] = "Validated"
     }
     else if (ongoing === "false") {
-        queryString["selector"]["projectState"]["$eq"] = "Completed"
+        queryString["selector"]["projectState"]["$eq"] = "Validated"
     }
     else {
         queryString["selector"]["projectState"]["$ne"] = ""
@@ -395,7 +475,23 @@ router.get('/all', async (req, res, next) => {
                 if (timeDifference < 0) {
                     timeDifference = 0
                 }
-                response['daysLeft'] = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
+                //daysLeftToStart = no of days between currentDate and Start date of 1st phase.
+                //daysPassed = no of days between Start date of 1st phase and current date.
+                response['daysLeft'] = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+
+                let startDate = record.phases[0]['startDate']
+                let timeDiff = startDate - Date.now()
+                if (timeDiff < 0) {
+                    timeDiff = 0
+                }
+                response['daysLeftToStart'] = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+
+                timeDiff = Date.now() - startDate
+                if (timeDiff < 0) {
+                    timeDiff = 0
+                }
+                response['daysPassed'] = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+
                 allRecords.push(response);
             }
 
@@ -648,7 +744,7 @@ router.get('/total-corporate-ongoing-projects', async (req, res, next) => {
     }
 
     // let contributor = 'contributors.' + corporate + '\\.corporate\\.csr\\.com'
-    let args = '{"selector":{"docType":"Project","projectState": {"$ne": "Completed"} ,"contributors.' + req.userName + '\\\\.' + ORG2_NAME + '\\\\.' + BLOCKCHAIN_DOMAIN + '\\\\.com":{"$exists":true}},"fields":["_id"]}'
+    let args = '{"selector":{"docType":"Project","projectState": {"$ne": "Validated"} ,"contributors.' + req.userName + '\\\\.' + ORG2_NAME + '\\\\.' + BLOCKCHAIN_DOMAIN + '\\\\.com":{"$exists":true}},"fields":["_id"]}'
 
     logger.debug('args : ' + args);
 
@@ -1025,7 +1121,21 @@ router.get('/getCorporateProjectDetails', async (req, res, next) => {
             if (timeDifference < 0) {
                 timeDifference = 0
             }
-            response["daysLeft"] = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
+            response["daysLeft"] = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+
+            let startDate = e["Record"].phases[0]['startDate']
+            let timeDiff = startDate - Date.now()
+            if (timeDiff < 0) {
+                timeDiff = 0
+            }
+            response['daysLeftToStart'] = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+
+            timeDiff = Date.now() - startDate
+            if (timeDiff < 0) {
+                timeDiff = 0
+            }
+            response['daysPassed'] = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+
 
             result.push(response)
         });
@@ -1086,8 +1196,10 @@ router.get('/get-allprojects', async (req, res, next) => {
     const orgDLTName = req.userName + "." + orgMap[req.orgName.toLowerCase()] + "." + BLOCKCHAIN_DOMAIN + ".com";
     const pageSize = req.query.pageSize;
     const bookmark = req.query.bookmark;
-    const status = req.query.projectStatus;
-    const validated = req.query.validated
+    const status = decodeURIComponent(req.query.projectStatus);
+    // const validated = req.query.validated
+    const projectType = req.query.projectType;
+    const place = req.query.place;
 
     if (!CHAINCODE_NAME) {
         return res.json(fieldErrorMessage('\'chaincodeName\''));
@@ -1102,12 +1214,12 @@ router.get('/get-allprojects', async (req, res, next) => {
         return res.json(fieldErrorMessage('\'status\''));
     }
 
-    let queryS = {
-        "selector": {
-            "docType": "Project",
-            "projectState": "Seeking Validation"
-        }
-    }
+    // let queryS = {
+    //     "selector": {
+    //         "docType": "Project",
+    //         "projectState": "Seeking Validation"
+    //     }
+    // }
 
     let queryString = {
         "selector": {
@@ -1116,8 +1228,22 @@ router.get('/get-allprojects', async (req, res, next) => {
         }
     }
 
+    if (status === 'Seeking Validation' || status === 'Validated') {
+        delete queryString["selector"]['approvalState'];
+        queryString["selector"]['projectState'] = status;
+    }
+
     if (orgMap[req.orgName.toLowerCase()] === ORG3_NAME) {
         queryString["selector"]["ngo"] = orgDLTName
+    } else if (orgMap[req.orgName.toLowerCase()] === ORG2_NAME) {
+        queryString["selector"]['approvalState'] = 'Abandoned';
+    }
+
+    if (projectType) {
+        queryString["selector"]["projectType"] = projectType;
+    }
+    if (place) {
+        queryString["selector"]["place"] = place.toLowerCase();
     }
 
     logger.debug('queryString: ' + JSON.stringify(queryString));
@@ -1125,10 +1251,10 @@ router.get('/get-allprojects', async (req, res, next) => {
     let args = [JSON.stringify(queryString), pageSize, bookmark];
     args = JSON.stringify(args);
 
-    if (validated === true) {
-        args = [JSON.stringify(queryS), pageSize, bookmark];
-        args = JSON.stringify(args);
-    }
+    // if (validated === true) {
+    //     args = [JSON.stringify(queryS), pageSize, bookmark];
+    //     args = JSON.stringify(args);
+    // }
 
     try {
         let message = await query.main(req.userName, req.orgName, "CommonQueryPagination", CHAINCODE_NAME, CHANNEL_NAME, args);
@@ -1200,7 +1326,21 @@ router.get('/get-allprojects', async (req, res, next) => {
                 if (timeDifference < 0) {
                     timeDifference = 0
                 }
-                response['daysLeft'] = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
+                response['daysLeft'] = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+
+                let startDate = record.phases[0]['startDate']
+                let timeDiff = startDate - Date.now()
+                if (timeDiff < 0) {
+                    timeDiff = 0
+                }
+                response['daysLeftToStart'] = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+
+                timeDiff = Date.now() - startDate
+                if (timeDiff < 0) {
+                    timeDiff = 0
+                }
+                response['daysPassed'] = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+
                 allRecords.push(response);
             }
 
@@ -1243,6 +1383,89 @@ router.put('/abandon', async (req, res, next) => {
         await invoke.main(req.userName, req.orgName, "AbandonProject", CHAINCODE_NAME, CHANNEL_NAME, args);
         logger.debug('Successfully invoked AbandonProject')
         return res.json(getMessage(true, "Abandoned project successfully"))
+    }
+    catch (e) {
+        generateError(e, next)
+    }
+});
+
+//****************************** Edit Project *******************************
+router.put('/edit', async (req, res, next) => {
+
+    //extract parameters from request body.
+    const projectId = req.body.projectId;
+    const projectdetails = req.body.mongo;
+    const projectblock = req.body.blockchain;
+
+    if (!CHAINCODE_NAME) {
+        return res.json(fieldErrorMessage('\'chaincodeName\''));
+    } else if (!CHANNEL_NAME) {
+        return res.json(fieldErrorMessage('\'CHANNEL_NAME\''));
+    } else if (!projectId) {
+        return res.json(fieldErrorMessage('\'projectId\''));
+    } else if (!projectdetails) {
+        return res.json(fieldErrorMessage('\'projectdetails\''));
+    }
+
+    let args = [projectId, JSON.stringify(projectblock), Date.now().toString(), uuid().toString()];
+    args = JSON.stringify(args);
+    logger.debug('args  : ' + args);
+
+    try {
+        await invoke.main(req.userName, req.orgName, "EditProject", CHAINCODE_NAME, CHANNEL_NAME, args);
+        logger.debug('Successfully invoked EditProject')
+        // return res.json(getMessage(true, 'Successfully invoked EditProject'));
+
+        let queryString = {
+            "selector": {
+                "_id": projectId
+            }
+        }
+        args = JSON.stringify(queryString)
+        logger.debug(`query string:\n ${args}`);
+
+        let message = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
+        message = JSON.parse(message.toString());
+
+        message.forEach(elem => {
+            elem['Record'] = JSON.parse(elem['Record'])
+        })
+        console.log("message: project data: ", message)
+        let currentPhaseNum = -1
+        if (message.length > 0) {
+            if (message[0]['Record']['docType'] === 'Project') {
+                message = message[0]
+                if (message['Record']['approvalState'] === "Approved") {
+
+                    for (let f = 0; f < message['Record'].phases.length; f++) {
+
+                        if (message["Record"].phases[f]["phaseState"] !== "Validated") {
+                            // message["Record"]["currentPhase"] = f;
+                            currentPhaseNum = f;
+                            break;
+                        }
+
+                    }
+
+                } else {
+                    return res.json(getMessage(true, "Only Approved project allowed to edit"))
+                }
+            }
+        }
+        console.log('currentPhaseNum: ', currentPhaseNum)
+        if (currentPhaseNum === -1) {
+            return res.json(getMessage(true, "failed to find current phaseNumber"))
+        }
+        projectService.editProject(projectId, projectdetails, currentPhaseNum)
+            .then((data) => {
+                console.log(data)
+                logger.debug('Mongo edit project success')
+                return res.json(getMessage(true, "Edit project successfully"))
+            })
+            .catch(err => {
+                generateError(err, next, 500, 'Failed to edit project in mongo');
+            });
+
     }
     catch (e) {
         generateError(e, next)

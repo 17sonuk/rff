@@ -126,4 +126,44 @@ projectModelObj.updateProjectForApproval = async (projectId, projectObj) => {
     }
 }
 
+//edit project
+projectModelObj.editProject = async (projectId, projectObj, currentPhaseNum) => {
+    try {
+        let p = await projectModel.findOne({ projectId: projectId })
+
+        if (!p) {
+            return ({ message: 'Project ID does not exist.', error: true })
+        }
+        p.question1 = projectObj.question1
+        p.question2 = projectObj.question2
+        p.question3 = projectObj.question3
+        p.question4 = projectObj.question4
+        p.question5 = projectObj.question5
+        p.question6 = projectObj.question6
+        p.question7 = projectObj.question7
+        p.images=projectObj.images
+        for (let i = 0; i < p.phases.length; i++) {
+            if (currentPhaseNum <= i) {
+                p.phases[i].phaseName = projectObj.phases[i].phaseName
+                p.phases[i].description = projectObj.phases[i].description
+            }
+
+        }
+
+        let data = await projectModel.updateOne({ projectId: projectId }, { $set: p })
+        console.log("data: ", data)
+        return ({ message: 'Project edited Successfully.', success: true })
+
+
+    }
+
+    catch (err) {
+        console.log(err)
+        err = new Error("Received error from database")
+        err.status = 500
+        throw err
+    }
+
+}
+
 module.exports = projectModelObj;

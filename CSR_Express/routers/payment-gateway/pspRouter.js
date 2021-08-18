@@ -31,8 +31,8 @@ router.post('/coinbase/charge', async (req, res, next) => {
             return res.json(fieldErrorMessage('\'userName\''));
         if (!req.body.payload.projectId)
             return res.json(fieldErrorMessage('\'projectId\''));
-        if (req.body.payload.phaseNumber === undefined || typeof req.body.payload.phaseNumber !== "number")
-            return res.json(fieldErrorMessage('\'phaseNumber\''));
+        // if (req.body.payload.phaseNumber === undefined || typeof req.body.payload.phaseNumber !== "number")
+        //     return res.json(fieldErrorMessage('\'phaseNumber\''));
         if (!req.body.payload.donorDetails)
             return res.json(fieldErrorMessage('\'donorDetails\''));
         if (!req.body.payload.donorDetails.email)

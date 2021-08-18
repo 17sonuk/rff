@@ -21,6 +21,8 @@ router.get('/countries', async (req, res, next) => {
             countries[i].name = result[i].name;
             countries[i].phonecode = result[i].phonecode;
             countries[i].isoCode = result[i].isoCode;
+	    countries[i].currency = result[i].currency;
+            countries[i].flag = result[i].flag;
         }
         res.send(countries);
     }
