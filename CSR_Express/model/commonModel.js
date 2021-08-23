@@ -1,5 +1,5 @@
 const logger = require('../loggers/logger');
-const { orgModel, communityModel, donorModel } = require('./models');
+const { orgModel, communityModel, donorModel, projectModel } = require('./models');
 
 const commonModel = {}
 
@@ -129,9 +129,20 @@ commonModel.getListedCommunity = async (communityIds, orgName) => {
 }
 
 commonModel.getOrgDetails = (userName) => {
-    return orgModel.findOne({ userName },{_id:0,firstName:1,orgName:1,subRole:1,email:1}).then(data => {
+    return orgModel.findOne({ userName },{_id:0,firstName:1,orgName:1,subRole:1,email:1,address:1}).then(data => {
         return data ? data : null
     })
 }
 
+commonModel.getProjectById = (projectId) => {
+    return projectModel.findOne({ projectId },{_id:0,projectName:1}).then(data => {
+        return data ? data : null
+    })
+}
+
+commonModel.getDonorEmailList = (contributors) => {
+    return orgModel.find({ userName: { $in: contributors } }, { _id: 0, email: 1}).then(data => {
+        return data ? data : null
+    })
+}
 module.exports = commonModel;

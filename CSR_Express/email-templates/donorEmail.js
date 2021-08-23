@@ -1,41 +1,85 @@
 module.exports ={
-    donorEmail:(name,amount)=>{
-        return `<!DOCTYPE html>
-<html style="height:100%;">
-    <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-        <meta name="viewport" content="width=device-width"/>
-        <title>Thank You</title>
-    </head>
-    <body style="margin:0px; padding:0px; height:100%; " >
-        <table style="vertical-align:top; font-family:Arial, Helvetica, sans-serif; color:#3a3a3a;font-size:14px; no-repeat;background-size:cover;background-position:center; background-color:#38404c; " width="100%" height="100%" border="0" cellspacing="20" cellpadding="0">
-            <tr>
-                <td>
-                    <table cellspacing="0" cellpadding="0" style="max-width:600px; background:#fff; width:100%; margin:0 auto;padding:0;box-sizing:border-box;border-collapse:collapse; ">
-                        <tr>
-                            <td style="">
-                            <table cellspacing="0" cellpadding="0" style="padding:40px 40px; width:100%; box-sizing:border-box;">
-                            <tr>
-                                <td style="margin:0px;">
-                                <h2 style="font-size:16px;font-weight:600;font-size:20px; color:#000; text-align:center;text-transform:none;margin:0px; ">Thank you ${name}!</h2>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="margin:0px;text-align:center;padding:30px 0px;line-height: 23px; font-size:16px;color:#3a3a3a;">
-                                <p style=" margin: 0px; line-height: 23px; font-size:16px;color:#3a3a3a;">You have successfully donated $${amount}.</p>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="text-align:center; padding:0px"></td>
-                            </tr>
-                            </table>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-        </table>
-    </body>
-</html>`
+    donorEmail:(firstName,amount,projectName,platformName,date,address)=>{
+        if(firstName ==='Guest'){
+            return `<!DOCTYPE html>
+            <html style="height:100%;">
+                <head>
+                    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+                    <meta name="viewport" content="width=device-width"/>
+                    <title></title>
+                </head>
+                <body>
+                <div>
+                    <div margin-top: 10px; margin-right: 10px; margin-left: 10px;>
+                    <br>
+                    <br>
+    
+                    <p>Hi,</p><br>
+                    <p>Thank you for your recent donation to ${platformName} in support of the project “${projectName}.” </p>
+            
+            <p>We received your donation of <b>$${amount} USD</b> on <b>${date}</b>.</p>
+            
+            <p>Rainforest Foundation US, administering contributions made to ${platformName} is a 501(c)(3) non-profit organization with tax identification number 95-1622945. Your gift is fully tax deductible; no goods and/or services were provided to you in exchange for this donation. Please keep this as a receipt of your donation.</p>
+            
+            <p>Please consider sharing the news on social media using #Platformhashtag and tell others why donating through this platform was important to you.</p>
+            
+            <p>What’s next?</p>
+            
+            <p>You’ll be notified when the project ${projectName} begins activities. Stay tuned! Your climate action is officially in progress.</p>
+            
+            <p>Thank you again for taking a clear stand for the forests, their peoples, and the planet.</p>
+            
+            <p>If you have any questions or feedback for us, please email blockchain@rffny.org</p>
+            
+            <p>With gratitude,</p>
+            <p>${platformName} Team</p>
+            
+                    </div>   
+                </div>
+                </body>
+            </html>`
+        }
+        else{
+            return `<!DOCTYPE html>
+        <html style="height:100%;">
+            <head>
+                <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+                <meta name="viewport" content="width=device-width"/>
+                <title></title>
+            </head>
+            <body>
+            <div>
+                <div margin-top: 10px; margin-right: 10px; margin-left: 10px;>
+                <p>${firstName}</p>
+                <p>${address.addressLine1}</p>
+                <p>${address.addressLine2}</p>
+                <p>${address.city+','+address.state+','+address.zipCode}</p><br>
+
+                <p>Dear <b>${firstName}</b>,</p><br>
+                <p>Thank you for your recent donation to ${platformName} in support of the project “${projectName}.” </p>
+        
+        <p>We received your donation of <b>$${amount} USD</b> on <b>${date}</b>.</p>
+        
+        <p>Rainforest Foundation US, administering contributions made to ${platformName} is a 501(c)(3) non-profit organization with tax identification number 95-1622945. Your gift is fully tax deductible; no goods and/or services were provided to you in exchange for this donation. Please keep this as a receipt of your donation.</p>
+        
+        <p>Please consider sharing the news on social media using #Platformhashtag and tell others why donating through this platform was important to you.</p>
+        
+        <p>What’s next?</p>
+        
+        <p>You’ll be notified when the project ${projectName} begins activities. Stay tuned! Your climate action is officially in progress.</p>
+        
+        <p>${firstName}, thank you again for taking a clear stand for the forests, their peoples, and the planet.</p>
+        
+        <p>If you have any questions or feedback for us, please email blockchain@rffny.org</p>
+        
+        <p>With gratitude,</p>
+        <p>${platformName} Team</p>
+        
+                </div>   
+            </div>
+            </body>
+        </html>`
+
+        }
     }
 }

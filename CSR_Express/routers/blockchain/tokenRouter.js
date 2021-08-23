@@ -200,7 +200,7 @@ router.post('/transfer', async (req, res, next) => {
         //call a service that sends email to donor
         if (req.userName !== '') {
             if (req.userName === 'guest' && donorDetails.email != "") {
-                commonService.sendEmailToDonor(donorDetails.email, '', amount)
+                commonService.sendEmailToDonor(donorDetails.email, 'Guest', amount,projectId,'')
                     .then((data) => {
                         logger.debug('email sent to donor')
                         logger.debug(data)
@@ -216,7 +216,7 @@ router.post('/transfer', async (req, res, next) => {
                     if (orgDetails.subRole === 'Institution') {
                         donorName = orgDetails.orgName;
                     }
-                    commonService.sendEmailToDonor(orgDetails.email, donorName, amount)
+                    commonService.sendEmailToDonor(orgDetails.email, donorName, amount,projectId,orgDetails.address)
                         .then((data) => {
                             logger.debug('email send to donor')
                             logger.debug(data)

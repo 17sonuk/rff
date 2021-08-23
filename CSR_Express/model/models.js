@@ -100,7 +100,7 @@ const paymentSchema = new Schema({
 
 //to store communities on mongo
 const communitySchema = new Schema({
-    name: { type: String, maxLength: 50 },
+    name: { type: String, maxLength: 100 },
     place: { type: String, maxLength: 100 },
     paymentDetails: paymentSchema
 })

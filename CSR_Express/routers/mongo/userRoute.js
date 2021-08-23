@@ -39,39 +39,7 @@ router.post('/onboard', (req, res, next) => {
     logger.debug(`router-onboarding: ${JSON.stringify(req.body, null, 2)}`);
 
     userService.registerUser(req.body)
-        .then(async (data) => {
-            if ((req.body['role'] === 'Corporate' && req.body['subRole'] === 'Individual') || req.body['role'] === 'Ngo') {
-                try {
-                    await registerUser(req.body.userName, req.body['role'].toLowerCase());
-                    if(req.body['role'] === 'Corporate') {
-                        let emailList = req.body.email
-                        transporter.verify().then((data) => {
-                            console.log(data);
-                            console.log('sending email to :' + emailList);
-                            transporter.sendMail({
-                                from: '"CSR Test Mail" <csr.rainforest@gmail.com', // sender address
-                                to: emailList, // list of receivers
-                                subject: `Successful Registration`, // Subject line
-                                text: `Thankyou for registring `, // plain text body
-                                //html: "<b>You have successfully onboarded to the CSR platform</b>", // html body
-                            }).then(info => {
-                                console.log({ info });
-                            }).catch(console.error);
-                        }).catch(console.error);
-                    }
-                    return res.json(getMessage(true, "User onboarded successfully!"));
-                } catch (registerError) {
-                    if (registerError.status === 400) {
-                        return generateError(registerError, next, 400, `${req.body.userName} is already registered in blockchain`);
-                    }
-                    try {
-                        await userService.resetUserStatus(req.body.userName)
-                        return generateError(registerError, next, 500, 'Couldn\'t register user in blockchain!');
-                    } catch (resetStatusError) {
-                        return generateError(resetStatusError, next);
-                    }
-                }
-            }
+        .then((data) => {
             console.log('user route data::::: ')
             console.log(data)
             res.json(data)
@@ -174,37 +142,6 @@ router.post('/approve-user', async (req, res, next) => {
     }
 })
 
-//Project Initiation
-
-router.post('/initiate-project', async (req, res, next) => {
-    logger.debug('router-initiateProject');
-
-    try {
-        let projectData = await mongoProjectService.getProjectById(req.body.projectId)
-        try {
-            let emailList = orgModel.find({ role: "Corporate" }, { _id: 0, email: 1 })
-            let eList = emailList.join(", ")
-            transporter.verify().then((data) => {
-                console.log(data);
-                console.log('sending email to :' + emailList);
-                transporter.sendMail({
-                    from: '"CSR Test Mail" <csr.rainforest@gmail.com', // sender address
-                    bcc: eList, // list of receivers
-                    subject: `${projectData.projectName} is open for funding!`, // Subject line
-                    text: `${projectData.projectName} is open for funding, your contribution would be appreciated `, // plain text body
-                    //html: "<b>You have successfully onboarded to the CSR platform</b>", // html body
-                }).then(info => {
-                    console.log({ info });
-                }).catch(console.error);
-            }).catch(console.error);
-            return res.json(getMessage(true, "Project has been initiated and donors have been notified!"));
-        } catch (err1) {
-            return generateError(err1, next);
-        }
-    } catch (err2) {
-        return generateError(err2, next);
-    }
-})
 
 //project completed
 

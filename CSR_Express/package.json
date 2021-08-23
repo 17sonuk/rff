@@ -32,6 +32,7 @@
     "jsonwebtoken": "^8.5.1",
     "jwks-rsa": "^2.0.3",
     "mmmagic": "^0.5.3",
+    "moment": "^2.29.1",
     "mongoose": "^5.12.5",
     "nanoid": "^3.1.22",
     "nodemailer": "^6.6.2",

@@ -53,6 +53,23 @@ paymentService.saveTx = async (event, next) => {
                     generateError(err, next, 500, 'Failed to add contributor in mongo');
                 });
 
+            // send mail
+            let orgDetails = await commonService.getOrgDetails( event.metadata.userName);
+                if (orgDetails && orgDetails.email) {
+                    let donorName = orgDetails.firstName;
+                    if (orgDetails.subRole === 'Institution') {
+                        donorName = orgDetails.orgName;
+                    }
+                    commonService.sendEmailToDonor(orgDetails.email, donorName, amount,projectId,orgDetails.address)
+                        .then((data) => {
+                            logger.debug('email send to donor')
+                            logger.debug(data)
+                        })
+                        .catch(err => {
+                            generateError(err, next, 500, 'Failed to send email to donor');
+                        })
+                }
+
             return commonService.saveDonor(donorDetails)
                 .then((data) => {
                     logger.debug('saved donor details')
@@ -92,6 +109,18 @@ paymentService.saveTx = async (event, next) => {
                 .catch(err => {
                     generateError(err, next, 500, 'Failed to add contributor in mongo');
                 });
+            
+            // send mail
+            if (donorDetails.email) {
+                commonService.sendEmailToDonor(donorDetails.email, 'Guest', amount,projectId,'')
+                        .then((data) => {
+                            logger.debug('email sent to donor')
+                            logger.debug(data)
+                        })
+                        .catch(err => {
+                            generateError(err, next, 500, 'Failed to send email to donor');
+                        })
+             }
 
             //save donor details
             if (donorDetails.email) {
@@ -105,6 +134,7 @@ paymentService.saveTx = async (event, next) => {
                         generateError(err, next, 500, 'Failed to save donor details');
                     })
             }
+            
             return response
         }
         catch (e) {

@@ -275,10 +275,10 @@ let convertToExcel = (jsonData, fileName) => {
 
             if (temp.length == 0) {
                 obj["Project Name"] = project
-                obj["Total Recieved"] = jsonData[project]["totalReceived"]
+                obj["Total Received"] = jsonData[project]["totalReceived"]
             } else {
                 obj["Project Name"] = ""
-                obj["Total Recieved"] = ""
+                obj["Total Received"] = ""
             }
             obj["Donor"] = donor
             obj["Amount"] = jsonData[project]['donors'][donor]

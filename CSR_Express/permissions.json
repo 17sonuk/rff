@@ -64,7 +64,7 @@
         "/mongo/common/community",
         "/mongo/common/community/all",
         "/mongo/common/update-community",
-        "/mongo/user/initiate-project",
+        "/mongo/project/initiate",
         "/mongo/user/project-completed",
         "/mongo/user/approve-user",
         "/mongo/user/reject-user",

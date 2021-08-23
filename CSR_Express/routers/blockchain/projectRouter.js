@@ -11,7 +11,7 @@ const { fieldErrorMessage, generateError, getMessage, splitOrgName } = require('
 const invoke = require('../../fabric-sdk/invoke');
 const query = require('../../fabric-sdk/query');
 const projectService = require('../../service/projectService')
-
+const commonService = require('../../service/commonService')
 let orgMap = {
     'creditsauthority': ORG1_NAME,
     'corporate': ORG2_NAME,
@@ -198,71 +198,88 @@ router.post('/validate-phase', async (req, res, next) => {
         // return res.json(getMessage(true, 'Successfully invoked ValidatePhase'));
         logger.debug('Successfully invoked ValidatePhase')
 
-        let queryString = {
-            "selector": {
-                "_id": projectId
-            }
+        if (isValid === "true") {
+            commonService.MilestoneEmail(projectId,phaseNumber, req.userName, req.orgName)
         }
-        args = JSON.stringify(queryString)
-        logger.debug(`query string:\n ${args}`);
+        commonService.ProjectCompletionEmail(projectId, req.userName, req.orgName)
 
-        let message = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
-        message = JSON.parse(message.toString());
+        // let queryString = {
+        //     "selector": {
+        //         "_id": projectId
+        //     }
+        // }
+        // args = JSON.stringify(queryString)
+        // logger.debug(`query string:\n ${args}`);
 
-        message.forEach(elem => {
-            elem['Record'] = JSON.parse(elem['Record'])
-        })
+        // let message = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
+        // message = JSON.parse(message.toString());
 
-        if (message.length > 0) {
-            if (message[0]['Record']['docType'] === 'Project') {
-                message = message[0]
-                if (message['Record']['projectState'] === "Validated") {
+        // message.forEach(elem => {
+        //     elem['Record'] = JSON.parse(elem['Record'])
+        // })
 
-                    let contributorsObj = message['Record']['contributors']
-                    // console.log('contributorsObj ', contributorsObj)
-                    let contributors = []
-                    for (let key in contributorsObj) {
-                        if (!key.startsWith("guest")) {
-                            // console.log('key', key)
-                            contributors.push(splitOrgName(key))
-                        }
-                    }
-                    // console.log('contributors: ', contributors)
+        // if (message.length > 0) {
+        //     if (message[0]['Record']['docType'] === 'Project') {
+        //         message = message[0]
+        //         if (message['Record']['projectState'] === "Validated") {
 
-                    let emailList = await orgModel.find({ userName: { $in: contributors } }, { _id: 0, email: 1 })
-                    // console.log('emailList: ', emailList)
+        //             let contributorsObj = message['Record']['contributors']
+        //             // console.log('contributorsObj ', contributorsObj)
+        //             let contributors = []
+        //             for (let key in contributorsObj) {
+        //                 if (!key.startsWith("guest")) {
+        //                     // console.log('key', key)
+        //                     contributors.push(splitOrgName(key))
+        //                 }
+        //             }
+        //             // console.log('contributors: ', contributors)
 
-                    let emails = ""
-                    for (let i = 0; i < emailList.length; i++) {
-                        emails += emailList[i]
-                        if (i !== emailList.length - 1) {
-                            emails += ", "
-                        }
-                    }
-                    // console.log('emails: ', emails)
+        //             let platformName="Rainforest Blockchain Platform"
 
-                    transporter.verify().then((data) => {
-                        console.log(data);
-                        console.log('sending email to :', emails);
-                        transporter.sendMail({
-                            from: '"CSR Test Mail" <csr.rainforest@gmail.com', // sender address
-                            bcc: emails, // list of receivers
-                            subject: `${message['Record']['projectName']} is now completed`, // Subject line
-                            text: ` Hi, ${message['Record']['projectName']} is now completed, thanks for your contribution `, // plain text body
-                            //html: "<b>You have successfully onboarded to the CSR platform</b>", // html body
-                        }).then(info => {
-                            console.log({ info });
-                        }).catch(console.error);
-                    }).catch(console.error);
+        //             let emailList= await commonService.getDonorEmailList(contributors)
 
-                    return res.json(getMessage(true, "Project has been completed and donors have been notified!"));
+        //             let emails = ""
+        //             for (let i = 0; i < emailList.length; i++) {
+        //                 emails += emailList[i]
+        //                 if (i !== emailList.length - 1) {
+        //                     emails += ", "
+        //                 }
+        //             }
 
-                }
-                else {
-                    return res.json(getMessage(true, "Successfully validated the phase"))
-                }
-            }
-        }
+        // let emailList = await orgModel.find({ userName: { $in: contributors } }, { _id: 0, email: 1 })
+        // // console.log('emailList: ', emailList)
+
+        // let emails = ""
+        // for (let i = 0; i < emailList.length; i++) {
+        //     emails += emailList[i]
+        //     if (i !== emailList.length - 1) {
+        //         emails += ", "
+        //     }
+        // }
+        // // console.log('emails: ', emails)
+
+        // transporter.verify().then((data) => {
+        //     console.log(data);
+        //     console.log('sending email to :', emails);
+        //     transporter.sendMail({
+        //         from: '"CSR Test Mail" <csr.rainforest@gmail.com', // sender address
+        //         bcc: emails, // list of receivers
+        //         subject: `${message['Record']['projectName']} is now completed`, // Subject line
+        //         text: ` Hi, ${message['Record']['projectName']} is now completed, thanks for your contribution `, // plain text body
+        //         //html: "<b>You have successfully onboarded to the CSR platform</b>", // html body
+        //     }).then(info => {
+        //         console.log({ info });
+        //     }).catch(console.error);
+        // }).catch(console.error);
+
+        //     return res.json(getMessage(true, "Project has been completed and donors have been notified!"));
+
+        // }
+        // else {
+        return res.json(getMessage(true, "Successfully validated the phase"))
+        // }
+        // }
+        // }
 
     }
     catch (e) {

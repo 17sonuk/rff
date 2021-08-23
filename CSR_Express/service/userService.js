@@ -485,4 +485,48 @@ userService.updateUserProfile = async (userName, profileData) => {
     })
 }
 
+userService.registerUser = async () => {
+    if ((req.body['role'] === 'Corporate') || req.body['role'] === 'Ngo') {
+        try {
+            await registerUser(req.body.userName, req.body['role'].toLowerCase());
+            let htmlBody = ""
+            let subject = ""
+            let emailList = ""
+            if (req.body['role'] === 'Corporate' && req.body['subRole'] === 'Individual') {
+                htmlBody = await individualRegEmailTemplate.individualRegEmail(req.body.firstName)
+                emailList = req.body.email
+                subject = "Thank you for joining Rainforest Blockchain Platform"
+            }
+            if (req.body['role'] === 'Corporate' && req.body['subRole'] === 'Institution') {
+                let orgName = req.body.orgName
+                htmlBody = await institutionRegEmailTemplate.institutionRegEmail(req.body.firstName, orgName)
+                emailList = req.body.email
+                subject = "Thank you for joining Rainforest Blockchain Platform"
+            }
+            transporter.verify().then((data) => {
+                console.log(data);
+                console.log('sending email to :' + emailList);
+                transporter.sendMail({
+                    from: '"CSR Test Mail" <csr.rainforest@gmail.com', // sender address
+                    to: emailList, // list of receivers
+                    subject: subject, // Subject line
+                    html: htmlBody, // html body
+                }).then(info => {
+                    console.log({ info });
+                }).catch(console.error);
+            }).catch(console.error);
+            return res.json(getMessage(true, "User onboarded successfully!"));
+        } catch (registerError) {
+            if (registerError.status === 400) {
+                return generateError(registerError, next, 400, `${req.body.userName} is already registered in blockchain`);
+            }
+            try {
+                await userService.resetUserStatus(req.body.userName)
+                return generateError(registerError, next, 500, 'Couldn\'t register user in blockchain!');
+            } catch (resetStatusError) {
+                return generateError(resetStatusError, next);
+            }
+        }
+    }
+}
 module.exports = userService;
