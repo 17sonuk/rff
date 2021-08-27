@@ -1,3 +1,5 @@
+require('dotenv').config();
+const { PLATFORM_NAME, PLATFORM_HASHTAG } = process.env;
 module.exports ={
     donorEmail:(firstName,amount,projectName,platformName,date,address)=>{
         if(firstName ==='Guest'){
@@ -15,13 +17,13 @@ module.exports ={
                     <br>
     
                     <p>Hi,</p><br>
-                    <p>Thank you for your recent donation to ${platformName} in support of the project “${projectName}.” </p>
+                    <p>Thank you for your recent donation to ${PLATFORM_NAME} in support of the project “${projectName}.” </p>
             
             <p>We received your donation of <b>$${amount} USD</b> on <b>${date}</b>.</p>
             
-            <p>Rainforest Foundation US, administering contributions made to ${platformName} is a 501(c)(3) non-profit organization with tax identification number 95-1622945. Your gift is fully tax deductible; no goods and/or services were provided to you in exchange for this donation. Please keep this as a receipt of your donation.</p>
+            <p>Rainforest Foundation US, administering contributions made to ${PLATFORM_NAME} is a 501(c)(3) non-profit organization with tax identification number 95-1622945. Your gift is fully tax deductible; no goods and/or services were provided to you in exchange for this donation. Please keep this as a receipt of your donation.</p>
             
-            <p>Please consider sharing the news on social media using #Platformhashtag and tell others why donating through this platform was important to you.</p>
+            <p>Please consider sharing the news on social media using #${PLATFORM_HASHTAG} and tell others why donating through this platform was important to you.</p>
             
             <p>What’s next?</p>
             
@@ -32,7 +34,7 @@ module.exports ={
             <p>If you have any questions or feedback for us, please email blockchain@rffny.org</p>
             
             <p>With gratitude,</p>
-            <p>${platformName} Team</p>
+            <p>${PLATFORM_NAME} Team</p>
             
                     </div>   
                 </div>
@@ -56,13 +58,13 @@ module.exports ={
                 <p>${address.city+','+address.state+','+address.zipCode}</p><br>
 
                 <p>Dear <b>${firstName}</b>,</p><br>
-                <p>Thank you for your recent donation to ${platformName} in support of the project “${projectName}.” </p>
+                <p>Thank you for your recent donation to ${PLATFORM_NAME} in support of the project “${projectName}.” </p>
         
         <p>We received your donation of <b>$${amount} USD</b> on <b>${date}</b>.</p>
         
-        <p>Rainforest Foundation US, administering contributions made to ${platformName} is a 501(c)(3) non-profit organization with tax identification number 95-1622945. Your gift is fully tax deductible; no goods and/or services were provided to you in exchange for this donation. Please keep this as a receipt of your donation.</p>
+        <p>Rainforest Foundation US, administering contributions made to ${PLATFORM_NAME} is a 501(c)(3) non-profit organization with tax identification number 95-1622945. Your gift is fully tax deductible; no goods and/or services were provided to you in exchange for this donation. Please keep this as a receipt of your donation.</p>
         
-        <p>Please consider sharing the news on social media using #Platformhashtag and tell others why donating through this platform was important to you.</p>
+        <p>Please consider sharing the news on social media using #${PLATFORM_HASHTAG} and tell others why donating through this platform was important to you.</p>
         
         <p>What’s next?</p>
         
@@ -73,7 +75,7 @@ module.exports ={
         <p>If you have any questions or feedback for us, please email blockchain@rffny.org</p>
         
         <p>With gratitude,</p>
-        <p>${platformName} Team</p>
+        <p>${PLATFORM_NAME} Team</p>
         
                 </div>   
             </div>

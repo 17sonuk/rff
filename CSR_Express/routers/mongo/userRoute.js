@@ -38,14 +38,28 @@ let orgMap = {
 router.post('/onboard', (req, res, next) => {
     logger.debug(`router-onboarding: ${JSON.stringify(req.body, null, 2)}`);
 
-    userService.registerUser(req.body)
+    return userService.registerUser(req.body)
         .then((data) => {
             console.log('user route data::::: ')
             console.log(data)
-            res.json(data)
+
+            return registerUser(req.body.userName, req.body['role'].toLowerCase())
+                .then((response) => {
+                    logger.debug('blockchain register successful')
+                    userService.sendEmailForDonorRegistration(req);
+                    //send registration success message
+                    return res.json(getMessage(true, "User onboarded successfully!"));
+                })
+                .catch((err) => {
+                    //call delete service to delete user in mongo
+                    userSerive.deleteUser(req.body.userName)
+                    return generateError(registerError, next, 500, 'Couldn\'t register user in blockchain! Please report');
+                });
+            //res.json(data)
         })
         .catch(err => {
-            console.log('user adding router error.............................')
+          //  console.log("mongodb error",err)
+            logger.error('could not register user!')
             return generateError(err, next);
             // next(err)
         })

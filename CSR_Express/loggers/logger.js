@@ -10,7 +10,6 @@ const formatDate = (t, a, s) => {
 }
 
 let a = [{ day: 'numeric' }, { month: 'short' }, { year: 'numeric' }];
-let fileName = formatDate(new Date, a, '-');
 
 const myFormat = printf(({ level, message, timestamp, ...metadata }) => {
     let msg = `${timestamp} [${level}] : ${message}`
@@ -23,7 +22,7 @@ const myFormat = printf(({ level, message, timestamp, ...metadata }) => {
 const options = {
     file: {
         level: 'debug',
-        filename: `logs/${fileName}.log`,
+        filename: `logs/${formatDate(new Date, a, '-')}.log`,
         handleExceptions: true,
         json: true,
         maxsize: '20m', // 20MB

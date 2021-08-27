@@ -53,12 +53,12 @@ function phaseLimit(val) {
 }
 
 const addressSchema = new Schema({
-    addressLine1: { type: String, maxLength: 100 },
-    addressLine2: { type: String, maxLength: 100 },
-    city: { type: String, maxLength: 30 },
-    state: { type: String, maxLength: 30 },
-    zipCode: { type: String, maxLength: 10 },
-    country: { type: String, maxLength: 30 }
+    addressLine1: { type: String, maxLength: [100, 'Address line 1 cannot exceed 100 characters'] },
+    addressLine2: { type: String, maxLength: [100, 'Address line 2 cannot exceed 100 characters'] },
+    city: { type: String, maxLength: [30, 'City name cannot exceed 30 characters'] },
+    state: { type: String, maxLength: [30, 'State name cannot exceed 30 characters'] },
+    zipCode: { type: String, maxLength: [10, 'Zipcode cannot exceed 10 characters'] },
+    country: { type: String, maxLength: [30, 'Country name cannot exceed 30 characters'] }
 })
 
 const fileSchema = new Schema({
@@ -70,54 +70,54 @@ const fileSchema = new Schema({
 })
 
 const phoneSchema = new Schema({
-    countryCode: { type: String, maxLength: 20 },
-    phoneNumber: { type: String, maxLength: 10 }
+    countryCode: { type: String, maxLength: [20, 'Country code cannot exceed 20 characters'] },
+    phoneNumber: { type: String, maxLength: [10, 'Phone number cannot exceed 10 characters'] }
 })
 
 //ngo bank details
 const bankDetailsSchema = new Schema({
-    isUSBank: { type: Boolean, required: true },
-    taxId: { type: String, required: true, maxLength: 100 },
-    beneficiaryName: { type: String, required: true, maxLength: 34 },
-    beneficiaryAddress: { type: String, required: true, maxLength: 35 },
-    bankName: { type: String, required: true, maxLength: 50 },
-    bankAddress: { type: addressSchema, required: true },
+    isUSBank: { type: Boolean, required: [true, 'Field is required'] },
+    taxId: { type: String, required: true, maxLength: [100, 'Tax id cannot exceed 100 characters'] },
+    beneficiaryName: { type: String, required: [true, 'Beneficiary name field is required'], maxLength: [34, 'Beneficiary name cannot exceed 34 characters'] },
+    beneficiaryAddress: { type: String, required: [true, 'Beneficiary address field is required'], maxLength: [35, 'Beneficiary address cannot exceed 35 characters'] },
+    bankName: { type: String, required: [true, 'Bank name field is required'], maxLength: [50, 'Bank name cannot exceed 50 characters'] },
+    bankAddress: { type: addressSchema, required: [true, 'Bank address field is required'] },
     bankPhone: phoneSchema,
-    currencyType: { type: String, required: true, maxLength: 20 },
-    bankAccountNo: { type: String, maxLength: 100 },
-    ABAorRoutingNo: { type: String, maxLength: 100 },
-    BICSwiftorCHIPSUISSortCode: { type: String, maxLength: 100 },
-    IBANNo: { type: String, maxLength: 100 }
+    currencyType: { type: String, required: [true,'Currency type field is required'], maxLength: [20, 'Currency type cannot exceed 20 characters'] },
+    bankAccountNo: { type: String, maxLength: [100, 'Bank account no. cannot exceed 100 characters'] },
+    ABAorRoutingNo: { type: String, maxLength: [100, 'Routing no. cannot exceed 100 characters'] },
+    BICSwiftorCHIPSUISSortCode: { type: String, maxLength: [100, 'Code cannot exceed 100 characters'] },
+    IBANNo: { type: String, maxLength: [100, 'IBAN no. cannot exceed 100 characters'] }
 })
 
 //ngo/community payment details
 const paymentSchema = new Schema({
-    paymentType: { type: String, enum: ['Paypal', 'Cryptocurrency', 'Bank'], required: true },
-    paypalEmailId: { type: String, maxLength: 50 },
-    cryptoAddress: { type: String, maxLength: 100 },
+    paymentType: { type: String, enum: ['Paypal', 'Cryptocurrency', 'Bank'], required: [true, 'Payment type field is required'] },
+    paypalEmailId: { type: String, maxLength: [50, 'Paypal email id cannot exceed 50 characters'] },
+    cryptoAddress: { type: String, maxLength: [100, 'Crypto address cannot exceed 100 characters'] },
     bankDetails: bankDetailsSchema
 })
 
 //to store communities on mongo
 const communitySchema = new Schema({
-    name: { type: String, maxLength: 100 },
-    place: { type: String, maxLength: 100 },
+    name: { type: String, maxLength: [100, 'Name cannot exceed 100 characters'] },
+    place: { type: String, maxLength: [100, 'Place name cannot exceed 100 characters'] },
     paymentDetails: paymentSchema
 })
 
 //to store user data
 const orgSchema = new Schema({
-    firstName: { type: String, required: true, maxLength: 50 },
-    lastName: { type: String, required: true, maxLength: 50 },
-    orgName: { type: String, maxLength: 50 },
-    userName: { type: String, required: true, unique: true, maxLength: 50 },
-    email: { type: String, required: true, unique: true },
-    role: { type: String, required: true, enum: ['Ngo', 'Corporate'] },
+    firstName: { type: String, required: [true, 'First name field is required'], maxLength: [50, 'First name cannot exceed 50 characters']},
+    lastName: { type: String, required: [true, 'Last name field is required'], maxLength: [50, 'Last name cannot exceed 50 characters']},
+    orgName: { type: String, maxLength: [50, 'Organisation name cannot exceed 50 characters'] },
+    userName: { type: String, required: [true, 'User name field is required'], unique: true, maxLength: [50, 'User name cannot exceed 50 characters'] },
+    email: { type: String, required: [true, 'Email field is required'], unique: true },
+    role: { type: String, required: [true, 'Role field is required'], enum: ['Ngo', 'Corporate'] },
     subRole: { type: String, enum: ['Institution', 'Individual'] },
     status: { type: String, required: true, enum: ['created', 'approved', 'rejected'] },
-    description: { type: String, maxLength: 200 },
+    description: { type: String, maxLength: [200, 'Description cannot exceed 200 characters'] },
     address: addressSchema,
-    website: { type: String, maxLength: 50 },
+    website: { type: String, maxLength: [50, 'Website name cannot exceed 50 characters'] },
     phone: [phoneSchema],
     paymentDetails: paymentSchema
 }, { collection: "OrganisationProfile" })

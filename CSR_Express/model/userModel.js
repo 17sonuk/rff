@@ -70,7 +70,7 @@ userModel.registerUser = async (obj) => {
     try {
         let user = await orgModel.find({ $or: criteria })
         if (user.length > 0) {
-            let message = 'duplicate fields - ';
+            let message = 'Already used. Please try with other ';
             if (user[0].email == obj.email) {
                 message += 'email, ';
             }

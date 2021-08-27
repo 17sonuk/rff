@@ -32,7 +32,8 @@
         "/project/ngo-project-and-locked-details",
         "/mongo/file/upload",
         "/mongo/file/getFile",
-        "/project/get-allprojects"
+        "/project/get-allprojects",
+        "/project/initiate"
     ],
     "corporate": [
         "/users",
@@ -48,7 +49,7 @@
         "/escrow/fund/reserve",
         "/escrow/fund/release",
         "/project/all",
-	"/project/get-allprojects",
+        "/project/get-allprojects",
         "/project/total-corporate-ongoing-projects",
         "/project/corporate-project-transactions",
         "/tx/parked-by-corporate",

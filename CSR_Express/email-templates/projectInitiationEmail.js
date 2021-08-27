@@ -1,5 +1,8 @@
+require('dotenv').config();
+const { PLATFORM_NAME, PLATFORM_HASHTAG } = process.env;
+
 module.exports = {
-    projectInitiationEmail: (projectName, firstName, desc) => {
+    projectInitiationEmail: (projectName, firstName, desc, date) => {
         return `<!DOCTYPE html>
 <html style="height:100%;">
     <head>
@@ -15,11 +18,11 @@ module.exports = {
             <p>${desc}</p>
             <p>Your commitment is key to seeing community-based climate solutions in action and bringing us all closer to a hospitable planet. </p>
             <p>What’s next?</p>
-            <p>You can expect to receive periodic updates as this project hits its project milestones. The next milestone for this project is set to take place around [insert date for next milestone].</p>
-            <p>Please consider sharing the news on social media using #Platformhashtag and tell others why donating through this platform was important to you.</p>
+            <p>You can expect to receive periodic updates as this project hits its project milestones. The next milestone for this project is set to take place around ${date}.</p>
+            <p>Please consider sharing the news on social media using #${PLATFORM_HASHTAG} and tell others why donating through this platform was important to you.</p>
             <p>If you have any questions or feedback for us, please email blockchain@rffny.org</p>
             <p>With gratitude,<br>
-            <b>Rainforest Blockchain Platform</b></p>
+            <b>${PLATFORM_NAME}</b></p>
         </div>   
     </div>
     </body>

@@ -17,6 +17,7 @@ type Project struct {
 	Place            string                  `json:"place"`
 	Phases           []Phase                 `json:"phases"`
 	CreationDate     int                     `json:"creationDate"`
+	ActualStartDate  int                     `json:"actualStartDate"`
 	TotalProjectCost float64                 `json:"totalProjectCost"`
 	ProjectState     string                  `json:"projectState"`  //Created, Open For Funding, PartlyFunded, FullyFunded, Seeking Validation, Completed
 	ApprovalState    string                  `json:"approvalState"` //Approved, Abandoned, UnApproved
@@ -54,6 +55,76 @@ type Criterion struct {
 	Desc    string `json:"desc"`
 	DocName string `json:"docName"`
 	DocHash string `json:"docHash"`
+}
+
+// Actual Project Start date
+func (s *SmartContract) UpdateActualStartDate(ctx contractapi.TransactionContextInterface, arg string) (bool, error) {
+	creator, err := ctx.GetStub().GetCreator()
+	if err != nil {
+		return false, fmt.Errorf("Error getting transaction creator: " + err.Error())
+	}
+	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
+	fmt.Println("client is: " + commonName)
+
+	if mspId != NgoMSP {
+		return false, fmt.Errorf("only ca can initiate Project")
+	}
+
+	var args []string
+
+	err = json.Unmarshal([]byte(arg), &args)
+	if err != nil {
+		return false, fmt.Errorf(err.Error())
+	}
+	if len(args) != 3 {
+		return false, fmt.Errorf("Incorrect number of arguments. Expecting 3")
+	} else if len(args[0]) <= 0 {
+		return false, fmt.Errorf("pId must be a non-empty string")
+	} else if len(args[1]) <= 0 {
+		return false, fmt.Errorf("Date must be a non-empty string")
+	} else if len(args[2]) <= 0 {
+		return false, fmt.Errorf("tx Id must be a non-empty string")
+	}
+
+	projectId := strings.ToLower(args[0])
+	date, err := strconv.Atoi(args[1])
+	if err != nil {
+		return false, fmt.Errorf("date should be numeric.")
+	}
+	txId := args[2]
+
+	projectState := Project{}
+
+	//check if the project exists
+	projectAsBytes, err := ctx.GetStub().GetState(projectId)
+	if err != nil {
+		return false, fmt.Errorf("Error getting project")
+	}
+	if projectAsBytes == nil {
+		// InfoLogger.Printf("project with id:", projectId, "not present")
+		return false, fmt.Errorf("project is not present")
+	}
+	json.Unmarshal(projectAsBytes, &projectState)
+	if date <= 0 {
+		return false, fmt.Errorf("Date should be greater than zero")
+	}
+	projectState.ActualStartDate = date
+
+	projectAsBytes, _ = json.Marshal(projectState)
+	ctx.GetStub().PutState(projectId, projectAsBytes)
+
+	//create a transaction
+	err = createTransaction(ctx, commonName, projectState.NGO, 0.0, date, "UpdateActualStartDate", projectId, txId, -1)
+	if err != nil {
+		return false, fmt.Errorf("Failed to add a Tx: " + err.Error())
+	}
+
+	//eventPayload := projectState.ProjectName + " project has been initiated. "
+	//notification := &Notification{TxId: txId, Description: eventPayload, Users: []string{projectState.NGO}}
+	//notificationtAsBytes, err := json.Marshal(notification)
+	//ctx.GetStub().SetEvent("Notification", notificationtAsBytes)
+
+	return true, nil
 }
 
 //create a new project

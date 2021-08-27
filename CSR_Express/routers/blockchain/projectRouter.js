@@ -199,7 +199,7 @@ router.post('/validate-phase', async (req, res, next) => {
         logger.debug('Successfully invoked ValidatePhase')
 
         if (isValid === "true") {
-            commonService.MilestoneEmail(projectId,phaseNumber, req.userName, req.orgName)
+            commonService.MilestoneEmail(projectId, phaseNumber, req.userName, req.orgName)
         }
         commonService.ProjectCompletionEmail(projectId, req.userName, req.orgName)
 
@@ -1489,5 +1489,39 @@ router.put('/edit', async (req, res, next) => {
     }
 });
 
+//projectInitition
+router.post('/initiate', async (req, res, next) => {
+    logger.debug('router-initiateProject');
+
+    const projectId = req.body.projectId;
+    if (!CHAINCODE_NAME) {
+        return res.json(fieldErrorMessage('\'chaincodeName\''));
+    } else if (!CHANNEL_NAME) {
+        return res.json(fieldErrorMessage('\'CHANNEL_NAME\''));
+    } else if (!projectId) {
+        return res.json(fieldErrorMessage('\'projectId\''));
+    }
+
+    let args = [projectId, Date.now().toString(), uuid().toString()]
+    args = JSON.stringify(args);
+    logger.debug('args  : ' + args);
+
+    try {
+        await invoke.main(req.userName, req.orgName, "UpdateActualStartDate", CHAINCODE_NAME, CHANNEL_NAME, args);
+        commonService.projectInitiation(projectId, req.userName, req.orgName)
+            .then((data) => {
+                //res.json(data)
+                logger.info('email sent')
+            })
+            .catch(err => {
+                logger.error('email sending failed')
+                console.log(err)
+            })
+        return res.json(getMessage(true, "Project has been initiated and donors have been notified!"));
+    }
+    catch (e) {
+        generateError(e, next);
+    }
+})
 
 module.exports = router;

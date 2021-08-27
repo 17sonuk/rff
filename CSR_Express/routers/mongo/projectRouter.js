@@ -90,16 +90,6 @@ router.put('/updateProject', (req, res, next) => {
 //         .catch(err => next(err))
 // })
 
-router.post('/initiate', async (req, res, next) => {
-    logger.debug('router-initiateProject');
-
-    commonService.projectInitiation(req.body.projectId)
-        .then((data) => {
-            res.json(data)
-        })
-        .catch(err => next(err))
-    return res.json(getMessage(true, "Project has been initiated and donors have been notified!"));
-})
 
 
 module.exports = router;

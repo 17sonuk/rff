@@ -4,7 +4,23 @@ const CryptoJS = require('crypto-js');
 const userModel = require('../model/userModel');
 const mongoError = require('../model/mongoError')
 
+const individualRegEmailTemplate = require('../email-templates/individualRegEmail');
+const institutionRegEmailTemplate = require('../email-templates/institutionRegEmail');
+
 const userService = {};
+
+require('dotenv').config();
+const { SMTP_EMAIL, APP_PASSWORD , PLATFORM_NAME} = process.env;
+
+const nodemailer = require('nodemailer');
+const transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 587,
+    auth: {
+        user: SMTP_EMAIL,
+        pass: APP_PASSWORD,
+    },
+});
 
 logger.debug('<<<<<<<<<<<<<< user service >>>>>>>>>>>>>>>>>')
 
@@ -16,8 +32,34 @@ userService.registerUser = (obj) => {
 
     let err = new Error()
     err.status = 400
+    const validateEmail=/^[a-zA-Z0-9]+([._-]+[a-zA-Z0-9]+)*@[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*(?:\.[a-zA-Z]+)+$/;
+    if(!validateEmail.test(obj.email)){
+        err.message='Email format is invalid';
+        throw err;
+    }
+
+    if (!(typeof obj.firstName =='string')){
+        err.message='Invalid first name type';
+        throw err;
+    }
+    if (!(typeof obj.lastName =='string')){
+        err.message='Invalid last name type';
+        throw err;
+    }
+
+    if (!(typeof obj.orgName =='string') && (obj.subRole=='Institution' || obj.role=='Ngo')){
+        err.message='Invalid org name type';
+        throw err;
+    }
+    if (!(typeof obj.userName =='string')){
+        err.message='Invalid user name type';
+        throw err;
+    }
+
+
 
     if (obj.role === 'Corporate') {
+        
         if (!obj.subRole) {
             err.message = 'Donor type is missing/invalid!'
             throw err
@@ -61,11 +103,7 @@ userService.registerUser = (obj) => {
         }
     }
 
-    if ((obj['role'] === 'Corporate' && obj['subRole'] === 'Individual') || obj['role'] === 'Ngo') {
-        obj['status'] = 'approved';
-    } else {
-        obj['status'] = 'created';
-    }
+    obj['status'] = 'approved';
 
     //obj['date'] = new Date().getTime();
     return userModel.registerUser(obj).then(data => {
@@ -485,23 +523,19 @@ userService.updateUserProfile = async (userName, profileData) => {
     })
 }
 
-userService.registerUser = async () => {
-    if ((req.body['role'] === 'Corporate') || req.body['role'] === 'Ngo') {
+userService.sendEmailForDonorRegistration = async (req) => {
+    if ((req.body['role'] === 'Corporate')) {
         try {
-            await registerUser(req.body.userName, req.body['role'].toLowerCase());
             let htmlBody = ""
-            let subject = ""
             let emailList = ""
-            if (req.body['role'] === 'Corporate' && req.body['subRole'] === 'Individual') {
+            if (req.body['subRole'] === 'Individual') {
                 htmlBody = await individualRegEmailTemplate.individualRegEmail(req.body.firstName)
                 emailList = req.body.email
-                subject = "Thank you for joining Rainforest Blockchain Platform"
             }
-            if (req.body['role'] === 'Corporate' && req.body['subRole'] === 'Institution') {
+            else if (req.body['subRole'] === 'Institution') {
                 let orgName = req.body.orgName
                 htmlBody = await institutionRegEmailTemplate.institutionRegEmail(req.body.firstName, orgName)
                 emailList = req.body.email
-                subject = "Thank you for joining Rainforest Blockchain Platform"
             }
             transporter.verify().then((data) => {
                 console.log(data);
@@ -509,24 +543,34 @@ userService.registerUser = async () => {
                 transporter.sendMail({
                     from: '"CSR Test Mail" <csr.rainforest@gmail.com', // sender address
                     to: emailList, // list of receivers
-                    subject: subject, // Subject line
+                    subject: `Thank you for joining ${PLATFORM_NAME}`, // Subject line
                     html: htmlBody, // html body
                 }).then(info => {
                     console.log({ info });
                 }).catch(console.error);
             }).catch(console.error);
-            return res.json(getMessage(true, "User onboarded successfully!"));
-        } catch (registerError) {
-            if (registerError.status === 400) {
-                return generateError(registerError, next, 400, `${req.body.userName} is already registered in blockchain`);
-            }
-            try {
-                await userService.resetUserStatus(req.body.userName)
-                return generateError(registerError, next, 500, 'Couldn\'t register user in blockchain!');
-            } catch (resetStatusError) {
-                return generateError(resetStatusError, next);
-            }
+
+        } catch (emailError) {
+            console.error(emailError)
+            // if (registerError.status === 400) {
+            //     return generateError(registerError, next, 400, `${req.body.userName} is already registered in blockchain`);
+            // }
+            // try {
+            //     await userService.resetUserStatus(req.body.userName)
+
+            // } catch (resetStatusError) {
+            //     return generateError(resetStatusError, next);
+            // }
         }
     }
+}
+userService.deleteUser = (userName) => {
+    return userModel.rejectUser(userName).then(data => {
+        if (data) return data;
+
+        let err = new Error("Something went wrong")
+        err.status = 500
+        throw err
+    })
 }
 module.exports = userService;

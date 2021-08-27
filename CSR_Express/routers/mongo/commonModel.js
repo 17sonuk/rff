@@ -41,7 +41,20 @@ commonModel.getCommunities = () => {
     })
 }
 
-commonModel.getCommunity = (name, place) => {
+commonModel.getCommunity = (communityId) => {
+    return communityModel.findOne({ _id: communityId })
+        .then(data => {
+            console.log('community data', data);
+            return data;
+        })
+        .catch(err => {
+            let error = new Error('Failed to connect to mongo');
+            error.status = 500;
+            throw error;
+        })
+}
+
+commonModel.getCommunityByNameAndPlace = (name, place) => {
     return communityModel.findOne({ $and: [{ name: name }, { place: place }] })
         .then(data => {
             console.log('community data', data);

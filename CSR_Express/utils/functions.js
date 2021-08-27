@@ -1,5 +1,6 @@
 const e = require("cors");
 const axios = require('axios');
+const { stringify } = require("querystring");
 
 const functions = {}
 
@@ -14,12 +15,16 @@ functions.fieldErrorMessage = (field) => {
 
 functions.generateError = (error, next, statusCode = '', customErrMsg = '') => {
     let status, message;
+    
     // console.log(error, error.message, Object.keys(error));
+    console.log('error message',error.status);
     if (error.responses) {
         message = error.responses[0].response.message;
         status = error.responses[0].response.status === 500 ? 400 : error.responses[0].response.status;
     } else {
         message = (Object.keys(error).includes('message') || error.message) ? error.message : 'Some error occurred';
+        
+        
         status = error.status || 400;
     }
 
