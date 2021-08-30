@@ -22,8 +22,7 @@ const transporter = nodemailer.createTransport({
         pass: APP_PASSWORD,
     },
 });
-console.log("smtp email: ",SMTP_EMAIL)
-console.log("smtp pass: ",APP_PASSWORD)
+
 const commonService = {};
 
 logger.debug('<<<<<<<<<<<<<< common service >>>>>>>>>>>>>>>>>');
