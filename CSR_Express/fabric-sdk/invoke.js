@@ -81,7 +81,10 @@ async function main(userName, orgName, functionName, chaincodeName, channelName,
                     .then((data) => {
                         logger.debug(JSON.stringify(data, null, 2))
                     })
-                    .catch(err => logger.error(JSON.stringify(err, null, 2)))
+                    .catch(err => {
+                        console.log("create notification", err);
+                        logger.error(JSON.stringify(err, null, 2))
+                    })
             }
 
             //save the tx description
@@ -90,7 +93,10 @@ async function main(userName, orgName, functionName, chaincodeName, channelName,
                 .then((data) => {
                     logger.debug(JSON.stringify(data, null, 2))
                 })
-                .catch(err => logger.error(JSON.stringify(err, null, 2)))
+                .catch(err => {
+                    console.log("create tx description", err);
+                    logger.error(JSON.stringify(err, null, 2))
+                })
 
             console.log(`*** Event: ${event.eventName}`);
         };
