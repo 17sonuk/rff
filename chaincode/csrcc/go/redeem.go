@@ -18,6 +18,7 @@ type Redeem struct {
 	Date              int            `json:"date"`
 	PaymentId         string         `json:"paymentId"`
 	RejectionComments string         `json:"rejectionComments"`
+	ChangedFields     string         `json:"changedFields"` //to check if any default payment fields have changed
 	PaymentDetails    PaymentDetails `json:"paymentDetails"`
 	ProjectId         string         `json:"projectId"`
 	ProjectName       string         `json:"projectName"`
