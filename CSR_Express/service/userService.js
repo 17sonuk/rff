@@ -8,9 +8,9 @@ const individualRegEmailTemplate = require('../email-templates/individualRegEmai
 const institutionRegEmailTemplate = require('../email-templates/institutionRegEmail');
 
 const userService = {};
-
+const { v4: uuid } = require('uuid');
 require('dotenv').config();
-const { SMTP_EMAIL, APP_PASSWORD , PLATFORM_NAME} = process.env;
+const { SMTP_EMAIL, APP_PASSWORD, PLATFORM_NAME } = process.env;
 
 const nodemailer = require('nodemailer');
 const transporter = nodemailer.createTransport({
@@ -32,34 +32,34 @@ userService.registerUser = (obj) => {
 
     let err = new Error()
     err.status = 400
-    const validateEmail=/^[a-zA-Z0-9]+([._-]+[a-zA-Z0-9]+)*@[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*(?:\.[a-zA-Z]+)+$/;
-    if(!validateEmail.test(obj.email)){
-        err.message='Email format is invalid';
+    const validateEmail = /^[a-zA-Z0-9]+([._-]+[a-zA-Z0-9]+)*@[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*(?:\.[a-zA-Z]+)+$/;
+    if (obj.email === '' || !validateEmail.test(obj.email)) {
+        err.message = 'Email format is invalid';
         throw err;
     }
 
-    if (!(typeof obj.firstName =='string')){
-        err.message='Invalid first name type';
+    if (obj.firstName === '' || obj.firstName.length>50 || (!(typeof obj.firstName == 'string'))) {
+        err.message = 'Invalid first name';
         throw err;
     }
-    if (!(typeof obj.lastName =='string')){
-        err.message='Invalid last name type';
+    if (obj.lastName === '' || obj.lastName.length>50 || (!(typeof obj.lastName == 'string'))) {
+        err.message = 'Invalid last name';
         throw err;
     }
 
-    if (!(typeof obj.orgName =='string') && (obj.subRole=='Institution' || obj.role=='Ngo')){
-        err.message='Invalid org name type';
+    if (!(typeof obj.orgName == 'string') && (obj.subRole == 'Institution' || obj.role == 'Ngo')) {
+        err.message = 'Invalid org name';
         throw err;
     }
-    if (!(typeof obj.userName =='string')){
-        err.message='Invalid user name type';
+    if (obj.userName === '' || obj.userName.length>50 || (!(typeof obj.userName == 'string'))) {
+        err.message = 'Invalid user name';
         throw err;
     }
 
 
 
     if (obj.role === 'Corporate') {
-        
+
         if (!obj.subRole) {
             err.message = 'Donor type is missing/invalid!'
             throw err
@@ -106,7 +106,7 @@ userService.registerUser = (obj) => {
     obj['status'] = 'approved';
 
     //obj['date'] = new Date().getTime();
-    return userModel.registerUser(obj).then(data => {
+    return userModel.registerUser(obj).then( async (data) => {
         if (data) {
             if (data.success === false) {
                 err.message = data.message
@@ -114,6 +114,13 @@ userService.registerUser = (obj) => {
                 throw err
             }
             console.log('use added!!!!')
+            if (data.role == 'Corporate') {
+                const tId = uuid().toString()
+                var tmpNotification = { 'username': 'ca.creditsauthority.csr.com', 'txId': tId, 'seen': false }
+                var tmpTxDescription = { 'txId': tId, 'description': `${data.username} has successfully registered`}
+                await userService.createNotification(tmpNotification)
+                await userService.createTxDescription(tmpTxDescription)
+            }
             return data;
         }
         console.log('user add failed!!!')

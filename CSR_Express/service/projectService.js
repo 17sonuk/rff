@@ -147,4 +147,18 @@ projectService.editProject = async (projectId, projectObj, currentPhaseNum) => {
     }
 }
 
+//get country and category filters
+projectService.getFilters = () => {
+    console.log('service')
+    return projectModel.getFilters().then(data => {
+        if (data) {
+            return data;
+        } else {
+            let err = new Error("No records found")
+            err.status = 500
+            throw err
+        }
+    })
+}
+
 module.exports = projectService;

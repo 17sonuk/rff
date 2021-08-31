@@ -166,4 +166,15 @@ projectModelObj.editProject = async (projectId, projectObj, currentPhaseNum) => 
 
 }
 
+// get country and category filters
+projectModelObj.getFilters = async() => {
+    
+    let country = await projectModel.distinct('place')
+    let category= await projectModel.distinct('projectType')
+    return {
+        countries:country,
+        categories:category
+    }
+}
+
 module.exports = projectModelObj;

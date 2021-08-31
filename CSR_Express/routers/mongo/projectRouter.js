@@ -58,6 +58,18 @@ router.get('/all', (req, res, next) => {
         .catch(err => next(err))
 })
 
+router.get('/countryAndProjectTypeFilter', (req, res, next) => {
+    
+    logger.debug("router-filters");
+
+    projectService.getFilters()
+        .then((data) => {
+            res.json(data)
+        })
+        .catch(err => next(err))
+})
+
+//this should be the last router
 router.get('/:projectId', (req, res, next) => {
     logger.debug(`router-getProjectById: ${req.params.projectId}`);
 
@@ -89,6 +101,8 @@ router.put('/updateProject', (req, res, next) => {
 //         })
 //         .catch(err => next(err))
 // })
+
+
 
 
 
