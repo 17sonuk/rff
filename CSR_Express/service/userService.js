@@ -34,29 +34,44 @@ userService.registerUser = (obj) => {
     err.status = 400
     const validateEmail = /^[a-zA-Z0-9]+([._-]+[a-zA-Z0-9]+)*@[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*(?:\.[a-zA-Z]+)+$/;
     if (obj.email === '' || !validateEmail.test(obj.email)) {
-        err.message = 'Email format is invalid';
+        err.message = 'Email is missing/invalid format!';
         throw err;
     }
 
-    if (obj.firstName === '' || obj.firstName.length>50 || (!(typeof obj.firstName == 'string'))) {
-        err.message = 'Invalid first name';
+    if (obj.firstName === '' || (!(typeof obj.firstName == 'string'))) {
+        err.message = 'First name is missing/invalid!';
         throw err;
     }
-    if (obj.lastName === '' || obj.lastName.length>50 || (!(typeof obj.lastName == 'string'))) {
-        err.message = 'Invalid last name';
+
+    if (obj.firstName.length > 50) {
+        err.message = 'First name cannot exceed 50 characters';
+        throw err;
+    }
+
+    if (obj.lastName === '' || (!(typeof obj.lastName == 'string'))) {
+        err.message = 'Last name is missing/invalid!';
+        throw err;
+    }
+
+    if (obj.lastName.length > 50) {
+        err.message = 'Last name cannot exceed 50 characters';
         throw err;
     }
 
     if (!(typeof obj.orgName == 'string') && (obj.subRole == 'Institution' || obj.role == 'Ngo')) {
-        err.message = 'Invalid org name';
-        throw err;
-    }
-    if (obj.userName === '' || obj.userName.length>50 || (!(typeof obj.userName == 'string'))) {
-        err.message = 'Invalid user name';
+        err.message = 'Organisation name is invalid!';
         throw err;
     }
 
+    if (obj.userName === '' || (!(typeof obj.userName == 'string'))) {
+        err.message = 'User name is missing/invalid!';
+        throw err;
+    }
 
+    if (obj.userName.length > 50) {
+        err.message = 'User name cannot exceed 50 characters';
+        throw err;
+    }
 
     if (obj.role === 'Corporate') {
 
@@ -106,7 +121,7 @@ userService.registerUser = (obj) => {
     obj['status'] = 'approved';
 
     //obj['date'] = new Date().getTime();
-    return userModel.registerUser(obj).then( async (data) => {
+    return userModel.registerUser(obj).then(data => {
         if (data) {
             if (data.success === false) {
                 err.message = data.message
@@ -114,13 +129,6 @@ userService.registerUser = (obj) => {
                 throw err
             }
             console.log('use added!!!!')
-            if (data.role == 'Corporate') {
-                const tId = uuid().toString()
-                var tmpNotification = { 'username': 'ca.creditsauthority.csr.com', 'txId': tId, 'seen': false }
-                var tmpTxDescription = { 'txId': tId, 'description': `${data.username} has successfully registered`}
-                await userService.createNotification(tmpNotification)
-                await userService.createTxDescription(tmpTxDescription)
-            }
             return data;
         }
         console.log('user add failed!!!')

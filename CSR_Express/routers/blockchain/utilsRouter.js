@@ -188,12 +188,14 @@ router.get('/yearly-report', async function (req, res, next) {
         let messageTransaction = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
         let transactionList = JSON.parse(messageTransaction.toString())
 
-
         let regDonors = []
         let projectIds = []
         let guestEmails = []
         for (let t = 0; t < transactionList.length; t++) {
+
+            let paymentId = transactionList[t]['Key']
             transactionList[t] = JSON.parse(transactionList[t]['Record'])
+            transactionList[t]["paymentId"] = paymentId
             let username = splitOrgName(transactionList[t].from)
             regDonors.push(username)
             projectIds.push(transactionList[t].objRef)
@@ -233,6 +235,7 @@ router.get('/yearly-report', async function (req, res, next) {
             let username = splitOrgName(txn.from)
 
             txnObj["Gift Date"] = new Date(txn.date).toGMTString()
+            // txnObj["Payment ID"] = txn.paymentId
             txnObj["Project"] = projectMemory[txn.objRef].projectName
 
             if (username !== "guest") {
@@ -280,7 +283,7 @@ router.get('/yearly-report', async function (req, res, next) {
             }));
         }
         else if (responseType === 'excel') {
-            let excelResponse = convertToExcel(result, 'report');
+            let excelResponse = convertToExcel(result, `Report_${year}`, year);
             return res.json(getMessage(true, excelResponse));
         }
         else {
@@ -293,7 +296,7 @@ router.get('/yearly-report', async function (req, res, next) {
 });
 
 //get in excel format
-let convertToExcel = (jsonData, fileName) => {
+let convertToExcel = (jsonData, fileName, year) => {
 
     console.log("jsonData:", jsonData)
 
@@ -301,11 +304,19 @@ let convertToExcel = (jsonData, fileName) => {
     const ws = XLSX.utils.json_to_sheet(jsonData);
 
     //var f={E1: { t: 's', v: 'compliant' }};
-    const wb = { Sheets: { 'data': ws }, SheetNames: ['data'] };
-    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx',bookSST: true, cellStyles: true, type: 'base64' })
+    // const wb = { Sheets: { 'data': ws }, SheetNames: ['data'] };
+
+    let wb = {
+        'Sheets': {},
+        'SheetNames': []
+    }
+    wb['Sheets'][year] = ws
+    wb['SheetNames'] = [year]
+
+    // const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', bookSST: true, cellStyles: true, type: 'base64' })
     // cell.s = {alignment:{ wrapText: true }
-   
-    // const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' })
+
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' })
     logger.debug(`excelBuffer: ${excelBuffer}`)
     // let fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
     // const data = new Blob([excelBuffer], {type: fileType});

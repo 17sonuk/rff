@@ -83,7 +83,14 @@ router.get('/profile', (req, res, next) => {
     //     err.status=401
     //     return next(err)
     // }
-    userService.getUserDetails(req.userName)
+
+    let userName = req.userName;
+
+    if(req.orgName === 'creditsauthority'){
+        userName = req.query.userName;
+    }
+
+    userService.getUserDetails(userName)
         .then((data) => {
             res.json(data)
         })

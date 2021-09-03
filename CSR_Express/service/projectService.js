@@ -161,4 +161,16 @@ projectService.getFilters = () => {
     })
 }
 
+projectService.getProjectsByCommunity = (communityId) => {
+    return projectModel.getProjectsByCommunity(communityId).then(data => {
+        if (data) {
+            return data;
+        } else {
+            let err = new Error("No records found")
+            err.status = 500
+            throw err
+        }
+    })
+}
+
 module.exports = projectService;

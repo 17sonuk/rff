@@ -18,7 +18,7 @@ let orgMap = {
     'ngo': ORG3_NAME
 }
 
-const { orgModel } = require('../../model/models')
+const { orgModel, projectModel } = require('../../model/models')
 const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
@@ -608,7 +608,7 @@ router.get('/corporate-project-details', async (req, res, next) => {
 //getCorporateProjectTransaction
 router.get('/corporate-project-transactions', async (req, res, next) => {
     logger.debug('==================== QUERY BY CHAINCODE: getCorporateProjectTransaction ==================');
-    let corporate = req.orgName === ORG1_NAME ? req.query.corporate : req.userName;
+    let corporate = req.orgName === "creditsauthority" ? req.query.corporate : req.userName;
     const projectId = req.query.projectId
 
     logger.debug('corporate : ' + corporate);
@@ -972,20 +972,34 @@ router.get('/ngo-project-transactions', async (req, res, next) => {
     if (!CHANNEL_NAME) {
         return res.json(fieldErrorMessage('\'channelName\''));
     }
-    if (!projectId) {
-        return res.json(fieldErrorMessage('\'projectId\''));
-    }
+    // if (!projectId) {
+    //     return res.json(fieldErrorMessage('\'projectId\''));
+    // }
 
-    let regex = projectId + "$";
+    // let regex = projectId + "$";
+    // let queryString = {
+    //     "selector": {
+    //         "docType": "Transaction",
+    //         "to": orgDLTName,
+    //         "objRef": {
+    //             "$regex": regex
+    //         }
+    //     },
+    //     "sort": [{ "date": "desc" }]
+    // }
+
     let queryString = {
         "selector": {
             "docType": "Transaction",
-            "to": orgDLTName,
-            "objRef": {
-                "$regex": regex
-            }
+            "to": orgDLTName
+
         },
         "sort": [{ "date": "desc" }]
+    }
+    if (projectId) {
+        let regex = projectId + "$";
+
+        queryString['selector']['objRef'] = { '$regex': regex }
     }
 
     let args = JSON.stringify(queryString)
@@ -995,11 +1009,32 @@ router.get('/ngo-project-transactions', async (req, res, next) => {
         let message = await query.main(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args);
         message = JSON.parse(message.toString());
 
+        let projectMemory = {}
+        if (!projectId) {
+            console.log("inside not projectid")
+            // var mongoProject = await projectService.getProjectsNGO(req.userName)
+            var mongoProject = await projectModel.find({ ngo: req.userName }, { _id: 0, projectId: 1, projectName: 1, projectType: 1 })
+
+            for (let d = 0; d < mongoProject.length; d++) {
+                let p = mongoProject[d]
+                projectMemory[p.projectId] = p
+            }
+
+
+        }
         message.forEach(elem => {
             elem['Record'] = JSON.parse(elem['Record'])
             elem['Record']["from"] = splitOrgName(elem["Record"]["from"])
             elem['Record']["to"] = splitOrgName(elem["Record"]["to"])
+            if (!projectId && projectMemory[elem['Record']['objRef']]) {
+                elem['Record']["projectName"] = projectMemory[elem['Record']['objRef']].projectName
+                elem['Record']["projectType"] = projectMemory[elem['Record']['objRef']].projectType
+
+            }
         })
+
+
+
 
         logger.debug(`response :  ${JSON.stringify(message, null, 2)}`)
 
@@ -1009,6 +1044,8 @@ router.get('/ngo-project-transactions', async (req, res, next) => {
         generateError(e, next)
     }
 });
+
+
 
 router.get('/transactions', async (req, res, next) => {
     logger.debug('==================== QUERY BY CHAINCODE: projectIdTransaction ==================');
@@ -1210,6 +1247,9 @@ router.post('/delete', async (req, res, next) => {
 router.get('/get-allprojects', async (req, res, next) => {
     logger.debug('==================== QUERY BY CHAINCODE: getAllProjects ==================');
 
+    // ca, ngo, corporate
+    // place, projectType, approvalState, projectState, no. of contributors (mongo), funding progress, days until start
+
     const orgDLTName = req.userName + "." + orgMap[req.orgName.toLowerCase()] + "." + BLOCKCHAIN_DOMAIN + ".com";
     const pageSize = req.query.pageSize;
     const bookmark = req.query.bookmark;
@@ -1371,7 +1411,190 @@ router.get('/get-allprojects', async (req, res, next) => {
     }
 });
 
+// get all filtered projects by status,place, projectType, approvalState, projectState,
+router.get('/filtered-projects', async (req, res, next) => {
+    logger.debug('==================== QUERY BY CHAINCODE: filtered-projects ==================');
 
+    // ca, ngo, corporate
+    // place, projectType, approvalState, projectState, no. of contributors (mongo), funding progress, days until start
+    const orgDLTName = req.userName + "." + orgMap[req.orgName.toLowerCase()] + "." + BLOCKCHAIN_DOMAIN + ".com";
+
+    const self = req.query.self;
+    const applyFilter = req.query.applyFilter;
+    const pageSize = req.query.pageSize;
+    const bookmark = req.query.bookmark;
+    const projectStatus = req.query.projectStatus?decodeURIComponent(req.query.projectStatus):"";
+    const approvalStatus = req.query.approvalStatus?decodeURIComponent(req.query.approvalStatus):"";
+    const place = req.query.place?decodeURIComponent(req.query.place):"";
+
+    const projectType = req.query.projectType;
+
+    if (!CHAINCODE_NAME) {
+        return res.json(fieldErrorMessage('\'chaincodeName\''));
+    }
+    if (!CHANNEL_NAME) {
+        return res.json(fieldErrorMessage('\'channelName\''));
+    }
+    if (!self) {
+        return res.json(fieldErrorMessage('\'self\''));
+    }
+    if (!applyFilter) {
+        return res.json(fieldErrorMessage('\'applyFilter\''));
+    }
+    if (!pageSize) {
+        return res.json(fieldErrorMessage('\'pageSize\''));
+    }
+
+    if (req.orgName === 'creditsauthority' && self === "true") {
+        return res.json(fieldErrorMessage('\'self\''));
+    }
+
+    if (req.orgName === "corporate" && approvalStatus === "UnApproved") {
+        return res.json(fieldErrorMessage('\'approvalStatus\''));
+    }
+
+    if (req.userName === 'guest' && self === "true") {
+        return res.json(fieldErrorMessage('\'self\''));
+    }
+
+    if (req.orgName === 'ngo' && self === "false") {
+        return res.json(fieldErrorMessage('\'self\''));
+    }
+
+    let queryString = {
+        "selector": {
+            "docType": "Project"
+        }
+    }
+
+    if (applyFilter === "false") {
+        queryString["selector"]['approvalState'] = "Approved";
+        queryString["selector"]['projectState'] = { "$ne": "Validated" }
+
+        
+    } else if (applyFilter === "true") {
+        if (approvalStatus) {
+            queryString["selector"]['approvalState'] = approvalStatus;
+        }
+        if (projectStatus) {
+            queryString["selector"]['projectState'] = projectStatus;
+        }
+    }
+
+    if (self === "true") {
+        if (req.orgName === "ngo") {
+            queryString["selector"]["ngo"] = orgDLTName
+        } else if (req.orgName === "corporate") {
+            queryString["selector"]["contributors"] = {}
+            queryString["selector"]["contributors"][orgDLTName.replace(/\./g, "\\\\.")] = "exists";
+        }
+    }
+
+    if (projectType) {
+        queryString["selector"]["projectType"] = projectType;
+    }
+    if (place) {
+        queryString["selector"]["place"] = place.toLowerCase();
+    }
+    console.log("query :",queryString)
+    console.log("place",place)
+
+    logger.debug('queryString: ' + JSON.stringify(queryString));
+
+    let args = [JSON.stringify(queryString), pageSize, bookmark];
+    args = JSON.stringify(args);
+
+
+    try {
+        let message = await query.main(req.userName, req.orgName, "CommonQueryPagination", CHAINCODE_NAME, CHANNEL_NAME, args);
+        message = JSON.parse(message.toString());
+        if (message.toString().includes("Error:")) {
+            let errorMessage = message.toString().split("Error:")[1].trim()
+            return res.json(getMessage(false, errorMessage))
+        }
+        else {
+            let newObject = message['Results'];
+
+            let finalResponse = {}
+            let allRecords = []
+
+            //populate the MetaData
+            finalResponse["metaData"] = {}
+            finalResponse["metaData"]["recordsCount"] = message["RecordsCount"];
+            finalResponse["metaData"]["bookmark"] = message["Bookmark"];
+
+            //loop over the projects
+            for (let i = 0; i < newObject.length; i++) {
+
+                let record = JSON.parse(newObject[i]["Record"]);
+                logger.debug(`Project ${i} : ${JSON.stringify(record, null, 2)}`);
+
+                let response = {}
+                response["totalReceived"] = record.totalReceived;
+                response["ourContribution"] = 0;
+
+                if (record["contributions"][orgDLTName] !== undefined) {
+                    response["ourContribution"] += record["contributions"][orgDLTName]["contributionQty"];
+                }
+
+                let currentPhase = 0;
+                for (let f = 0; f < record.phases.length; f++) {
+                    let phaseQty = record.phases[f]["qty"];
+                    let phaseOutstandingQty = record.phases[f]["outstandingQty"]
+
+                    response["totalReceived"] += (phaseQty - phaseOutstandingQty)
+
+                    if (record.phases[f]["phaseState"] !== "Created") {
+                        currentPhase = f
+                    }
+                }
+
+                response['currentPhase'] = currentPhase + 1;
+                response['currentPhaseStatus'] = record.phases[currentPhase]['phaseState'];
+                response['currentPhaseTarget'] = record.phases[currentPhase]['qty'];
+                response['currentPhaseOutstandingAmount'] = record.phases[currentPhase]['outstandingQty'];
+
+                response['projectId'] = newObject[i]['Key']
+                response['contributors'] = Object.keys(record['contributors']).map(splitOrgName)
+                response['ngo'] = splitOrgName(record['ngo'])
+                response['totalProjectCost'] = record['totalProjectCost']
+                response['projectName'] = record['projectName']
+                response['projectType'] = record['projectType']
+                response['totalPhases'] = record.phases.length
+                response["percentageFundReceived"] = (response["totalReceived"] / record['totalProjectCost']) * 100;
+
+                let endDate = record.phases[record.phases.length - 1]['endDate']
+                let timeDifference = endDate - Date.now()
+                if (timeDifference < 0) {
+                    timeDifference = 0
+                }
+                response['daysLeft'] = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+
+                let startDate = record.phases[0]['startDate']
+                let timeDiff = startDate - Date.now()
+                if (timeDiff < 0) {
+                    timeDiff = 0
+                }
+                response['daysLeftToStart'] = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+
+                timeDiff = Date.now() - startDate
+                if (timeDiff < 0) {
+                    timeDiff = 0
+                }
+                response['daysPassed'] = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+
+                allRecords.push(response);
+            }
+
+            logger.debug(`All : ${JSON.stringify(allRecords, null, 2)}`);
+            finalResponse["records"] = allRecords
+            return res.json(getMessage(true, finalResponse))
+        }
+    }
+    catch (e) {
+        generateError(e, next);
+    }
+});
 
 //abandon a project by id
 router.put('/abandon', async (req, res, next) => {
@@ -1523,5 +1746,97 @@ router.post('/initiate', async (req, res, next) => {
         generateError(e, next);
     }
 })
+
+
+router.get('/userProfile/transactions', async (req, res, next) => {
+    logger.debug('==================== QUERY BY CHAINCODE: projectIdTransaction ==================');
+    const projectId = req.query.projectId
+    const ngo = req.query.ngo
+    const corporate = req.query.corporate
+
+
+    logger.debug('projectId : ' + projectId);
+
+    if (!CHAINCODE_NAME) {
+        return res.json(fieldErrorMessage('\'chaincodeName\''));
+    }
+
+    if (!CHANNEL_NAME) {
+        return res.json(fieldErrorMessage('\'channelName\''));
+    }
+
+    
+
+    let queryString = {
+        "selector": {
+            "docType": "Transaction",
+            "txType": {
+                "$in": [
+                    "ReleaseFundsFromEscrow",
+                    "TransferToken",
+                    "FundsToEscrowAccount",
+                    "FundsToEscrowAccount_snapshot",
+                    "TransferToken_snapshot"
+                ]
+            }
+        }
+    }
+
+    if (ngo) {
+        queryString['selector']['to'] = ngo + "." + orgMap['ngo'] + "." + BLOCKCHAIN_DOMAIN + ".com"
+    }
+    if (corporate) {
+        queryString['selector']['from'] = corporate + "." + orgMap['corporate'] + "." + BLOCKCHAIN_DOMAIN + ".com"
+    }
+    if (projectId) {
+        // queryString['selector']['objRef'] = projectId
+        queryString['selector']['objRef'] = { '$regex': projectId }
+        console.log("query: ", queryString)
+    }
+
+    const args = JSON.stringify(queryString)
+    logger.debug('args : ' + args);
+
+    try {
+        let message = await query.main(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args);
+        message = JSON.parse(message.toString());
+
+        let projectMemory = {}
+        if (!projectId) {
+
+            if (ngo && !corporate) {
+                var mongoProject = await projectModel.find({ 'ngo': ngo }, { _id: 0, projectId: 1, projectName: 1, projectType: 1 })
+            } else if (!ngo && corporate) {
+                mongoProject = await projectModel.find({ 'contributorsList': corporate }, { _id: 0, projectId: 1, projectName: 1, projectType: 1 })
+            } else if (ngo && corporate) {
+                mongoProject = await projectModel.find({ 'ngo': ngo, 'contributorsList': corporate }, { _id: 0, projectId: 1, projectName: 1, projectType: 1 })
+            } else {
+                mongoProject = await projectModel.find({}, { _id: 0, projectId: 1, projectName: 1, projectType: 1 })
+            }
+
+            for (let d = 0; d < mongoProject.length; d++) {
+                let p = mongoProject[d]
+                projectMemory[p.projectId] = p
+            }
+        }
+
+        message.forEach(elem => {
+            elem['Record'] = JSON.parse(elem['Record'])
+            elem['Record']["from"] = splitOrgName(elem["Record"]["from"])
+            elem['Record']["to"] = splitOrgName(elem["Record"]["to"])
+            if (!projectId && projectMemory[elem['Record']['objRef']]) {
+                elem['Record']["projectName"] = projectMemory[elem['Record']['objRef']].projectName
+                elem['Record']["projectType"] = projectMemory[elem['Record']['objRef']].projectType
+            }
+        })
+
+        logger.debug(`response :  ${JSON.stringify(message, null, 2)}`)
+
+        return res.json({ ...getMessage(true, 'CommonQuery successful'), "records": message });
+    }
+    catch (e) {
+        generateError(e, next)
+    }
+});
 
 module.exports = router;

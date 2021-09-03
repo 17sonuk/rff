@@ -5,6 +5,7 @@
         "/mongo/user/notification",
         "/mongo/user/checkUserNameValidity",
         "/query/getRecord",
+        "/project/filtered-projects",
         "/project/total-project-locked-amount",
         "/country/countries",
         "/country/states",
@@ -64,9 +65,14 @@
     ],
     "creditsauthority": [
         "/mongo/common/community",
+        "/redeem/request/forUserprofile",
         "/mongo/common/community/all",
         "/mongo/common/update-community",
         "/mongo/project/initiate",
+        "/mongo/project/projects-corporate",
+        "/mongo/project/projects-ngo",
+        "/mongo/project/projectsByCommunity",
+        "/mongo/user/profile",
         "/mongo/user/project-completed",
         "/mongo/user/approve-user",
         "/mongo/user/reject-user",
@@ -102,7 +108,8 @@
         "/project/delete",
         "/project/get-allprojects",
         "/project/approve",
-        "/project/edit"
+        "/project/edit",
+        "/project/userProfile/transactions"
     ],
     "guest": [
         "/mongo/file/getFile",

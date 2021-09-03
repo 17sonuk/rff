@@ -31,7 +31,13 @@ router.post('/create', (req, res, next) => {
 router.get('/projects-ngo', (req, res, next) => {
     logger.debug("router-getProjectNGO");
 
-    projectService.getProjectsNGO(req.userName)
+    userName = req.userName
+
+    if(req.orgName === 'creditsauthority'){
+        userName = req.query.userName
+    }
+
+    projectService.getProjectsNGO(userName)
         .then((data) => {
             res.json(data)
         })
@@ -41,7 +47,13 @@ router.get('/projects-ngo', (req, res, next) => {
 router.get('/projects-corporate', (req, res, next) => {
     logger.debug("router-getProjectsCorporate");
 
-    projectService.getProjectsCorporate(req.userName)
+    userName = req.userName
+
+    if(req.orgName === 'creditsauthority'){
+        userName = req.query.userName
+    }
+
+    projectService.getProjectsCorporate(userName)
         .then((data) => {
             res.json(data)
         })
@@ -58,11 +70,20 @@ router.get('/all', (req, res, next) => {
         .catch(err => next(err))
 })
 
-router.get('/countryAndProjectTypeFilter', (req, res, next) => {
-    
+router.get('/countryAndProjectTypeFilter', (req, res, next) => {   
     logger.debug("router-filters");
 
     projectService.getFilters()
+        .then((data) => {
+            res.json(data)
+        })
+        .catch(err => next(err))
+})
+
+router.get('/projectsByCommunity', (req, res, next) => {    
+    logger.debug(`router-projectsByCommunity: ${req.query.communityId}`);
+
+    projectService.getProjectsByCommunity(req.query.communityId)
         .then((data) => {
             res.json(data)
         })

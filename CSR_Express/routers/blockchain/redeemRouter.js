@@ -210,4 +210,98 @@ router.get('/request/all', async (req, res, next) => {
     }
 });
 
+router.get('/request/forUserprofile', async (req, res, next) => {
+    logger.debug('==================== QUERY BY CHAINCODE: getAllRedeemRequests ==================');
+    const userDLTName = req.query.ngo + "." + orgMap['ngo'] + "." + BLOCKCHAIN_DOMAIN + ".com";
+
+    const pageSize = req.query.pageSize;
+    const bookmark = req.query.bookmark;
+    const status = req.query.status;
+    const communityName = req.query.communityName ? decodeURIComponent(req.query.communityName) : '';
+    const communityPlace = req.query.communityPlace ? decodeURIComponent(req.query.communityPlace) : '';
+    const ngo = req.query.ngo;
+
+    logger.debug('pageSize : ' + pageSize + ' bookmark : ' + bookmark);
+    logger.debug('status : ' + status);
+    logger.debug('communityName : ' + communityName);
+    logger.debug('communityPlace : ' + communityPlace);
+    logger.debug('ngo : ' + ngo);
+
+    if (!pageSize) {
+        return res.json(fieldErrorMessage('\'pageSize\''));
+    }
+    if (!status) {
+        return res.json(fieldErrorMessage('\'status\''));
+    }
+
+    if (!ngo && (!communityName && !communityPlace)) {
+        return res.json({ success: false, message: 'Select either ngo or community' });
+    }
+
+    if (ngo && (communityName || communityPlace)) {
+        return res.json({ success: false, message: 'Both ngo and community can not be selected' });
+    }
+
+    if (!ngo && (!communityName || !communityPlace)) {
+        if (!communityName) {
+            return res.json(fieldErrorMessage('\'communityName\''));
+        } else {
+            return res.json(fieldErrorMessage('\'communityPlace\''));
+        }
+    }
+
+    let queryString = {
+        "selector": {
+            "docType": "Redeem",
+            "status": status
+        },
+        "sort": [{ "date": "asc" }]
+    }
+
+    if (ngo) {
+        queryString['selector']['from'] = userDLTName
+    } else if (communityName && communityPlace) {
+        queryString['selector']['communityName'] = communityName
+        queryString['selector']['communityPlace'] = communityPlace
+    } else {
+        return res.json({ success: false, message: 'Unauthorised redeem request access...' })
+    }
+
+    let args = [JSON.stringify(queryString), pageSize, bookmark];
+    args = JSON.stringify(args);
+    logger.debug('args : ' + args);
+
+    try {
+        let message = await query.main(req.userName, req.orgName, "CommonQueryPagination", CHAINCODE_NAME, CHANNEL_NAME, args);
+        message = JSON.parse(message.toString());
+
+        let newObject = message['Results'];
+
+        let finalResponse = {}
+        let allRecords = []
+
+        //populate the MetaData
+        finalResponse["metaData"] = {}
+        finalResponse["metaData"]["recordsCount"] = message["RecordsCount"];
+        finalResponse["metaData"]["bookmark"] = message["Bookmark"];
+
+        for (let i = 0; i < newObject.length; i++) {
+
+            let req = JSON.parse(newObject[i]['Record'])
+            req['from'] = splitOrgName(req['from'])
+            req['key'] = newObject[i]['Key']
+            allRecords.push(req)
+        }
+
+        finalResponse['records'] = allRecords
+        return res.json(getMessage(true, finalResponse))
+    }
+    catch (e) {
+        generateError(e, next);
+    }
+
+
+});
+
+
 module.exports = router;
