@@ -71,7 +71,7 @@ const fileSchema = new Schema({
 
 const phoneSchema = new Schema({
     countryCode: { type: String, maxLength: [20, 'Country code cannot exceed 20 characters'] },
-    phoneNumber: { type: String, maxLength: [10, 'Phone number cannot exceed 10 characters'] }
+    phoneNumber: { type: String, maxLength: [20, 'Phone number cannot exceed 20 characters'] }
 })
 
 //ngo bank details

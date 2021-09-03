@@ -241,7 +241,7 @@ router.get('/yearly-report', async function (req, res, next) {
             if (username !== "guest") {
                 if (orgsObj[username].subRole === 'Institution') {
                     txnObj["Donor"] = orgsObj[username].orgName
-                } else if (orgsObj[username].subRole === 'Intividual') {
+                } else if (orgsObj[username].subRole === 'Individual') {
                     txnObj["Donor"] = orgsObj[username].firstName + " " + orgsObj[username].lastName
                 }
                 txnObj["Email"] = orgsObj[username].email
