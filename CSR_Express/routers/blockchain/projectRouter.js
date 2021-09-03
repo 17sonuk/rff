@@ -991,8 +991,16 @@ router.get('/ngo-project-transactions', async (req, res, next) => {
     let queryString = {
         "selector": {
             "docType": "Transaction",
-            "to": orgDLTName
-
+            "to": orgDLTName,
+            "txType": {
+                "$in": [
+                    "ReleaseFundsFromEscrow",
+                    "TransferToken",
+                    "FundsToEscrowAccount",
+                    "FundsToEscrowAccount_snapshot",
+                    "TransferToken_snapshot"
+                ]
+            },
         },
         "sort": [{ "date": "desc" }]
     }
@@ -1033,9 +1041,6 @@ router.get('/ngo-project-transactions', async (req, res, next) => {
             }
         })
 
-
-
-
         logger.debug(`response :  ${JSON.stringify(message, null, 2)}`)
 
         return res.json({ ...getMessage(true, 'CommonQuery successful'), "records": message });
@@ -1044,8 +1049,6 @@ router.get('/ngo-project-transactions', async (req, res, next) => {
         generateError(e, next)
     }
 });
-
-
 
 router.get('/transactions', async (req, res, next) => {
     logger.debug('==================== QUERY BY CHAINCODE: projectIdTransaction ==================');
