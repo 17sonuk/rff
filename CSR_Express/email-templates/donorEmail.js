@@ -42,20 +42,24 @@ module.exports ={
             </html>`
         }
         else{
+            let addressHtml='';
+            if((address.zipCode !='' && address.city !='' && address.state != '')){
+            addressHtml=`<div margin-top: 10px; margin-right: 10px; margin-left: 10px;>
+            <p>${firstName}</p>
+            <p>${address.addressLine1}</p>
+            <p>${address.addressLine2}</p>
+            <p>${address.city+', '+address.state+', '+address.zipCode}</p><br>`
+            }
             return `<!DOCTYPE html>
-        <html style="height:100%;">
+            <html style="height:100%;">
             <head>
-                <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-                <meta name="viewport" content="width=device-width"/>
-                <title></title>
+            <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+            <meta name="viewport" content="width=device-width"/>
+            <title></title>
             </head>
             <body>
             <div>
-                <div margin-top: 10px; margin-right: 10px; margin-left: 10px;>
-                <p>${firstName}</p>
-                <p>${address.addressLine1}</p>
-                <p>${address.addressLine2}</p>
-                <p>${address.city+','+address.state+','+address.zipCode}</p><br>
+            ${addressHtml}
 
                 <p>Dear <b>${firstName}</b>,</p><br>
                 <p>Thank you for your recent donation to ${PLATFORM_NAME} in support of the project “${projectName}.” </p>
