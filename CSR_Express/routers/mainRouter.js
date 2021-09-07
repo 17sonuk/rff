@@ -6,7 +6,7 @@ var jwt = require('jsonwebtoken');
 const mainRouter = express.Router();
 
 // Routers
-const escrowRouter = require('./blockchain/escrowRouter');
+// const escrowRouter = require('./blockchain/escrowRouter');
 const countryRouter = require('./country/countryRouter');
 const fileMongoRouter = require('./mongo/fileRouter');
 const commonMongoRouter = require('./mongo/commonRouter');
@@ -227,7 +227,7 @@ mainRouter.use('/mongo/file', fileMongoRouter);
 mainRouter.use('/mongo/common', commonMongoRouter);
 
 // Blockchain Routers
-mainRouter.use('/escrow', escrowRouter);
+// mainRouter.use('/escrow', escrowRouter);
 mainRouter.use('/query', queryRouter);
 mainRouter.use('/project', projectRouter);
 mainRouter.use('/redeem', redeemRouter);

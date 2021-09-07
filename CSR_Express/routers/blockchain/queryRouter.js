@@ -153,110 +153,110 @@ router.get('/getRecord/:recordKey', async function (req, res, next) {
     }
 });
 
-router.get('/total-locked-and-validity-of-corporate', async function (req, res, next) {
-    // const corporate = req.query.corporate;
+// router.get('/total-locked-and-validity-of-corporate', async function (req, res, next) {
+//     // const corporate = req.query.corporate;
 
-    // if (!corporate) {
-    //     return res.json(fieldErrorMessage('\'corporate\''));
-    // }
+//     // if (!corporate) {
+//     //     return res.json(fieldErrorMessage('\'corporate\''));
+//     // }
 
-    let queryString = {
-        "selector": {
-            "docType": "EscrowDetails",
-            "corporate": req.userName + "." + ORG2_NAME + "." + BLOCKCHAIN_DOMAIN + ".com"
-        },
-        "fields": [
-            "funds"
-        ]
-    }
+//     let queryString = {
+//         "selector": {
+//             "docType": "EscrowDetails",
+//             "corporate": req.userName + "." + ORG2_NAME + "." + BLOCKCHAIN_DOMAIN + ".com"
+//         },
+//         "fields": [
+//             "funds"
+//         ]
+//     }
 
-    const args = JSON.stringify(queryString)
-    logger.debug(`query string:\n ${args}`);
+//     const args = JSON.stringify(queryString)
+//     logger.debug(`query string:\n ${args}`);
 
-    try {
-        let message = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
-        message = JSON.parse(message.toString());
+//     try {
+//         let message = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
+//         message = JSON.parse(message.toString());
 
-        message.forEach(elem => {
-            elem['Record'] = JSON.parse(elem['Record'])
-        })
+//         message.forEach(elem => {
+//             elem['Record'] = JSON.parse(elem['Record'])
+//         })
 
-        logger.debug(`response :  ${JSON.stringify(message, null, 2)}`)
+//         logger.debug(`response :  ${JSON.stringify(message, null, 2)}`)
 
-        let result = []
-        // let resultObject = new Object()
+//         let result = []
+//         // let resultObject = new Object()
 
-        message.forEach(e => {
-            e.Record.funds.forEach(f => {
-                let resultObject = new Object()
-                resultObject.qty = f.qty
-                resultObject.validity = f.validity
+//         message.forEach(e => {
+//             e.Record.funds.forEach(f => {
+//                 let resultObject = new Object()
+//                 resultObject.qty = f.qty
+//                 resultObject.validity = f.validity
 
-                if (result.length == 0) {
-                    result.push(resultObject)
-                }
-                else {
-                    result.forEach(g => {
-                        if (g.validity == resultObject.validity) {
-                            g.qty += resultObject.qty
-                        }
-                    })
-                }
-            })
-        })
+//                 if (result.length == 0) {
+//                     result.push(resultObject)
+//                 }
+//                 else {
+//                     result.forEach(g => {
+//                         if (g.validity == resultObject.validity) {
+//                             g.qty += resultObject.qty
+//                         }
+//                     })
+//                 }
+//             })
+//         })
 
-        return res.json(getMessage(true, result));
-    }
-    catch (e) {
-        generateError(e, next)
-    }
-});
+//         return res.json(getMessage(true, result));
+//     }
+//     catch (e) {
+//         generateError(e, next)
+//     }
+// });
 
-// get fund raised and contributors for particular ngo
-router.get('/amount-parked', async function (req, res, next) {
-    const projectId = req.query.projectId;
-    const userDLTName = req.userName + "." + orgMap[req.orgName.toLowerCase()] + "." + BLOCKCHAIN_DOMAIN + ".com";
+// // get fund raised and contributors for particular ngo
+// router.get('/amount-parked', async function (req, res, next) {
+//     const projectId = req.query.projectId;
+//     const userDLTName = req.userName + "." + orgMap[req.orgName.toLowerCase()] + "." + BLOCKCHAIN_DOMAIN + ".com";
 
-    if (!projectId) {
-        return res.json(fieldErrorMessage('\'projectId\''));
-    }
+//     if (!projectId) {
+//         return res.json(fieldErrorMessage('\'projectId\''));
+//     }
 
-    let queryString = {
-        "selector": {
-            "docType": "EscrowDetails",
-            "_id": userDLTName + "_" + projectId
-        }
-    }
+//     let queryString = {
+//         "selector": {
+//             "docType": "EscrowDetails",
+//             "_id": userDLTName + "_" + projectId
+//         }
+//     }
 
-    const args = JSON.stringify(queryString)
-    logger.debug(`query string:\n ${args}`);
+//     const args = JSON.stringify(queryString)
+//     logger.debug(`query string:\n ${args}`);
 
-    try {
-        let message = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
-        message = JSON.parse(message.toString());
+//     try {
+//         let message = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
+//         message = JSON.parse(message.toString());
 
-        message.forEach(elem => {
-            elem['Record'] = JSON.parse(elem['Record'])
-        })
+//         message.forEach(elem => {
+//             elem['Record'] = JSON.parse(elem['Record'])
+//         })
 
-        logger.debug(`response :  ${JSON.stringify(message, null, 2)}`)
+//         logger.debug(`response :  ${JSON.stringify(message, null, 2)}`)
 
-        let response = {}
+//         let response = {}
 
-        response["lockedQty"] = 0
+//         response["lockedQty"] = 0
 
-        if (message.length != 0) {
-            for (let i = 0; i < message[0]["Record"]["funds"].length; i++) {
-                response["lockedQty"] += message[0]["Record"]["funds"][i]["qty"]
-            }
-        }
+//         if (message.length != 0) {
+//             for (let i = 0; i < message[0]["Record"]["funds"].length; i++) {
+//                 response["lockedQty"] += message[0]["Record"]["funds"][i]["qty"]
+//             }
+//         }
 
-        return res.json(getMessage(true, response));
-    }
-    catch (e) {
-        generateError(e, next)
-    }
-});
+//         return res.json(getMessage(true, response));
+//     }
+//     catch (e) {
+//         generateError(e, next)
+//     }
+// });
 
 //fetch the Id data uploaded by the IT Dept. - (NOT USED)
 router.get('/it-data', async function (req, res, next) {
@@ -585,7 +585,7 @@ router.get('/ngo-report', async function (req, res, next) {
     try {
         console.log(listOfNgos);
         for (let i = 0; i < listOfNgos.length; i++) {
-            queryString["selector"]["txType"]["$in"] = ["TransferToken", "TransferToken_snapshot", "ReleaseFundsFromEscrow"];
+            queryString["selector"]["txType"]["$in"] = ["TransferToken"];
             queryString["selector"]["to"] = listOfNgos[i] + "." + ORG3_NAME + "." + BLOCKCHAIN_DOMAIN + ".com";
 
             let args = JSON.stringify(queryString);
@@ -631,25 +631,25 @@ router.get('/ngo-report', async function (req, res, next) {
             }
             ngoData["totalRedeemed"] = total;
 
-            //get all locked amounts
-            queryString["selector"]["txType"]["$in"] = ["FundsToEscrowAccount", "FundsToEscrowAccount_snapshot"];
-            args = JSON.stringify(queryString);
-            logger.debug(`query2 string:\n ${args}`);
+            // //get all locked amounts
+            // queryString["selector"]["txType"]["$in"] = ["FundsToEscrowAccount", "FundsToEscrowAccount_snapshot"];
+            // args = JSON.stringify(queryString);
+            // logger.debug(`query2 string:\n ${args}`);
 
-            let message3 = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
-            message3 = JSON.parse(message3.toString());
+            // let message3 = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
+            // message3 = JSON.parse(message3.toString());
 
-            message3.forEach(elem => {
-                elem['Record'] = JSON.parse(elem['Record'])
-            })
+            // message3.forEach(elem => {
+            //     elem['Record'] = JSON.parse(elem['Record'])
+            // })
 
-            logger.debug(`response3 :  ${JSON.stringify(message3, null, 2)}`)
+            // logger.debug(`response3 :  ${JSON.stringify(message3, null, 2)}`)
 
-            total = 0;
-            for (let j = 0; j < message3.length; j++) {
-                total += message3[j]["Record"]["qty"]
-            }
-            ngoData["totalLocked"] = total;
+            // total = 0;
+            // for (let j = 0; j < message3.length; j++) {
+            //     total += message3[j]["Record"]["qty"]
+            // }
+            // ngoData["totalLocked"] = total;
 
             response["result"].push(ngoData);
             logger.debug(response);
@@ -693,7 +693,7 @@ router.get('/ngo-contribution-details', async function (req, res, next) {
             "docType": "Transaction",
             "to": ngoName + "." + ORG3_NAME + "." + BLOCKCHAIN_DOMAIN + ".com",
             "txType": {
-                "$in": ["TransferToken", "TransferToken_snapshot", "FundsToEscrowAccount", "FundsToEscrowAccount_snapshot"]
+                "$in": ["TransferToken"]
             },
             "date": {
                 "$gt": startDate.valueOf(),
@@ -722,11 +722,8 @@ router.get('/ngo-contribution-details', async function (req, res, next) {
                 response["result"][from] = { "totalTransferred": 0, "totalLocked": 0 }
             }
 
-            if (message[i]["Record"]["txType"] === "TransferToken" || message[i]["Record"]["txType"] === "TransferToken_snapshot") {
+            if (message[i]["Record"]["txType"] === "TransferToken") {
                 response["result"][from]["totalTransferred"] += message[i]["Record"]["qty"]
-            }
-            else {
-                response["result"][from]["totalLocked"] += message[i]["Record"]["qty"]
             }
         }
 
@@ -749,17 +746,14 @@ router.get('/balance', async function (req, res, next) {
     let userDLTName = req.userName + "." + orgMap[req.orgName.toLowerCase()] + "." + BLOCKCHAIN_DOMAIN + ".com";
 
     let response = {
-        'balance': 0,
-        'snapshotBalance': 0,
-        'escrowBalance': 0
+        'balance': 0
     }
 
     let queryString = {
         "selector": {
             "_id": {
                 "$in": [
-                    userDLTName,
-                    userDLTName + '_snapshot'
+                    userDLTName
                 ]
             }
         }
@@ -773,41 +767,36 @@ router.get('/balance', async function (req, res, next) {
         let newObject = JSON.parse(message.toString())
 
         for (let i = 0; i < newObject.length; i++) {
-            if (newObject[i]['Key'] === userDLTName) {
-                response['balance'] = Number(newObject[i]['Record'])
-            }
-            else if (newObject[i]['Key'] === userDLTName + '_snapshot') {
-                response['snapshotBalance'] = Number(newObject[i]['Record'])
-            }
+            response['balance'] = Number(newObject[i]['Record'])
         }
 
-        if (req.orgName === 'corporate') {
-            queryString = {
-                'selector': {
-                    'docType': "EscrowDetails",
-                    'corporate': userDLTName
-                },
-                'fields': ['funds']
-            }
+        // if (req.orgName === 'corporate') {
+        //     queryString = {
+        //         'selector': {
+        //             'docType': "EscrowDetails",
+        //             'corporate': userDLTName
+        //         },
+        //         'fields': ['funds']
+        //     }
 
-            args = JSON.stringify(queryString)
-            logger.debug(`query string:\n ${args}`);
+        //     args = JSON.stringify(queryString)
+        //     logger.debug(`query string:\n ${args}`);
 
-            //query esrow balance
-            message = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
-            logger.debug(`response message: ${message.toString()}`);
+        //     //query esrow balance
+        //     message = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
+        //     logger.debug(`response message: ${message.toString()}`);
 
-            message = JSON.parse(message.toString())
+        //     message = JSON.parse(message.toString())
 
-            for (let i = 0; i < message.length; i++) {
-                message[i]['Record'] = JSON.parse(message[i]['Record'])
-                let funds = message[i]['Record']['funds']
-                for (let j = 0; j < funds.length; j++) {
-                    response['escrowBalance'] += funds[j]['qty']
-                }
-            }
-            response.success = true;
-        }
+        //     for (let i = 0; i < message.length; i++) {
+        //         message[i]['Record'] = JSON.parse(message[i]['Record'])
+        //         let funds = message[i]['Record']['funds']
+        //         for (let j = 0; j < funds.length; j++) {
+        //             response['escrowBalance'] += funds[j]['qty']
+        //         }
+        //     }
+        //     response.success = true;       // +++++++++++++++++++++++++++++++
+        // }
         return res.json(getMessage(true, response));
     }
     catch (e) {
@@ -907,8 +896,6 @@ router.get('/corporate-contributions', async function (req, res, next) {
             logger.debug(`response3 :  ${JSON.stringify(message3, null, 2)}`)
 
             resultObject.balance = message3.balance
-            resultObject.escrowBalance = message3.escrowBalance
-            resultObject.snapshotBalance = message3.snapshotBalance
 
             //get all the projects the corporate is contributed
             let list1 = corporate.split(".")

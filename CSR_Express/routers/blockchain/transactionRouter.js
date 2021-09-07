@@ -16,30 +16,31 @@ let orgMap = {
 
 router.get('/parked-by-corporate', async (req, res, next) => {
 
-    //extract parameters from query.
-    const parked = req.query.parked;
-    logger.debug('parked : ' + parked);
+    // //extract parameters from query.
+    // const parked = req.query.parked;
+    // logger.debug('parked : ' + parked);
 
-    if (!parked) {
-        return res.json(fieldErrorMessage('\'parked\''));
-    }
+    // if (!parked) {
+    //     return res.json(fieldErrorMessage('\'parked\''));
+    // }
 
     let userDLTName = req.userName + "." + orgMap[req.orgName.toLowerCase()] + "." + BLOCKCHAIN_DOMAIN + ".com";
 
     let queryString = {
         "selector": {
             "docType": "Transaction",
-            "txType": {},
+            "txType": "TransferToken",
             "from": userDLTName
         },
         "sort": [{ "date": "desc" }]
     }
 
-    if (parked === "true") {
-        queryString["selector"]["txType"]["$in"] = ["FundsToEscrowAccount", "FundsToEscrowAccount_snapshot"]
-    } else {
-        queryString["selector"]["txType"]["$in"] = ["TransferToken", "TransferToken_snapshot", "ReleaseFundsFromEscrow"]
-    }
+    // queryString["selector"]["txType"]["$in"] = ["TransferToken"]
+    // if (parked === "true") {
+    //     queryString["selector"]["txType"]["$in"] = ["FundsToEscrowAccount", "FundsToEscrowAccount_snapshot"]
+    // } else {
+    //     queryString["selector"]["txType"]["$in"] = ["TransferToken", "TransferToken_snapshot", "ReleaseFundsFromEscrow"]
+    // }
 
     let args = JSON.stringify(queryString);
     logger.debug(args);
@@ -63,9 +64,9 @@ router.get('/parked-by-corporate', async (req, res, next) => {
                 "fields": ["projectName"]
             }
 
-            if (parked === "true" || message[i]["Record"]["txType"] === 'ReleaseFundsFromEscrow') {
-                projectQueryString["selector"]["_id"] = objRef.split('_')[1]
-            }
+            // if (parked === "true" || message[i]["Record"]["txType"] === 'ReleaseFundsFromEscrow') {
+            //     projectQueryString["selector"]["_id"] = objRef.split('_')[1]
+            // }
 
             args = [JSON.stringify(projectQueryString)]
 

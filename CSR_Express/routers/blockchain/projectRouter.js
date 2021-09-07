@@ -635,11 +635,7 @@ router.get('/corporate-project-transactions', async (req, res, next) => {
             "from": corporate,
             "txType": {
                 "$in": [
-                    "ReleaseFundsFromEscrow",
-                    "TransferToken",
-                    "FundsToEscrowAccount",
-                    "FundsToEscrowAccount_snapshot",
-                    "TransferToken_snapshot"
+                    "TransferToken"
                 ]
             },
             "objRef": {
@@ -778,185 +774,185 @@ router.get('/total-corporate-ongoing-projects', async (req, res, next) => {
     }
 });
 
-// Get Total Amount Locked for ProjectId
-router.get('/total-project-locked-amount', async (req, res, next) => {
-    logger.debug('==================== QUERY BY CHAINCODE: getTotalAmountLockedForProjectId ==================');
-    //const corporate = req.query.corporate
-    const projectId = req.query.projectId
+// // Get Total Amount Locked for ProjectId
+// router.get('/total-project-locked-amount', async (req, res, next) => {
+//     logger.debug('==================== QUERY BY CHAINCODE: getTotalAmountLockedForProjectId ==================');
+//     //const corporate = req.query.corporate
+//     const projectId = req.query.projectId
 
-    //logger.debug('corporate : ' + corporate);
-    logger.debug('projectId : ' + projectId);
+//     //logger.debug('corporate : ' + corporate);
+//     logger.debug('projectId : ' + projectId);
 
-    if (!CHAINCODE_NAME) {
-        return res.json(fieldErrorMessage('\'chaincodeName\''));
-    }
-    if (!CHANNEL_NAME) {
-        return res.json(fieldErrorMessage('\'channelName\''));
-    }
-    //if (!corporate) {
-    //    return res.json(fieldErrorMessage('\'corporate\''));
-    //    return;
-    //}
-    if (!projectId) {
-        return res.json(fieldErrorMessage('\'projectId\''));
-    }
+//     if (!CHAINCODE_NAME) {
+//         return res.json(fieldErrorMessage('\'chaincodeName\''));
+//     }
+//     if (!CHANNEL_NAME) {
+//         return res.json(fieldErrorMessage('\'channelName\''));
+//     }
+//     //if (!corporate) {
+//     //    return res.json(fieldErrorMessage('\'corporate\''));
+//     //    return;
+//     //}
+//     if (!projectId) {
+//         return res.json(fieldErrorMessage('\'projectId\''));
+//     }
 
-    let queryString = {
-        "selector": {
-            "project": projectId,
-            "docType": "EscrowDetails"
-        },
-        "fields": [
-            "funds"
-        ]
-    }
+//     let queryString = {
+//         "selector": {
+//             "project": projectId,
+//             "docType": "EscrowDetails"
+//         },
+//         "fields": [
+//             "funds"
+//         ]
+//     }
 
-    let args = JSON.stringify(queryString)
-    logger.debug('args : ' + args);
+//     let args = JSON.stringify(queryString)
+//     logger.debug('args : ' + args);
 
-    try {
-        let message = await query.main(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args);
-        message = JSON.parse(message.toString());
+//     try {
+//         let message = await query.main(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args);
+//         message = JSON.parse(message.toString());
 
-        message.forEach(elem => {
-            elem['Record'] = JSON.parse(elem['Record'])
-        })
+//         message.forEach(elem => {
+//             elem['Record'] = JSON.parse(elem['Record'])
+//         })
 
-        logger.debug(`response :  ${JSON.stringify(message, null, 2)}`)
+//         logger.debug(`response :  ${JSON.stringify(message, null, 2)}`)
 
-        let result = 0
+//         let result = 0
 
-        message.forEach(e => {
-            e.Record.funds.forEach(f => {
-                result += f.qty
-            })
-        })
+//         message.forEach(e => {
+//             e.Record.funds.forEach(f => {
+//                 result += f.qty
+//             })
+//         })
 
-        return res.json({ ...getMessage(true, 'CommonQuery successful'), lockedAmount: result })
-    }
-    catch (e) {
-        generateError(e, next)
-    }
-});
+//         return res.json({ ...getMessage(true, 'CommonQuery successful'), lockedAmount: result })
+//     }
+//     catch (e) {
+//         generateError(e, next)
+//     }
+// });
 
-//getCorporateProjectTransaction
-router.get('/ngo-project-and-locked-details', async (req, res, next) => {
-    logger.debug('==================== QUERY BY CHAINCODE: getNgoProjectAndLockedAmountDetails ==================');
-    // const ngo = req.query.ngo
+// //getCorporateProjectTransaction
+// router.get('/ngo-project-and-locked-details', async (req, res, next) => {
+//     logger.debug('==================== QUERY BY CHAINCODE: getNgoProjectAndLockedAmountDetails ==================');
+//     // const ngo = req.query.ngo
 
-    // logger.debug('ngo : ' + ngo);
+//     // logger.debug('ngo : ' + ngo);
 
-    if (!CHAINCODE_NAME) {
-        return res.json(fieldErrorMessage('\'chaincodeName\''));
-    }
-    if (!CHANNEL_NAME) {
-        return res.json(fieldErrorMessage('\'channelName\''));
-    }
-    // if (!ngo) {
-    //     return res.json(fieldErrorMessage('\'ngo\''));
-    // }
+//     if (!CHAINCODE_NAME) {
+//         return res.json(fieldErrorMessage('\'chaincodeName\''));
+//     }
+//     if (!CHANNEL_NAME) {
+//         return res.json(fieldErrorMessage('\'channelName\''));
+//     }
+//     // if (!ngo) {
+//     //     return res.json(fieldErrorMessage('\'ngo\''));
+//     // }
 
-    let queryString = {
-        "selector": {
-            "docType": "Project",
-            "ngo": req.userName + "." + ORG3_NAME + "." + BLOCKCHAIN_DOMAIN + ".com"
-        },
-        "fields": [
-            "_id",
-            "projectId",
-            "phases",
-            "totalProjectCost",
-            "projectName",
-            "endDate"
-        ]
-    }
+//     let queryString = {
+//         "selector": {
+//             "docType": "Project",
+//             "ngo": req.userName + "." + ORG3_NAME + "." + BLOCKCHAIN_DOMAIN + ".com"
+//         },
+//         "fields": [
+//             "_id",
+//             "projectId",
+//             "phases",
+//             "totalProjectCost",
+//             "projectName",
+//             "endDate"
+//         ]
+//     }
 
-    let args = JSON.stringify(queryString)
-    logger.debug('args : ' + args);
+//     let args = JSON.stringify(queryString)
+//     logger.debug('args : ' + args);
 
-    try {
-        let message = await query.main(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args);
-        message = JSON.parse(message.toString());
+//     try {
+//         let message = await query.main(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args);
+//         message = JSON.parse(message.toString());
 
-        message.forEach(elem => {
-            elem['Record'] = JSON.parse(elem['Record'])
-        })
+//         message.forEach(elem => {
+//             elem['Record'] = JSON.parse(elem['Record'])
+//         })
 
-        logger.debug(`response :  ${JSON.stringify(message, null, 2)}`)
+//         logger.debug(`response :  ${JSON.stringify(message, null, 2)}`)
 
-        let response = []
+//         let response = []
 
-        for (let i = 0; i < message.length; i++) {
+//         for (let i = 0; i < message.length; i++) {
 
-            let obj = Object()
-            obj.projectName = message[i].Record.projectName
-            obj.totalProjectCost = message[i].Record.totalProjectCost
+//             let obj = Object()
+//             obj.projectName = message[i].Record.projectName
+//             obj.totalProjectCost = message[i].Record.totalProjectCost
 
-            //find amount locked for the project
+//             //find amount locked for the project
 
-            let queryString1 = {
-                "selector": {
-                    "project": message[i].Key,
-                    "docType": "EscrowDetails"
-                },
-                "fields": [
-                    "funds"
-                ]
-            }
-            let args1 = JSON.stringify(queryString1)
+//             let queryString1 = {
+//                 "selector": {
+//                     "project": message[i].Key,
+//                     "docType": "EscrowDetails"
+//                 },
+//                 "fields": [
+//                     "funds"
+//                 ]
+//             }
+//             let args1 = JSON.stringify(queryString1)
 
-            let message1 = await query.main(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args1);
+//             let message1 = await query.main(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args1);
 
-            message1 = JSON.parse(message1.toString());
+//             message1 = JSON.parse(message1.toString());
 
-            message1.forEach(elem => {
-                elem['Record'] = JSON.parse(elem['Record'])
-            })
+//             message1.forEach(elem => {
+//                 elem['Record'] = JSON.parse(elem['Record'])
+//             })
 
-            logger.debug(`response :  ${JSON.stringify(message1, null, 2)}`)
+//             logger.debug(`response :  ${JSON.stringify(message1, null, 2)}`)
 
-            let result = 0
+//             let result = 0
 
-            message1.forEach(e => {
-                e.Record.funds.forEach(f => {
-                    result += f.qty
-                })
-            })
-            obj.locked = result
-            obj.projectId = message[i].Key
+//             message1.forEach(e => {
+//                 e.Record.funds.forEach(f => {
+//                     result += f.qty
+//                 })
+//             })
+//             obj.locked = result
+//             obj.projectId = message[i].Key
 
-            //get current phase details
+//             //get current phase details
 
-            let amountCollected = 0
-            for (let j = 0; j < message[i].Record.phases.length; j++) {
+//             let amountCollected = 0
+//             for (let j = 0; j < message[i].Record.phases.length; j++) {
 
-                if (message[i].Record.phases[j].phaseState == "Complete") {
-                    amountCollected += message[i].Record.phases[j].qty - message[i].Record.phases[j].outstandingQty
-                    continue
-                }
+//                 if (message[i].Record.phases[j].phaseState == "Complete") {
+//                     amountCollected += message[i].Record.phases[j].qty - message[i].Record.phases[j].outstandingQty
+//                     continue
+//                 }
 
-                if (message[i].Record.phases[j].phaseState != "Complete") {
-                    amountCollected += message[i].Record.phases[j].qty - message[i].Record.phases[j].outstandingQty
-                    let phase = new Object()
-                    phase.phaseNumber = j
-                    phase.endDate = message[i].Record.phases[j].endDate
-                    phase.qty = message[i].Record.phases[j].qty
-                    phase.outstandingQty = message[i].Record.phases[j].outstandingQty
-                    phase.phaseState = message[i].Record.phases[j].phaseState
-                    obj.phase = phase
+//                 if (message[i].Record.phases[j].phaseState != "Complete") {
+//                     amountCollected += message[i].Record.phases[j].qty - message[i].Record.phases[j].outstandingQty
+//                     let phase = new Object()
+//                     phase.phaseNumber = j
+//                     phase.endDate = message[i].Record.phases[j].endDate
+//                     phase.qty = message[i].Record.phases[j].qty
+//                     phase.outstandingQty = message[i].Record.phases[j].outstandingQty
+//                     phase.phaseState = message[i].Record.phases[j].phaseState
+//                     obj.phase = phase
 
-                    break
-                }
-            }
-            obj.amountCollected = amountCollected
-            response.push(obj)
-        }
-        return res.json({ ...getMessage(true, 'CommonQuery successful'), 'records': response })
-    }
-    catch (e) {
-        generateError(e, next)
-    }
-});
+//                     break
+//                 }
+//             }
+//             obj.amountCollected = amountCollected
+//             response.push(obj)
+//         }
+//         return res.json({ ...getMessage(true, 'CommonQuery successful'), 'records': response })
+//     }
+//     catch (e) {
+//         generateError(e, next)
+//     }
+// });
 
 router.get('/ngo-project-transactions', async (req, res, next) => {
     logger.debug('==================== QUERY BY CHAINCODE: getNgoProjectTx ==================')
@@ -994,11 +990,7 @@ router.get('/ngo-project-transactions', async (req, res, next) => {
             "to": orgDLTName,
             "txType": {
                 "$in": [
-                    "ReleaseFundsFromEscrow",
                     "TransferToken",
-                    "FundsToEscrowAccount",
-                    "FundsToEscrowAccount_snapshot",
-                    "TransferToken_snapshot"
                 ]
             },
         },
@@ -1074,11 +1066,7 @@ router.get('/transactions', async (req, res, next) => {
             },
             "txType": {
                 "$in": [
-                    "ReleaseFundsFromEscrow",
-                    "TransferToken",
-                    "FundsToEscrowAccount",
-                    "FundsToEscrowAccount_snapshot",
-                    "TransferToken_snapshot"
+                    "TransferToken"
                 ]
             }
         }
@@ -1776,11 +1764,7 @@ router.get('/userProfile/transactions', async (req, res, next) => {
             "docType": "Transaction",
             "txType": {
                 "$in": [
-                    "ReleaseFundsFromEscrow",
-                    "TransferToken",
-                    "FundsToEscrowAccount",
-                    "FundsToEscrowAccount_snapshot",
-                    "TransferToken_snapshot"
+                    "TransferToken"
                 ]
             }
         }

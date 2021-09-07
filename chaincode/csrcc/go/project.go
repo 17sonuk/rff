@@ -766,30 +766,6 @@ func (s *SmartContract) UpdateProject(ctx contractapi.TransactionContextInterfac
 	splitName := strings.SplitN(commonName, ".", -1)
 	eventPayload := splitName[0] + " has updated the phase " + strconv.Itoa(phaseNumber+1) + " of project " + projectState.ProjectName + "."
 
-	//not relevant for rainforest
-	// if state == "Open For Funding" {
-	// 	//get all corporates who have locked credits for this project.
-	// 	//notification will be sent to only these corporates.
-	// 	queryString := fmt.Sprintf("{\"selector\":{\"docType\":\"EscrowDetails\", \"project\": \"%s\"}, \"fields\": [\"corporate\"]}", projectId)
-	// 	queryResults, err := GetQueryResultForQueryString(ctx, queryString)
-	// 	if err != nil {
-	// 		return false, fmt.Errorf(err.Error())
-	// 	}
-	// 	InfoLogger.Printf("query result:", string(queryResults))
-
-	// 	var result []map[string]interface{}
-	// 	err = json.Unmarshal([]byte(queryResults), &result)
-
-	// 	corpsList := make([]string, 0, len(result))
-	// 	for _, value := range result {
-	// 		corpName := value["Record"].(map[string]interface{})["corporate"].(string)
-	// 		InfoLogger.Printf("corpName: ", corpName)
-	// 		corpsList = append(corpsList, corpName)
-	// 	}
-	// 	tmpList = corpsList
-	// 	eventPayload = "Phase " + strconv.Itoa(phaseNumber+1) + " of project " + projectState.ProjectName + " is open for funding."
-	// }
-
 	notification := &Notification{TxId: txId, Description: eventPayload, Users: tmpList}
 	if state == "Seeking Validation" {
 		notification.Users = []string{"ca." + creditsauthority + "." + domain}

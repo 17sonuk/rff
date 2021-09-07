@@ -14,22 +14,22 @@ const query = require('../../fabric-sdk/query');
 const e = require('express');
 const { orgModel, donorModel, projectModel } = require('../../model/models')
 //take a snapshot of all corporate balances on chaincode on target peers.
-router.post('/snapshot/create', async (req, res, next) => {
-    logger.debug('==================== INVOKE CREATE SNAPSHOT ON CHAINCODE ==================');
+// router.post('/snapshot/create', async (req, res, next) => {
+//     logger.debug('==================== INVOKE CREATE SNAPSHOT ON CHAINCODE ==================');
 
-    let args = [Date.now().toString(), uuid().toString()];
+//     let args = [Date.now().toString(), uuid().toString()];
 
-    args = JSON.stringify(args);
-    logger.debug('args  : ' + args);
+//     args = JSON.stringify(args);
+//     logger.debug('args  : ' + args);
 
-    try {
-        await invoke.main(req.userName, req.orgName, "SnapshotCurrentCorporateBalances", CHAINCODE_NAME, CHANNEL_NAME, args);
-        return res.json(getMessage(true, 'Successfully invoked SnapshotCurrentCorporateBalances'));
-    }
-    catch (e) {
-        generateError(e, next)
-    }
-});
+//     try {
+//         await invoke.main(req.userName, req.orgName, "SnapshotCurrentCorporateBalances", CHAINCODE_NAME, CHANNEL_NAME, args);
+//         return res.json(getMessage(true, 'Successfully invoked SnapshotCurrentCorporateBalances'));
+//     }
+//     catch (e) {
+//         generateError(e, next)
+//     }
+// });
 
 //transfer unspent tokens to government.
 router.post('/unspent/transfer', async (req, res, next) => {

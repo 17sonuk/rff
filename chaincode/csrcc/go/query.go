@@ -456,36 +456,36 @@ func (s *SmartContract) GetBalance(ctx contractapi.TransactionContextInterface) 
 	amount := 0.0
 
 	tokenBalanceAsBytes, _ := ctx.GetStub().GetState(commonName)
-	snapshotBalanceAsBytes, _ := ctx.GetStub().GetState(commonName + "_snapshot")
+	// snapshotBalanceAsBytes, _ := ctx.GetStub().GetState(commonName + "_snapshot")
 
-	//fetch all escrow funds
-	queryString := fmt.Sprintf("{\"selector\":{\"docType\":\"EscrowDetails\", \"corporate\": \"%s\"}}", commonName)
-	queryResults, err := GetQueryResultForQueryString(ctx, queryString)
-	if err != nil {
-		return nil, fmt.Errorf(err.Error())
-	}
+	// //fetch all escrow funds
+	// queryString := fmt.Sprintf("{\"selector\":{\"docType\":\"EscrowDetails\", \"corporate\": \"%s\"}}", commonName)
+	// queryResults, err := GetQueryResultForQueryString(ctx, queryString)
+	// if err != nil {
+	// 	return nil, fmt.Errorf(err.Error())
+	// }
 	// InfoLogger.Printf("query result:", string(queryResults))
 
-	var result []map[string]interface{}
-	err = json.Unmarshal([]byte(queryResults), &result)
+	// var result []map[string]interface{}
+	// err = json.Unmarshal([]byte(queryResults), &result)
 
-	for _, value := range result {
-		for _, fundObj := range value["Record"].(map[string]interface{})["funds"].([]interface{}) {
-			amount += fundObj.(map[string]interface{})["qty"].(float64)
-		}
-	}
+	// for _, value := range result {
+	// 	for _, fundObj := range value["Record"].(map[string]interface{})["funds"].([]interface{}) {
+	// 		amount += fundObj.(map[string]interface{})["qty"].(float64)
+	// 	}
+	// }
 
-	if amount > 0.0 {
-		allBalances["escrowBalance"] = amount
-	}
+	// if amount > 0.0 {
+	// 	allBalances["escrowBalance"] = amount
+	// }
 	if tokenBalanceAsBytes != nil {
 		amount, _ = strconv.ParseFloat(string(tokenBalanceAsBytes), 64)
 		allBalances["balance"] = amount
 	}
-	if snapshotBalanceAsBytes != nil {
-		amount, _ = strconv.ParseFloat(string(snapshotBalanceAsBytes), 64)
-		allBalances["snapshotBalance"] = amount
-	}
+	// if snapshotBalanceAsBytes != nil {
+	// 	amount, _ = strconv.ParseFloat(string(snapshotBalanceAsBytes), 64)
+	// 	allBalances["snapshotBalance"] = amount
+	// }
 
 	balJSON, _ := json.Marshal(allBalances)
 	jsonStr := string(balJSON)
@@ -528,8 +528,8 @@ func (s *SmartContract) GetProjectTransactions(ctx contractapi.TransactionContex
 type Record struct {
 	Qty             float64 `json:qty`
 	Balance         float64 `json:balance`
-	EscrowBalance   float64 `json:escrowBalance`
-	SnapshotBalance float64 `json:snapshotBalance`
+	// EscrowBalance   float64 `json:escrowBalance`
+	// SnapshotBalance float64 `json:snapshotBalance`
 	Corporate       string  `json:corporate`
 	Id              string  `json:_id`
 	ProjectCount    float64 `json:projectCount`
@@ -569,8 +569,8 @@ func (s *SmartContract) GetCorporateDetails(ctx contractapi.TransactionContextIn
 		InfoLogger.Printf(string(result1))
 		json.Unmarshal(result2, &recordObj)
 		balance := recordObj.Balance
-		escrowBalance := recordObj.EscrowBalance
-		snapshotBalance := recordObj.SnapshotBalance
+		// escrowBalance := recordObj.EscrowBalance
+		// snapshotBalance := recordObj.SnapshotBalance
 
 		//get the no of ongoing projects they are working
 		list1 := strings.Split(org, ".")
@@ -592,8 +592,8 @@ func (s *SmartContract) GetCorporateDetails(ctx contractapi.TransactionContextIn
 		recordObj.Corporate = org
 		recordObj.Qty = sum
 		recordObj.Balance = balance
-		recordObj.EscrowBalance = escrowBalance
-		recordObj.SnapshotBalance = snapshotBalance
+		// recordObj.EscrowBalance = escrowBalance
+		// recordObj.SnapshotBalance = snapshotBalance
 		recordObj.ProjectCount = float64(projectCount)
 
 		endResult = append(endResult, recordObj)
@@ -618,36 +618,36 @@ func (s *SmartContract) GetBalanceCorporate(ctx contractapi.TransactionContextIn
 	orgName := arg
 
 	tokenBalanceAsBytes, _ := ctx.GetStub().GetState(orgName)
-	snapshotBalanceAsBytes, _ := ctx.GetStub().GetState(orgName + "_snapshot")
+	// snapshotBalanceAsBytes, _ := ctx.GetStub().GetState(orgName + "_snapshot")
 
-	//fetch all escrow funds
-	queryString := fmt.Sprintf("{\"selector\":{\"docType\":\"EscrowDetails\", \"corporate\": \"%s\"}}", orgName)
-	queryResults, err := GetQueryResultForQueryString(ctx, queryString)
-	if err != nil {
-		return "", fmt.Errorf(err.Error())
-	}
-	InfoLogger.Printf("query result:", string(queryResults))
+	// //fetch all escrow funds
+	// queryString := fmt.Sprintf("{\"selector\":{\"docType\":\"EscrowDetails\", \"corporate\": \"%s\"}}", orgName)
+	// queryResults, err := GetQueryResultForQueryString(ctx, queryString)
+	// if err != nil {
+	// 	return "", fmt.Errorf(err.Error())
+	// }
+	// InfoLogger.Printf("query result:", string(queryResults))
 
-	var result []map[string]interface{}
-	err = json.Unmarshal([]byte(queryResults), &result)
+	// var result []map[string]interface{}
+	// err = json.Unmarshal([]byte(queryResults), &result)
 
-	for _, value := range result {
-		for _, fundObj := range value["Record"].(map[string]interface{})["funds"].([]interface{}) {
-			amount = math.Round((amount+fundObj.(map[string]interface{})["qty"].(float64))*100) / 100
-		}
-	}
+	// for _, value := range result {
+	// 	for _, fundObj := range value["Record"].(map[string]interface{})["funds"].([]interface{}) {
+	// 		amount = math.Round((amount+fundObj.(map[string]interface{})["qty"].(float64))*100) / 100
+	// 	}
+	// }
 
-	if amount > 0.0 {
-		allBalances["escrowBalance"] = amount
-	}
+	// if amount > 0.0 {
+	// 	allBalances["escrowBalance"] = amount
+	// }
 	if tokenBalanceAsBytes != nil {
 		amount, _ = strconv.ParseFloat(string(tokenBalanceAsBytes), 64)
 		allBalances["balance"] = amount
 	}
-	if snapshotBalanceAsBytes != nil {
-		amount, _ = strconv.ParseFloat(string(snapshotBalanceAsBytes), 64)
-		allBalances["snapshotBalance"] = amount
-	}
+	// if snapshotBalanceAsBytes != nil {
+	// 	amount, _ = strconv.ParseFloat(string(snapshotBalanceAsBytes), 64)
+	// 	allBalances["snapshotBalance"] = amount
+	// }
 
 	balJSON, _ := json.Marshal(allBalances)
 	jsonStr := string(balJSON)
