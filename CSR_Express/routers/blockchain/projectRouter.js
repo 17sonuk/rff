@@ -1426,9 +1426,9 @@ router.get('/filtered-projects', async (req, res, next) => {
     const applyFilter = req.query.applyFilter;
     const pageSize = req.query.pageSize;
     const bookmark = req.query.bookmark;
-    const projectStatus = req.query.projectStatus?decodeURIComponent(req.query.projectStatus):"";
-    const approvalStatus = req.query.approvalStatus?decodeURIComponent(req.query.approvalStatus):"";
-    const place = req.query.place?decodeURIComponent(req.query.place):"";
+    const projectStatus = req.query.projectStatus ? decodeURIComponent(req.query.projectStatus) : "";
+    const approvalStatus = req.query.approvalStatus ? decodeURIComponent(req.query.approvalStatus) : "";
+    const place = req.query.place ? decodeURIComponent(req.query.place) : "";
 
     const projectType = req.query.projectType;
 
@@ -1473,14 +1473,15 @@ router.get('/filtered-projects', async (req, res, next) => {
     if (applyFilter === "false") {
         queryString["selector"]['approvalState'] = "Approved";
         queryString["selector"]['projectState'] = { "$ne": "Validated" }
-
-        
     } else if (applyFilter === "true") {
         if (approvalStatus) {
             queryString["selector"]['approvalState'] = approvalStatus;
         }
         if (projectStatus) {
             queryString["selector"]['projectState'] = projectStatus;
+        }
+        if (!approvalStatus && !projectStatus && req.orgName === "corporate") {
+            queryString["selector"]['approvalState'] = { "$ne": "UnApproved" }
         }
     }
 
@@ -1499,8 +1500,8 @@ router.get('/filtered-projects', async (req, res, next) => {
     if (place) {
         queryString["selector"]["place"] = place.toLowerCase();
     }
-    console.log("query :",queryString)
-    console.log("place",place)
+    console.log("query :", queryString)
+    console.log("place", place)
 
     logger.debug('queryString: ' + JSON.stringify(queryString));
 
@@ -1533,7 +1534,7 @@ router.get('/filtered-projects', async (req, res, next) => {
                 logger.debug(`Project ${i} : ${JSON.stringify(record, null, 2)}`);
 
                 let response = {}
-                response["totalReceived"] = record.totalReceived;
+                response["totalReceived"] = 0;
                 response["ourContribution"] = 0;
 
                 if (record["contributions"][orgDLTName] !== undefined) {
@@ -1768,7 +1769,7 @@ router.get('/userProfile/transactions', async (req, res, next) => {
         return res.json(fieldErrorMessage('\'channelName\''));
     }
 
-    
+
 
     let queryString = {
         "selector": {

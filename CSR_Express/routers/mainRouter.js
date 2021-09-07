@@ -88,7 +88,7 @@ mainRouter.use((req, res, next) => {
         generateError(e, next);
     }
 
-    let skip = ['/mongo/user/onboard', '/mongo/user/checkUserNameValidity', '/users', '/psp/coinbase/chargeStatus', '/country/countries', '/country/states', '/country/cities', '/mongo/common/community/listed'];
+    let skip = ['/mongo/user/onboard', '/mongo/user/checkUserNameValidity', '/users', '/psp/coinbase/chargeStatus', '/country/countries', '/country/states', '/country/cities', '/mongo/common/community/listed', '/project/filtered-projects'];
     if (skip.includes(req.path)) {
         return next();
     }
