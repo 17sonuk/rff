@@ -96,6 +96,8 @@
         "/query/ngo-report",
         "/query/ngo-contribution-details",
         "/query/corporate-contributions",
+        "/query/corporateReport-donorProfile",
+        "/query/ngoReport-userProfile",
         "/project/getCorporateProjectDetails",
         "/tx/transactions",
         "/utils/upload-excel",

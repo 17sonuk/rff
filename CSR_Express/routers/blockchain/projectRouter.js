@@ -1534,54 +1534,67 @@ router.get('/filtered-projects', async (req, res, next) => {
                 logger.debug(`Project ${i} : ${JSON.stringify(record, null, 2)}`);
 
                 let response = {}
-                response["totalReceived"] = 0;
+                response = record
+                console.log("record: ", record)
+                console.log("response: ", response)
+                // response["totalReceived"] = 0;
                 response["ourContribution"] = 0;
 
-                if (record["contributions"][orgDLTName] !== undefined) {
-                    response["ourContribution"] += record["contributions"][orgDLTName]["contributionQty"];
+                if (response["contributions"][orgDLTName] !== undefined) {
+                    response["ourContribution"] += response["contributions"][orgDLTName]["contributionQty"];
                 }
 
                 let currentPhase = 0;
-                for (let f = 0; f < record.phases.length; f++) {
-                    let phaseQty = record.phases[f]["qty"];
-                    let phaseOutstandingQty = record.phases[f]["outstandingQty"]
+                for (let f = 0; f < response.phases.length; f++) {
+                    // let phaseQty = response.phases[f]["qty"];
+                    // let phaseOutstandingQty = response.phases[f]["outstandingQty"]
 
-                    response["totalReceived"] += (phaseQty - phaseOutstandingQty)
+                    // response["totalReceived"] += (phaseQty - phaseOutstandingQty)
 
-                    if (record.phases[f]["phaseState"] !== "Created") {
+                    if (response.phases[f]["phaseState"] !== "Created") {
                         currentPhase = f
                     }
                 }
 
                 response['currentPhase'] = currentPhase + 1;
-                response['currentPhaseStatus'] = record.phases[currentPhase]['phaseState'];
-                response['currentPhaseTarget'] = record.phases[currentPhase]['qty'];
-                response['currentPhaseOutstandingAmount'] = record.phases[currentPhase]['outstandingQty'];
+                response['currentPhaseStatus'] = response.phases[currentPhase]['phaseState'];
+                response['currentPhaseTarget'] = response.phases[currentPhase]['qty'];
+                response['currentPhaseOutstandingAmount'] = response.phases[currentPhase]['outstandingQty'];
 
                 response['projectId'] = newObject[i]['Key']
-                response['contributors'] = Object.keys(record['contributors']).map(splitOrgName)
-                response['ngo'] = splitOrgName(record['ngo'])
-                response['totalProjectCost'] = record['totalProjectCost']
-                response['projectName'] = record['projectName']
-                response['projectType'] = record['projectType']
-                response['totalPhases'] = record.phases.length
-                response["percentageFundReceived"] = (response["totalReceived"] / record['totalProjectCost']) * 100;
+                response['contributors'] = Object.keys(response['contributors']).map(splitOrgName)
+                response['ngo'] = splitOrgName(response['ngo'])
+                // response['totalProjectCost'] = response['totalProjectCost']
+                // response['projectName'] = response['projectName']
+                // response['projectType'] = response['projectType']
+                response['totalPhases'] = response.phases.length
+                response["percentageFundReceived"] = (response["totalReceived"] / response['totalProjectCost']) * 100;
 
-                let endDate = record.phases[record.phases.length - 1]['endDate']
+                let endDate = response.phases[response.phases.length - 1]['endDate']
                 let timeDifference = endDate - Date.now()
                 if (timeDifference < 0) {
                     timeDifference = 0
                 }
                 response['daysLeft'] = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
 
-                let startDate = record.phases[0]['startDate']
+                let actualStartDate = response.actualStartDate
+                let startDate = response.phases[0]['startDate']
+
                 let timeDiff = startDate - Date.now()
+                if (actualStartDate!==0) {
+                    timeDiff = actualStartDate - Date.now()
+                }
+
                 if (timeDiff < 0) {
                     timeDiff = 0
                 }
                 response['daysLeftToStart'] = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
 
                 timeDiff = Date.now() - startDate
+                if (actualStartDate!==0) {
+                    timeDiff = Date.now() - actualStartDate
+                }
+
                 if (timeDiff < 0) {
                     timeDiff = 0
                 }
