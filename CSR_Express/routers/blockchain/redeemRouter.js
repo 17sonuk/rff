@@ -22,16 +22,18 @@ router.post('/request', async (req, res, next) => {
 
     //extract parameters from request body.
     const qty = req.body.qty;
-    console.log('QTY::::::::::::: ' + qty)
     const paymentDetails = req.body.paymentDetails
 
     if (!qty) {
         return res.json(fieldErrorMessage('\'quantity\''));
     }
+
     if (!paymentDetails) {
         return res.json(fieldErrorMessage('\'paymentDetails\''));
     }
+
     const paymentTypes = ['Paypal', 'Cryptocurrency', 'Bank']
+
     if (!paymentDetails.paymentType || !paymentTypes.includes(paymentDetails.paymentType)) {
         return res.json(fieldErrorMessage('\'payment type\''));
     }
@@ -39,9 +41,11 @@ router.post('/request', async (req, res, next) => {
     if (paymentDetails.paymentType === 'Paypal' && !paymentDetails.paypalEmailId) {
         return res.json(fieldErrorMessage('\'paypal email id of beneficiary\''));
     }
+
     if (paymentDetails.paymentType === 'Cryptocurrency' && !paymentDetails.cryptoAddress) {
         return res.json(fieldErrorMessage('\'crypto address of beneficiary\''));
     }
+
     if (paymentDetails.paymentType === 'Bank') {
         if (!paymentDetails.bankDetails)
             return res.json(fieldErrorMessage('\'bank account details of beneficiary\''));
@@ -62,6 +66,7 @@ router.post('/request', async (req, res, next) => {
     let args = [uuid().toString(), JSON.stringify(req.body), Date.now().toString(), uuid().toString()]
     //let args = [uuid().toString(), amount, receiverId, Date.now().toString(), uuid().toString()]
     //added current UTC date(in epoch milliseconds) to args
+
     args = JSON.stringify(args);
     logger.debug('args  : ' + args);
 
@@ -169,41 +174,28 @@ router.get('/request/all', async (req, res, next) => {
     logger.debug('args : ' + args);
 
     try {
-        let message = await query.main(req.userName, req.orgName, "CommonQueryPagination", CHAINCODE_NAME, CHANNEL_NAME, args);
-        message = JSON.parse(message.toString());
-
-        message['Results'].forEach(elem => {
-            elem['Record'] = JSON.parse(elem['Record'])
-        })
-        let newObject = message['Results'];
+        let redeemRequests = await query.main(req.userName, req.orgName, "CommonQueryPagination", CHAINCODE_NAME, CHANNEL_NAME, args);
+        redeemRequests = JSON.parse(redeemRequests.toString());
 
         let finalResponse = {}
         let allRecords = []
 
         //populate the MetaData
         finalResponse["metaData"] = {}
-        finalResponse["metaData"]["recordsCount"] = message["RecordsCount"];
-        finalResponse["metaData"]["bookmark"] = message["Bookmark"];
+        finalResponse["metaData"]["recordsCount"] = redeemRequests["RecordsCount"];
+        finalResponse["metaData"]["bookmark"] = redeemRequests["Bookmark"];
 
-        for (let i = 0; i < newObject.length; i++) {
-            newObject[i]['Record']['from'] = splitOrgName(newObject[i]['Record']['from'])
-            newObject[i]['Record']['key'] = newObject[i]['Key']
-            allRecords.push(newObject[i]['Record'])
+        for (let i = 0; i < redeemRequests['Results'].length; i++) {
+            let req = redeemRequests['Results'][i];
+            req['Record'] = JSON.parse(req['Record'])
+
+            req['Record']['from'] = splitOrgName(req['Record']['from'])
+            req['Record']['key'] = req['Key']
+            allRecords.push(req['Record'])
         }
 
         finalResponse['records'] = allRecords
         return res.json(getMessage(true, finalResponse))
-        /*
-            newObject = new Object()
-            newObject = JSON.parse(message.toString())
-    
-            for(var i=0; i<newObject.length; i++) {
-                newObject[i]['Record']['from'] = splitOrgName(newObject[i]['Record']['from'])
-            }
-    
-            newObject.success = true;
-            return res.send(newObject);
-        */
     }
     catch (e) {
         generateError(e, next);
@@ -272,25 +264,24 @@ router.get('/request/forUserprofile', async (req, res, next) => {
     logger.debug('args : ' + args);
 
     try {
-        let message = await query.main(req.userName, req.orgName, "CommonQueryPagination", CHAINCODE_NAME, CHANNEL_NAME, args);
-        message = JSON.parse(message.toString());
-
-        let newObject = message['Results'];
+        let redeemRequests = await query.main(req.userName, req.orgName, "CommonQueryPagination", CHAINCODE_NAME, CHANNEL_NAME, args);
+        redeemRequests = JSON.parse(redeemRequests.toString());
 
         let finalResponse = {}
         let allRecords = []
 
         //populate the MetaData
         finalResponse["metaData"] = {}
-        finalResponse["metaData"]["recordsCount"] = message["RecordsCount"];
-        finalResponse["metaData"]["bookmark"] = message["Bookmark"];
+        finalResponse["metaData"]["recordsCount"] = redeemRequests["RecordsCount"];
+        finalResponse["metaData"]["bookmark"] = redeemRequests["Bookmark"];
 
-        for (let i = 0; i < newObject.length; i++) {
+        for (let i = 0; i < redeemRequests['Results'].length; i++) {
+            let req = redeemRequests['Results'][i];
+            req['Record'] = JSON.parse(req['Record'])
 
-            let req = JSON.parse(newObject[i]['Record'])
-            req['from'] = splitOrgName(req['from'])
-            req['key'] = newObject[i]['Key']
-            allRecords.push(req)
+            req['Record']['from'] = splitOrgName(req['Record']['from'])
+            req['Record']['key'] = req['Key']
+            allRecords.push(req['Record'])
         }
 
         finalResponse['records'] = allRecords
@@ -299,8 +290,6 @@ router.get('/request/forUserprofile', async (req, res, next) => {
     catch (e) {
         generateError(e, next);
     }
-
-
 });
 
 
