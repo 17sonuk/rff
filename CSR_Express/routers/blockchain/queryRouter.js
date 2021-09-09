@@ -937,7 +937,7 @@ router.get('/corporate-contributions', async function (req, res, next) {
 });
 
 
-router.get('/corporateReport-donorProfile', async function (req, res, next) {
+router.get('/corporateReport-userProfile', async function (req, res, next) {
     try {
         let result = []
 
@@ -951,8 +951,8 @@ router.get('/corporateReport-donorProfile', async function (req, res, next) {
             "lastName": '',
             "orgName": '',
             "fundsDonated": 0,
-            "projects": [],
-            "fundedProject": 0
+            "projectsFunded": [],
+            "projectsFundedCount": 0
         }
         donorList.push(guestData)
 
@@ -967,8 +967,8 @@ router.get('/corporateReport-donorProfile', async function (req, res, next) {
             }
 
             donorMap[donor.userName]["fundsDonated"] = 0
-            donorMap[donor.userName]["fundedProjects"] = []
-            donorMap[donor.userName]["fundedProjectsCount"] = 0
+            donorMap[donor.userName]["projectsFunded"] = []
+            donorMap[donor.userName]["projectsFundedCount"] = 0
             // console.log('from for loop', donor)
 
             let donorAdd = donor.userName + "." + ORG2_NAME + "." + BLOCKCHAIN_DOMAIN + ".com"
@@ -999,9 +999,9 @@ router.get('/corporateReport-donorProfile', async function (req, res, next) {
 
             from = splitOrgName(from)
             donorMap[from]['fundsDonated'] += qty
-            if (!(donorMap[from]['fundedProjects'].includes(objRef))) {
-                donorMap[from]['fundedProjectsCount'] += 1
-                donorMap[from]['fundedProjects'].push(objRef)
+            if (!(donorMap[from]['projectsFunded'].includes(objRef))) {
+                donorMap[from]['projectsFundedCount'] += 1
+                donorMap[from]['projectsFunded'].push(objRef)
             }
         })
 
