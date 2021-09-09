@@ -6,6 +6,7 @@ const router = express.Router();
 const fs = require('fs');
 const path = require('path');
 const XLSX = require('xlsx');
+const { orgModel } = require('../../model/models');
 
 const logger = require('../../loggers/logger');
 const { fieldErrorMessage, generateError, getMessage, splitOrgName } = require('../../utils/functions');
@@ -524,7 +525,7 @@ let convertToExcel = (jsonData, fileName) => {
     const ws = XLSX.utils.json_to_sheet(jsonData);
 
     //var f={E1: { t: 's', v: 'compliant' }};
-    console.log("JsonData in it report: ",jsonData)
+    console.log("JsonData in it report: ", jsonData)
     const wb = { Sheets: { 'data': ws }, SheetNames: ['data'] };
     const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' })
     logger.debug(`excelBuffer: ${excelBuffer}`)
@@ -921,5 +922,150 @@ router.get('/corporate-contributions', async function (req, res, next) {
         generateError(e, next);
     }
 });
+
+
+router.get('/corporateReport-userProfile', async function (req, res, next) {
+    try {
+        let result = []
+
+        let donorList = await orgModel.find({ role: "Corporate" }, { _id: 0, subRole: 1, userName: 1, firstName: 1, lastName: 1, orgName: 1, email: 1 })
+        let donorMap = {}
+        let queryCorporate = []
+
+        let guestData = {
+            "userName": "guest",
+            "firstName": '',
+            "lastName": '',
+            "orgName": '',
+            "fundsDonated": 0,
+            "projectsFunded": [],
+            "projectsFundedCount": 0
+        }
+        donorList.push(guestData)
+
+        for (i = 0; i < donorList.length; i++) {
+            let donor = donorList[i]
+            if (donor.userName == 'guest') {
+                //data not coming from mongo
+                donorMap[donor.userName] = donor
+            } else {
+                //data coming from mongo
+                donorMap[donor.userName] = donor.toJSON()
+            }
+
+            donorMap[donor.userName]["fundsDonated"] = 0
+            donorMap[donor.userName]["projectsFunded"] = []
+            donorMap[donor.userName]["projectsFundedCount"] = 0
+            // console.log('from for loop', donor)
+
+            let donorAdd = donor.userName + "." + ORG2_NAME + "." + BLOCKCHAIN_DOMAIN + ".com"
+            queryCorporate.push(donorAdd)
+        }
+        // console.log('outside loop', donorMap);
+
+        //get amount assigned to corporate
+        let queryString = {
+            "selector": {
+                "docType": "Transaction",
+                "txType": "TransferToken",
+                "from": { "$in": queryCorporate }
+            },
+            "fields": ["qty", "objRef", "from"]
+        }
+
+        let args = JSON.stringify(queryString);
+        logger.debug(`query string:\n ${args}`);
+
+        let txnList = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
+        txnList = JSON.parse(txnList.toString());
+        logger.debug(`response2 :  ${JSON.stringify(txnList, null, 2)}`)
+
+        txnList.forEach(elem => {
+            elem['Record'] = JSON.parse(elem['Record'])
+            let { from, objRef, qty } = elem['Record']
+
+            from = splitOrgName(from)
+            donorMap[from]['fundsDonated'] += qty
+            if (!(donorMap[from]['projectsFunded'].includes(objRef))) {
+                donorMap[from]['projectsFundedCount'] += 1
+                donorMap[from]['projectsFunded'].push(objRef)
+            }
+        })
+
+        result = Object.values(donorMap)
+        return res.json(getMessage(true, result))
+    }
+    catch (e) {
+        generateError(e, next);
+    }
+});
+
+router.get('/ngoReport-userProfile', async function (req, res, next) {
+    try {
+        let result = []
+
+        let ngoList = await orgModel.find({ role: "Ngo" }, { _id: 0, userName: 1, firstName: 1, lastName: 1, orgName: 1, email: 1 })
+        let ngoMap = {}
+        let queryNgo = []
+
+        for (i = 0; i < ngoList.length; i++) {
+            let ngo = ngoList[i]
+            //data coming from mongo
+            ngoMap[ngo.userName] = ngo.toJSON()
+           
+            ngoMap[ngo.userName]["totalReceived"] = 0
+            ngoMap[ngo.userName]["totalRedeemed"] = 0
+            ngoMap[ngo.userName]["contributors"] = []
+            ngoMap[ngo.userName]["projectsFunded"] = []
+
+            let ngoAdd = ngo.userName + "." + ORG3_NAME + "." + BLOCKCHAIN_DOMAIN + ".com"
+            queryNgo.push(ngoAdd)
+        }
+       
+        let queryString = {
+            "selector": {
+                "docType": "Transaction",        
+                "txType":{"$in":["TransferToken","ApproveRedeemRequest"]},
+                 "to": { "$in": queryNgo }
+            },
+            "fields": ["qty", "objRef", "to", "txType", "from"]
+        }
+
+        let args = JSON.stringify(queryString);
+        logger.debug(`query string:\n ${args}`);
+
+        let txnList = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
+        txnList = JSON.parse(txnList.toString());
+        logger.debug(`response2 :  ${JSON.stringify(txnList, null, 2)}`)
+
+        txnList.forEach(elem => {
+            elem['Record'] = JSON.parse(elem['Record'])
+            let { to, objRef, qty, txType, from } = elem['Record']
+
+            to = splitOrgName(to)
+            from = splitOrgName(from)
+            // console.log("transaction type: ",txType,to , from )
+            if (txType == "TransferToken") {
+                ngoMap[to]['totalReceived'] += qty
+                if (!(ngoMap[to]['projectsFunded'].includes(objRef))) {
+                    ngoMap[to]['projectsFunded'].push(objRef)
+                }
+                if (!(ngoMap[to]['contributors'].includes(from))) {
+                    ngoMap[to]['contributors'].push(from)
+                }
+            }
+            else if (txType == "ApproveRedeemRequest") {
+                ngoMap[to]['totalRedeemed'] += qty
+            }
+        })
+
+        result = Object.values(ngoMap)
+        return res.json(getMessage(true, result))
+    }
+    catch (e) {
+        generateError(e, next);
+    }
+});
+
 
 module.exports = router;
