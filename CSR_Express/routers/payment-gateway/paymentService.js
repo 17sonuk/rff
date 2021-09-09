@@ -31,7 +31,7 @@ paymentService.saveTx = async (event, next) => {
         logger.debug('args  : ' + args);
 
         try {
-            await invoke.main(event.metadata.userName, ORG2_NAME, "RequestTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
+            await invoke.main(event.metadata.userName, ORG2_NAME, "RequestTokens", CHAINCODE_NAME, CHANNEL_NAME, args); //to discuss **
             //return getMessage(true, 'Successfully credited funds');
 
             const projectId = payload.projectId

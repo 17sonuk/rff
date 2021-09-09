@@ -18,7 +18,7 @@ let orgMap = {
     'ngo': ORG3_NAME
 }
 
-// Request Token transaction on chaincode on target peers.- done
+// Request Token transaction on chaincode on target peers.- done // to discuss **
 router.post('/request', async (req, res, next) => {
     logger.debug('==================== INVOKE REQUEST TOKEN ON CHAINCODE ==================');
 
@@ -50,7 +50,7 @@ router.post('/request', async (req, res, next) => {
     logger.debug('args  : ' + args);
 
     try {
-        if (paymentStatus === 'COMPLETED') {
+        if (paymentStatus === 'COMPLETED') {   // to discuss **
             await invoke.main(req.userName, req.orgName, "RequestTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
             return res.json(getMessage(true, 'Successfully credited funds'));
         } else if (paymentStatus === 'PENDING') {

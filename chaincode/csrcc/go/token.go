@@ -115,7 +115,7 @@ func (s *SmartContract) RequestTokens(ctx contractapi.TransactionContextInterfac
 	txType := "TokenRequest"
 	if paymentStatus == "COMPLETED" {
 		txType = "AssignToken"
-		//credit the funds to the donor's wallet
+		//credit the funds to the donor's wallet  // to discuss **
 		tokenBalanceAsBytes, _ := ctx.GetStub().GetState(commonName)
 		if tokenBalanceAsBytes == nil {
 			ctx.GetStub().PutState(commonName, []byte(fmt.Sprintf("%0.2f", tokenQty)))
@@ -136,7 +136,7 @@ func (s *SmartContract) RequestTokens(ctx contractapi.TransactionContextInterfac
 		}
 	}
 
-	//emit chaincode event for notification
+	//emit chaincode event for notification  // to discuss **
 	if paymentStatus == "PENDING" {
 		splitName := strings.SplitN(commonName, ".", -1)
 		eventPayload := splitName[0] + " has requested " + fmt.Sprintf("%0.2f", tokenQty) + " credits."
@@ -210,7 +210,7 @@ func (s *SmartContract) AssignTokens(ctx contractapi.TransactionContextInterface
 		return false, fmt.Errorf("TokenRequest with id: " + bankTxId + " is already " + tokenRequest.Status)
 	}
 
-	//credit funds in donor's wallet
+	//credit funds in donor's wallet // to discuss **
 	tokenBalanceAsBytes, _ := ctx.GetStub().GetState(tokenRequest.From)
 	if tokenBalanceAsBytes == nil {
 		ctx.GetStub().PutState(tokenRequest.From, []byte(fmt.Sprintf("%0.2f", tokenRequest.Qty)))

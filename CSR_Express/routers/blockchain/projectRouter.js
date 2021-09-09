@@ -672,72 +672,72 @@ router.get('/corporate-project-transactions', async (req, res, next) => {
     }
 });
 
-//gives all corporate names along with their contribution (NOT USED)
-router.get('/locked-details', async (req, res, next) => {
-    logger.debug('==================== QUERY BY CHAINCODE: getProjectLockedDetails ==================');
-    const projectId = req.query.projectId;
+// //gives all corporate names along with their contribution (NOT USED)
+// router.get('/locked-details', async (req, res, next) => {
+//     logger.debug('==================== QUERY BY CHAINCODE: getProjectLockedDetails ==================');
+//     const projectId = req.query.projectId;
 
-    logger.debug('projectId : ' + projectId);
+//     logger.debug('projectId : ' + projectId);
 
-    if (!CHAINCODE_NAME) {
-        return res.json(fieldErrorMessage('\'chaincodeName\''));
-    }
-    if (!CHANNEL_NAME) {
-        return res.json(fieldErrorMessage('\'channelName\''));
-    }
-    if (!projectId) {
-        return res.json(fieldErrorMessage('\'projectId\''));
-    }
+//     if (!CHAINCODE_NAME) {
+//         return res.json(fieldErrorMessage('\'chaincodeName\''));
+//     }
+//     if (!CHANNEL_NAME) {
+//         return res.json(fieldErrorMessage('\'channelName\''));
+//     }
+//     if (!projectId) {
+//         return res.json(fieldErrorMessage('\'projectId\''));
+//     }
 
-    // let args = JSON.stringify("queryString");
-    // logger.debug('args : ' + args);
+//     // let args = JSON.stringify("queryString");
+//     // logger.debug('args : ' + args);
 
-    try {
-        let message = await query.main(req.userName, req.orgName, "GetAllCorporates", CHAINCODE_NAME, CHANNEL_NAME, '');
-        logger.debug(`response1 :  ${JSON.stringify(message, null, 2)}`)
+//     try {
+//         let message = await query.main(req.userName, req.orgName, "GetAllCorporates", CHAINCODE_NAME, CHANNEL_NAME, '');
+//         logger.debug(`response1 :  ${JSON.stringify(message, null, 2)}`)
 
-        let corporateList = message
+//         let corporateList = message
 
-        let result = []
+//         let result = []
 
-        for (let corporate of corporateList) {
+//         for (let corporate of corporateList) {
 
-            let queryString = {
-                "selector": {
-                    "_id": corporate + '_' + projectId
-                }
-            }
+//             let queryString = {
+//                 "selector": {
+//                     "_id": corporate + '_' + projectId
+//                 }
+//             }
 
-            let args1 = JSON.stringify(queryString);
-            logger.debug('args1 : ' + args1);
+//             let args1 = JSON.stringify(queryString);
+//             logger.debug('args1 : ' + args1);
 
-            let message1 = await query.main(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args1);
-            message1 = JSON.parse(message1.toString());
+//             let message1 = await query.main(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args1);
+//             message1 = JSON.parse(message1.toString());
 
-            message1.forEach(elem => {
-                elem['Record'] = JSON.parse(elem['Record'])
-            })
+//             message1.forEach(elem => {
+//                 elem['Record'] = JSON.parse(elem['Record'])
+//             })
 
-            logger.debug(`response2 :  ${JSON.stringify(message1, null, 2)}`)
+//             logger.debug(`response2 :  ${JSON.stringify(message1, null, 2)}`)
 
 
-            message1.forEach(e => {
-                let returnObject = {}
-                returnObject.corporate = splitOrgName(e.Record.corporate)
-                let totalsum = 0.0
-                e.Record.funds.forEach(f => {
-                    totalsum += f.qty
-                })
-                returnObject.quantity = totalsum
-                result.push(returnObject)
-            })
-            return res.json({ ...getMessage(true, "CommonQuery successful"), Records: result })
-        }
-    }
-    catch (e) {
-        generateError(e, next)
-    }
-});
+//             message1.forEach(e => {
+//                 let returnObject = {}
+//                 returnObject.corporate = splitOrgName(e.Record.corporate)
+//                 let totalsum = 0.0
+//                 e.Record.funds.forEach(f => {
+//                     totalsum += f.qty
+//                 })
+//                 returnObject.quantity = totalsum
+//                 result.push(returnObject)
+//             })
+//             return res.json({ ...getMessage(true, "CommonQuery successful"), Records: result })
+//         }
+//     }
+//     catch (e) {
+//         generateError(e, next)
+//     }
+// });
 
 //getOngoing project count for csr : 
 router.get('/total-corporate-ongoing-projects', async (req, res, next) => {

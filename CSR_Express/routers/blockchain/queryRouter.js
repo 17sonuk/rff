@@ -441,7 +441,7 @@ router.get('/it-report', async function (req, res, next) {
             transactionList.forEach(e => {
                 e['Record'] = JSON.parse(e['Record'])
                 logger.debug("tx Record: ", e.Record)
-                if (e.Record.txType == "AssignToken") {
+                if (e.Record.txType == "AssignToken") {   // to discuss **
                     creditsReceived += e.Record.qty
                 }
                 // else if (e.Record.txType == "FundsToEscrowAccount") {
@@ -497,7 +497,7 @@ router.get('/it-report', async function (req, res, next) {
             logger.debug("resultObject", resultObject)
             let newResultObject = {}
             newResultObject.donor = resultObject.corporate
-            newResultObject.funds_pledged = resultObject.creditsReceived
+            newResultObject.funds_pledged = resultObject.creditsReceived    // to discuss **
             newResultObject.funds_disbursed = resultObject.creditsContributed
             newResultObject.funds_available = resultObject.creditsUnspent
             result.push(newResultObject)
