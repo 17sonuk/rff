@@ -39,7 +39,7 @@ userService.registerUser = (obj) => {
     }
 
     // do not allow user to set this value
-    if (obj.seen === true || obj.seen === false) {
+    if (obj.seen !== undefined) {
         err.message = 'Seen is an invalid field';
         throw err;
     }
@@ -434,7 +434,7 @@ userService.updateUserProfile = async (userName, profileData) => {
         throw err
     }
 
-    if (profileData.role || profileData.subRole || profileData.email || profileData.userName || profileData.orgName || (profileData.seen === true || profileData.seen === false)) {
+    if (profileData.role || profileData.subRole || profileData.email || profileData.userName || profileData.orgName || profileData.seen !== undefined) {
         let err = new Error("These fields cannot be updated: Email, User Name, Organisation Name, Status, Seen")
         err.status = 401
         throw err
