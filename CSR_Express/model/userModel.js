@@ -133,6 +133,18 @@ userModel.getUnapprovedUserDetails = () => {
     })
 }
 
+// get approved institutional donors 
+userModel.getApprovedInstitutions = async () => {
+    try {
+        return await orgModel.find({ status: 'approved', role: 'Corporate', subRole: 'Institution', seen: false }, { _id: 1, orgName: 1, firstName: 1, lastName: 1, email: 1, website: 1 }).sort({ _id: -1 });
+    }
+    catch (error) {
+        let err = new Error("Connection Issue")
+        err.status = 500
+        throw err
+    }
+}
+
 // approve users
 userModel.approveUser = (userName) => {
     return orgModel.updateOne({ userName: userName }, { $set: { "status": 'approved' } }).then(data => {
@@ -156,7 +168,7 @@ userModel.resetUserStatus = (userName) => {
         })
         .catch(err => {
             logger.error(err);
-            err = new Error("Connection issue!")
+            err = new Error("Connection Issue")
             err.status = 500
             throw err;
         })
@@ -262,7 +274,7 @@ userModel.updateUserProfile = (userN, profileData) => {
     return orgModel.update({ userName: userN }, { $set: profileData }).then((data) => {
         return data;
     }).catch((error) => {
-        let err = new Error("Connection Failed")
+        let err = new Error("Connection Issue")
         err.status = 500
         throw err
     })

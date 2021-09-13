@@ -141,7 +141,7 @@ projectModelObj.editProject = async (projectId, projectObj, currentPhaseNum) => 
         p.question5 = projectObj.question5
         p.question6 = projectObj.question6
         p.question7 = projectObj.question7
-        p.images=projectObj.images
+        p.images = projectObj.images
         for (let i = 0; i < p.phases.length; i++) {
             if (currentPhaseNum <= i) {
                 p.phases[i].phaseName = projectObj.phases[i].phaseName
@@ -167,19 +167,28 @@ projectModelObj.editProject = async (projectId, projectObj, currentPhaseNum) => 
 }
 
 // get country and category filters
-projectModelObj.getFilters = async() => {
-    
-    let country = await projectModel.distinct('place')
-    let category= await projectModel.distinct('projectType')
+projectModelObj.getFilters = async (userName, orgName) => {
+
+    let country = [];
+    let category = [];
+
+    if (orgName === 'ngo') {
+        country = await projectModel.distinct('place', { ngo: userName });
+        category = await projectModel.distinct('projectType', { ngo: userName });
+    } else {
+        country = await projectModel.distinct('place');
+        category = await projectModel.distinct('projectType');
+    }
+
     return {
-        countries:country,
-        categories:category
+        countries: country,
+        categories: category
     }
 }
 
 //get projects by community
 projectModelObj.getProjectsByCommunity = (communityId) => {
-    return projectModel.find({ communities: communityId }, {_id: 0, projectId: 1, projectName: 1}).then(data => {
+    return projectModel.find({ communities: communityId }, { _id: 0, projectId: 1, projectName: 1 }).then(data => {
         return data
     })
 }

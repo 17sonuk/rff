@@ -148,9 +148,9 @@ projectService.editProject = async (projectId, projectObj, currentPhaseNum) => {
 }
 
 //get country and category filters
-projectService.getFilters = () => {
+projectService.getFilters = (userName, orgName) => {
     console.log('service')
-    return projectModel.getFilters().then(data => {
+    return projectModel.getFilters(userName, orgName).then(data => {
         if (data) {
             return data;
         } else {

@@ -33,7 +33,7 @@ router.get('/projects-ngo', (req, res, next) => {
 
     userName = req.userName
 
-    if(req.orgName === 'creditsauthority'){
+    if (req.orgName === 'creditsauthority') {
         userName = req.query.userName
     }
 
@@ -49,7 +49,7 @@ router.get('/projects-corporate', (req, res, next) => {
 
     userName = req.userName
 
-    if(req.orgName === 'creditsauthority'){
+    if (req.orgName === 'creditsauthority') {
         userName = req.query.userName
     }
 
@@ -70,17 +70,17 @@ router.get('/all', (req, res, next) => {
         .catch(err => next(err))
 })
 
-router.get('/countryAndProjectTypeFilter', (req, res, next) => {   
+router.get('/countryAndProjectTypeFilter', (req, res, next) => {
     logger.debug("router-filters");
 
-    projectService.getFilters()
+    projectService.getFilters(req.userName, req.orgName)
         .then((data) => {
             res.json(data)
         })
         .catch(err => next(err))
 })
 
-router.get('/projectsByCommunity', (req, res, next) => {    
+router.get('/projectsByCommunity', (req, res, next) => {
     logger.debug(`router-projectsByCommunity: ${req.query.communityId}`);
 
     projectService.getProjectsByCommunity(req.query.communityId)

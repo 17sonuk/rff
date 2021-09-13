@@ -38,6 +38,12 @@ userService.registerUser = (obj) => {
         throw err;
     }
 
+    // do not allow user to set this value
+    if (obj.seen === true || obj.seen === false) {
+        err.message = 'Seen is an invalid field';
+        throw err;
+    }
+
     if (obj.firstName === '' || (!(typeof obj.firstName == 'string'))) {
         err.message = 'First name is missing/invalid!';
         throw err;
@@ -201,6 +207,15 @@ userService.getUnapprovedUserDetails = () => {
             throw err
         }
     })
+}
+
+// get approved institutional donors
+userService.getApprovedInstitutions = async () => {
+    try {
+        return await userModel.getApprovedInstitutions();
+    } catch (error) {
+        throw error;
+    }
 }
 
 //approve user
@@ -419,8 +434,8 @@ userService.updateUserProfile = async (userName, profileData) => {
         throw err
     }
 
-    if (profileData.role || profileData.subRole || profileData.email || profileData.userName || profileData.orgName || profileData.status) {
-        let err = new Error("These fields cannot be updated: Email, User Name, Organisation Name, Status")
+    if (profileData.role || profileData.subRole || profileData.email || profileData.userName || profileData.orgName || (profileData.seen === true || profileData.seen === false)) {
+        let err = new Error("These fields cannot be updated: Email, User Name, Organisation Name, Status, Seen")
         err.status = 401
         throw err
     }

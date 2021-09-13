@@ -1,0 +1,12 @@
+{
+    "index": {
+        "fields": [
+            "docType",
+            "txType",
+            "to"
+        ]
+    },
+    "ddoc": "ngoUserProfileIndexDoc",
+    "name": "ngoUserProfileIndex",
+    "type": "json"
+}
