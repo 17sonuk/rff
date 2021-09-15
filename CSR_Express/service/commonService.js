@@ -68,17 +68,18 @@ commonService.getCommunity = async (communityId) => {
         throw er
     })
 }
-commonService.getCommunityByNameAndPlace = (name, place) => {
-    return commonModel.getCommunityByNameAndPlace (name, place).then(data => {
-        if (data) {
-            return data;
-        } else {
-            let err = new Error("No payment details stored for this community")
-            err.status = 500
-            throw err
-        }
-    })
-}
+
+// commonService.getCommunityByNameAndPlace = (name, place) => {
+//     return commonModel.getCommunityByNameAndPlace (name, place).then(data => {
+//         if (data) {
+//             return data;
+//         } else {
+//             let err = new Error("No payment details stored for this community")
+//             err.status = 500
+//             throw err
+//         }
+//     })
+// }
 
 commonService.deleteCommunities = (communityIds) => {
     return commonModel.deleteCommunities(communityIds).then(data => {
@@ -178,7 +179,6 @@ commonService.projectInitiation = async (projectId, username, orgname) => {
     let desc = projectData.phases[0].description
 
     let emailList = await orgModel.find({ role: "Corporate" }, { _id: 0, email: 1, firstName: 1 })
-    //logger.debug(emailList)
 
     let queryString = {
         "selector": {
@@ -196,7 +196,7 @@ commonService.projectInitiation = async (projectId, username, orgname) => {
     })
 
     const endDate = message[0]['Record'].phases[0].endDate
-    var mydate = new Date(message[0]['Record'].phases[0].endDate);
+    //var mydate = new Date(message[0]['Record'].phases[0].endDate);
 
     transporter.verify().then((data) => {
         for (i = 0; i < emailList.length; i++) {
@@ -265,31 +265,20 @@ commonService.ProjectCompletionEmail = async (projectId, username, orgname) => {
         amount += redeemMsg[i].Record.qty
     }
 
-
-
     if (message.length > 0) {
         if (message[0]['Record']['docType'] === 'Project') {
             message = message[0]
             if (message['Record']['projectState'] === "Validated") {
-
                 let contributorsObj = message['Record']['contributors']
-                // console.log('contributorsObj ', contributorsObj)
                 let contributors = []
                 for (let key in contributorsObj) {
                     if (!key.startsWith("guest")) {
-                        // console.log('key', key)
                         contributors.push(splitOrgName(key))
                     }
                 }
-                // console.log('contributors: ', contributors)
-
-                // let platformName = "Rainforest Blockchain Platform"
                 let donorList = await orgModel.find({ userName: { $in: contributors } }, { _id: 0, email: 1, firstName: 1, orgName: 1, subRole: 1 })
-
-                // let emailList = await commonService.getDonorEmailList(contributors)
                 if (donorList.length > 0) {
                     for (let i = 0; i < donorList.length; i++) {
-
                         let name = donorList[i].firstName
                         if (donorList[i].subRole === "Institution") {
                             name = donorList[i].orgName
@@ -299,7 +288,6 @@ commonService.ProjectCompletionEmail = async (projectId, username, orgname) => {
 
                         transporter.verify().then((data) => {
                             console.log(data);
-                            // console.log('sending email to :', emails);
                             transporter.sendMail({
                                 from: '"CSR Test Mail" <rainforest.csr@gmail.com', // sender address
                                 to: donorList[i].email, // list of receivers
@@ -339,22 +327,16 @@ commonService.MilestoneEmail = async (projectId, phaseNumber, username, orgname)
         if (message[0]['Record']['docType'] === 'Project') {
             message = message[0]
 
-
             let contributorsObj = message['Record']['contributors']
-            // console.log('contributorsObj ', contributorsObj)
             let contributors = []
             for (let key in contributorsObj) {
                 if (!key.startsWith("guest")) {
-                    // console.log('key', key)
                     contributors.push(splitOrgName(key))
                 }
             }
-            // console.log('contributors: ', contributors)
 
-            // let platformName = "Rainforest Blockchain Platform"
             let donorList = await orgModel.find({ userName: { $in: contributors } }, { _id: 0, email: 1, firstName: 1, orgName: 1, subRole: 1 })
 
-            // let emailList = await commonService.getDonorEmailList(contributors)
             if (donorList.length > 0) {
                 let projectData = await mongoProjectService.getProjectById(projectId)
                 let desc1 = projectData.phases[phaseNumber].description
@@ -370,7 +352,6 @@ commonService.MilestoneEmail = async (projectId, phaseNumber, username, orgname)
 
                     transporter.verify().then((data) => {
                         console.log(data);
-                        // console.log('sending email to :', emails);
                         transporter.sendMail({
                             from: '"CSR Test Mail" <rainforest.csr@gmail.com', // sender address
                             to: donorList[i].email, // list of receivers

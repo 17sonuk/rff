@@ -1,0 +1,12 @@
+{
+    "index": {
+        "fields": [
+            "docType",
+            "txType",
+            "from"
+        ]
+    },
+    "ddoc": "corporateUserProfileIndexDoc",
+    "name": "corporateUserProfileIndex",
+    "type": "json"
+}

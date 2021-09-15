@@ -58,7 +58,7 @@ router.post('/onboard', (req, res, next) => {
             //res.json(data)
         })
         .catch(err => {
-          //  console.log("mongodb error",err)
+            //  console.log("mongodb error",err)
             logger.error('could not register user!')
             return generateError(err, next);
             // next(err)
@@ -86,7 +86,7 @@ router.get('/profile', (req, res, next) => {
 
     let userName = req.userName;
 
-    if(req.orgName === 'creditsauthority'){
+    if (req.orgName === 'creditsauthority') {
         userName = req.query.userName;
     }
 
@@ -116,6 +116,19 @@ router.get('/unapproved-users', (req, res, next) => {
             res.json(data)
         })
         .catch(err => next(err))
+})
+
+//get unapproved user details
+router.get('/getApprovedInstitutions', async (req, res, next) => {
+    logger.debug(`router-getApprovedInstitutions`);
+
+    try {
+        let result = await userService.getApprovedInstitutions();
+        res.json(result)
+    }
+    catch (error) {
+        next(error);
+    }
 })
 
 //approve user

@@ -38,6 +38,12 @@ userService.registerUser = (obj) => {
         throw err;
     }
 
+    // do not allow user to set this value
+    if (obj.seen !== undefined) {
+        err.message = 'Seen is an invalid field';
+        throw err;
+    }
+
     if (obj.firstName === '' || (!(typeof obj.firstName == 'string'))) {
         err.message = 'First name is missing/invalid!';
         throw err;
@@ -155,8 +161,6 @@ userService.checkUserNameValidty = (userName) => {
 userService.getUserDetails = (userName) => {
     return userModel.getUserDetails(userName, 'userName').then(data => {
         if (data) {
-            // data.pan = CryptoJS.AES.decrypt(data.pan, "Secret123PaN").toString(CryptoJS.enc.Utf8)
-            // data.contact[0].number = CryptoJS.AES.decrypt((data.contact[0].number), "Secret123CoN").toString(CryptoJS.enc.Utf8)
             return data;
         } else {
             let err = new Error("Bad Connection")
@@ -201,6 +205,15 @@ userService.getUnapprovedUserDetails = () => {
             throw err
         }
     })
+}
+
+// get approved institutional donors
+userService.getApprovedInstitutions = async () => {
+    try {
+        return await userModel.getApprovedInstitutions();
+    } catch (error) {
+        throw error;
+    }
 }
 
 //approve user
@@ -419,8 +432,8 @@ userService.updateUserProfile = async (userName, profileData) => {
         throw err
     }
 
-    if (profileData.role || profileData.subRole || profileData.email || profileData.userName || profileData.orgName || profileData.status) {
-        let err = new Error("These fields cannot be updated: Email, User Name, Organisation Name, Status")
+    if (profileData.role || profileData.subRole || profileData.email || profileData.userName || profileData.orgName || profileData.seen !== undefined) {
+        let err = new Error("These fields cannot be updated: Email, User Name, Organisation Name, Status, Seen")
         err.status = 401
         throw err
     }
@@ -459,7 +472,6 @@ userService.updateUserProfile = async (userName, profileData) => {
                 throw err
             }
         }
-
     }
 
     if (user.role == 'Ngo' && !profileData.paymentDetails) {

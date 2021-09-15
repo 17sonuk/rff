@@ -50,11 +50,10 @@ router.post('/request', async (req, res, next) => {
     logger.debug('args  : ' + args);
 
     try {
-        if (paymentStatus === 'COMPLETED') {   // to discuss **
-            await invoke.main(req.userName, req.orgName, "RequestTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
+        await invoke.main(req.userName, req.orgName, "RequestTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
+        if (paymentStatus === 'COMPLETED') {
             return res.json(getMessage(true, 'Successfully credited funds'));
         } else if (paymentStatus === 'PENDING') {
-            await invoke.main(req.userName, req.orgName, "RequestTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
             return res.json(getMessage(true, 'Request is pending with Rainforest US. Please wait to receive funds in your wallet.'));
         } else {
             let error = new Error('Some error occured!');
@@ -138,18 +137,28 @@ router.post('/transfer', async (req, res, next) => {
     let notes = req.body.notes ? req.body.notes : "";
     const donorDetails = req.body.donorDetails;
 
-    if (!CHAINCODE_NAME)
+    if (!CHAINCODE_NAME) {
         return res.json(fieldErrorMessage('\'chaincodeName\''));
-    if (!CHANNEL_NAME)
+    }
+    if (!CHANNEL_NAME) {
         return res.json(fieldErrorMessage('\'channelName\''));
-    if (!amount)
+    }
+    if (!amount) {
         return res.json(fieldErrorMessage('\'amount\''));
-    if (!projectId)
+    }
+    if (!projectId) {
         return res.json(fieldErrorMessage('\'projectId\''));
-    // if (!phaseNumber)
+    }
+    // if (!phaseNumber){
     //     return res.json(fieldErrorMessage('\'phaseNumber\''));
-    if (!donorDetails)
+    // }
+    if (!donorDetails) {
         return res.json(fieldErrorMessage('\'donorDetails\''));
+    }
+    if (req.userName === 'guest' && !donorDetails.paymentId) {
+        return res.json(fieldErrorMessage('\'paymentId\''));
+    }
+
     if (req.userName !== 'guest') {
         // if (!donorDetails.email)
         donorDetails.email = req.email
@@ -158,14 +167,11 @@ router.post('/transfer', async (req, res, next) => {
         donorDetails.name = req.name
         // return res.json(fieldErrorMessage('\'donor name\''));
     }
-    if (req.userName === 'guest' && !donorDetails.paymentId) {
-        return res.json(fieldErrorMessage('\'paymentId\''));
-    }
+
     if (req.userName === 'guest') {
         notes = donorDetails.email + "\n" + "PaymentId - " + donorDetails.paymentId + "\n" + notes
     }
 
-    logger.debug(notes)
     let args = [amount, projectId, notes, Date.now().toString(), uuid().toString()]
     if (req.userName === 'guest') {
         args[4] = donorDetails.paymentId;
@@ -176,6 +182,7 @@ router.post('/transfer', async (req, res, next) => {
     try {
         await invoke.main(req.userName, req.orgName, "TransferTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
         logger.debug('Blockchain transfer success')
+
         // add contributor in mongoDB
         // assumption: mongo service won't fail.
         projectService.addContributor(projectId, req.userName)
@@ -197,10 +204,11 @@ router.post('/transfer', async (req, res, next) => {
                     generateError(err, next, 500, 'Failed to save donor details');
                 })
         }
+
         //call a service that sends email to donor
         if (req.userName !== '') {
             if (req.userName === 'guest' && donorDetails.email != "") {
-                commonService.sendEmailToDonor(donorDetails.email, 'Guest', amount,projectId,'')
+                commonService.sendEmailToDonor(donorDetails.email, 'Guest', amount, projectId, '')
                     .then((data) => {
                         logger.debug('email sent to donor')
                         logger.debug(data)
@@ -211,12 +219,15 @@ router.post('/transfer', async (req, res, next) => {
             }
             else if (req.userName !== 'guest') {
                 let orgDetails = await commonService.getOrgDetails(req.userName);
+
                 if (orgDetails && orgDetails.email) {
                     let donorName = orgDetails.firstName;
+
                     if (orgDetails.subRole === 'Institution') {
                         donorName = orgDetails.orgName;
                     }
-                    commonService.sendEmailToDonor(orgDetails.email, donorName, amount,projectId,orgDetails.address)
+
+                    commonService.sendEmailToDonor(orgDetails.email, donorName, amount, projectId, orgDetails.address)
                         .then((data) => {
                             logger.debug('email send to donor')
                             logger.debug(data)
@@ -225,12 +236,10 @@ router.post('/transfer', async (req, res, next) => {
                             generateError(err, next, 500, 'Failed to send email to donor');
                         })
                 }
-
-            }else{
+            } else {
                 logger.debug("No email is sent since no email is provided by guest user")
             }
         }
-
     }
     catch (e) {
         generateError(e, next);
@@ -289,17 +298,17 @@ router.get('/all-requests', async (req, res, next) => {
     logger.debug('args : ' + args);
 
     try {
-        let message = await query.main(req.userName, req.orgName, "CommonQueryPagination", CHAINCODE_NAME, CHANNEL_NAME, args);
-        message = JSON.parse(message.toString());
+        let creditRequests = await query.main(req.userName, req.orgName, "CommonQueryPagination", CHAINCODE_NAME, CHANNEL_NAME, args);
+        creditRequests = JSON.parse(creditRequests.toString());
 
-        logger.debug(JSON.stringify(message, null, 2))
+        logger.debug(JSON.stringify(creditRequests, null, 2))
 
-        if (message.toString().includes("Error:")) {
-            let errorMessage = message.toString().split("Error:")[1].trim()
+        if (creditRequests.toString().includes("Error:")) {
+            let errorMessage = creditRequests.toString().split("Error:")[1].trim()
             return res.json(getMessage(false, errorMessage))
         }
         else {
-            message['Results'] = message['Results'].map(elem => {
+            creditRequests['Results'] = creditRequests['Results'].map(elem => {
                 elem['Record'] = JSON.parse(elem['Record'])
                 elem['Record']['from'] = splitOrgName(elem['Record']['from'])
                 //elem['Record']['role'] = splitOrgName(elem['Record']['role'])
@@ -310,9 +319,9 @@ router.get('/all-requests', async (req, res, next) => {
 
             //populate the MetaData
             finalResponse["metaData"] = {}
-            finalResponse["metaData"]["recordsCount"] = message["RecordsCount"];
-            finalResponse["metaData"]["bookmark"] = message["Bookmark"];
-            finalResponse['records'] = message['Results']
+            finalResponse["metaData"]["recordsCount"] = creditRequests["RecordsCount"];
+            finalResponse["metaData"]["bookmark"] = creditRequests["Bookmark"];
+            finalResponse['records'] = creditRequests['Results']
             return res.json(getMessage(true, finalResponse));
         }
     }

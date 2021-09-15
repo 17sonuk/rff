@@ -71,6 +71,7 @@
         "/mongo/user/approve-user",
         "/mongo/user/reject-user",
         "/mongo/user/unapproved-users",
+        "/mongo/user/getApprovedInstitutions",
         "/mongo/project/all",
         "/token/all-requests",
         "/token/assign",

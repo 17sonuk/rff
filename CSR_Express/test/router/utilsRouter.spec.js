@@ -14,16 +14,17 @@ const { createSandbox } = require('sinon');
 var auth;
 const invoke = require('../../fabric-sdk/invoke');
 const query = require('../../fabric-sdk/query');
+const { orgModel, donorModel, projectModel } = require('../../model/models')
 
 describe('BLOCKCHAIN UTILS ROUTER - /add-corporate-email API SUCCESS', () => {
     let mockObj = ""
-    let finalres={
+    let finalres = {
         success: true,
-        message:"Successfully invoked AddCorporateEmail"
+        message: "Successfully invoked AddCorporateEmail"
     }
-    
+
     beforeEach(() => {
-        mockObj = sandbox.stub(invoke,'main');
+        mockObj = sandbox.stub(invoke, 'main');
     });
     afterEach(() => {
         mockObj.restore();
@@ -36,13 +37,103 @@ describe('BLOCKCHAIN UTILS ROUTER - /add-corporate-email API SUCCESS', () => {
         }
         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
         const response = await request(app)
-        .post("/utils/add-corporate-email").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-        .send({
-            corporateName:"keanu",
-            email:"keanu@gmail.com"
-        })
+            .post("/utils/add-corporate-email").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+            .send({
+                corporateName: "keanu",
+                email: "keanu@gmail.com"
+            })
         expect(response.body.success).to.equal(true)
         // expect(response.body.message).to.equal("Successfully invoked AddCorporateEmail")
+    });
+})
+
+
+describe('BLOCKCHAIN UTILS ROUTER - /yearly-report API SUCCESS', () => {
+    let mockObj = ""
+    let mockObj1 = ""
+    let mockObj2 = ""
+    let mockObj3 = ""
+
+
+
+    let finalres = [{
+        Key: '12E25274C17966904',
+        Record: '{\"date\":\"1630660663324\",\"from\":\"guest.corporate.csr.com\",\"notes\":\"gaurav.jena96@gmail.com\\nPaymentId - 12E25274C17966904\\n\",\"objRef\":\"83a35cb6-d8d9-4acb-b37b-57da022fb4c8\",\"qty\":\"100\",\"to\":\"gwave.ngo.csr.com\"}'
+    }]
+
+    let transactionList = []
+    let buffer = Buffer.from(JSON.stringify(transactionList));
+    console.log(buffer)
+    let orgModelList = []
+    let donorModelList = []
+    let projectModelList = []
+
+    beforeEach(() => {
+        mockObj = sandbox.stub(query, 'main');
+        mockObj1 = sandbox.stub(orgModel, 'find');
+        mockObj2 = sandbox.stub(donorModel, 'find');
+        mockObj3 = sandbox.stub(projectModel, 'find');
+    });
+    afterEach(() => {
+        mockObj.restore();
+        mockObj1.restore();
+        mockObj2.restore();
+        mockObj3.restore();
+
+    });
+    it('testing blockchain utils /yearly-report', async function () {
+        mockObj.resolves(buffer)
+        mockObj1.resolves(orgModelList)
+        mockObj2.resolves(donorModelList)
+        mockObj3.resolves(projectModelList)
+
+        let payload = {
+            userName: 'ca',
+            orgName: 'creditsauthority'
+        }
+        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+        const response = await request(app)
+            .get("/utils/yearly-report").set("csrtoken", "Bearer " + token).set("testmode", "Testing").set({ responseType: "json" })
+            .query({
+                year: "2021"
+            })
+        console.log("Resp yearly report: ", response.body)
+        expect(response.body.success).to.equal(true)
+        // expect(response.body.message).to.equal("'amount' field is missing or Invalid in the request")
+    })
+})
+
+describe('BLOCKCHAIN UTILS ROUTER - /yearly-report API', () => {
+    it('testing blockchain utils router API when responseType field is empty', async function () {
+        let payload = {
+            userName: 'ca',
+            orgName: 'creditsauthority'
+        }
+        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+        const response = await request(app)
+            .get("/utils/yearly-report").set("csrtoken", "Bearer " + token).set("testmode", "Testing").set({ responseType: "" })
+            .query({
+                year: "2021"
+            })
+
+        expect(response.body.success).to.equal(false)
+        expect(response.body.message).to.equal("'responseType' field is missing or Invalid in the request")
+    });
+
+    it('testing blockchain utils router API when year field is empty', async function () {
+        let payload = {
+            userName: 'ca',
+            orgName: 'creditsauthority'
+        }
+        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+        const response = await request(app)
+
+            .get("/utils/yearly-report").set("csrtoken", "Bearer " + token).set("testmode", "Testing").set({ responseType: "json" })
+            .query({
+                year: ""
+            })
+        expect(response.body.success).to.equal(false)
+        expect(response.body.message).to.equal("'year' field is missing or Invalid in the request")
     });
 })
 
@@ -58,7 +149,7 @@ describe('BLOCKCHAIN UTILS ROUTER - /add-corporate-email API SUCCESS', () => {
 //         "fileHash": "4b41a3475132bd861b30a878e30aa56a",
 //         "fileSize": "3028",
 //     }
-    
+
 //     beforeEach(() => {
 //         mockObj = sandbox.stub(invoke,'main');
 //     });

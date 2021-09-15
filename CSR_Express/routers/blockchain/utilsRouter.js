@@ -187,7 +187,7 @@ router.get('/yearly-report', async function (req, res, next) {
         args = JSON.stringify(queryTransaction)
         let messageTransaction = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
         let transactionList = JSON.parse(messageTransaction.toString())
-
+        console.log("transactionList : ",transactionList)
         let regDonors = []
         let projectIds = []
         let guestEmails = []

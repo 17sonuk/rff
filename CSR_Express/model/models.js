@@ -83,7 +83,7 @@ const bankDetailsSchema = new Schema({
     bankName: { type: String, required: [true, 'Bank name field is required'], maxLength: [50, 'Bank name cannot exceed 50 characters'] },
     bankAddress: { type: addressSchema, required: [true, 'Bank address field is required'] },
     bankPhone: phoneSchema,
-    currencyType: { type: String, required: [true,'Currency type field is required'], maxLength: [20, 'Currency type cannot exceed 20 characters'] },
+    currencyType: { type: String, required: [true, 'Currency type field is required'], maxLength: [20, 'Currency type cannot exceed 20 characters'] },
     bankAccountNo: { type: String, maxLength: [100, 'Bank account no. cannot exceed 100 characters'] },
     ABAorRoutingNo: { type: String, maxLength: [100, 'Routing no. cannot exceed 100 characters'] },
     BICSwiftorCHIPSUISSortCode: { type: String, maxLength: [100, 'Code cannot exceed 100 characters'] },
@@ -107,8 +107,8 @@ const communitySchema = new Schema({
 
 //to store user data
 const orgSchema = new Schema({
-    firstName: { type: String, required: [true, 'First name field is required'], maxLength: [50, 'First name cannot exceed 50 characters']},
-    lastName: { type: String, required: [true, 'Last name field is required'], maxLength: [50, 'Last name cannot exceed 50 characters']},
+    firstName: { type: String, required: [true, 'First name field is required'], maxLength: [50, 'First name cannot exceed 50 characters'] },
+    lastName: { type: String, required: [true, 'Last name field is required'], maxLength: [50, 'Last name cannot exceed 50 characters'] },
     orgName: { type: String, maxLength: [50, 'Organisation name cannot exceed 50 characters'] },
     userName: { type: String, required: [true, 'User name field is required'], unique: true, maxLength: [50, 'User name cannot exceed 50 characters'] },
     email: { type: String, required: [true, 'Email field is required'], unique: true },
@@ -119,7 +119,8 @@ const orgSchema = new Schema({
     address: addressSchema,
     website: { type: String, maxLength: [50, 'Website name cannot exceed 50 characters'] },
     phone: [phoneSchema],
-    paymentDetails: paymentSchema
+    paymentDetails: paymentSchema,
+    seen: { type: Boolean, default: false }
 }, { collection: "OrganisationProfile" })
 
 // orgSchema.pre('validate', function (next) {
