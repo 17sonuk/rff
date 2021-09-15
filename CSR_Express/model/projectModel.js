@@ -147,14 +147,11 @@ projectModelObj.editProject = async (projectId, projectObj, currentPhaseNum) => 
                 p.phases[i].phaseName = projectObj.phases[i].phaseName
                 p.phases[i].description = projectObj.phases[i].description
             }
-
         }
 
         let data = await projectModel.updateOne({ projectId: projectId }, { $set: p })
         console.log("data: ", data)
         return ({ message: 'Project edited Successfully.', success: true })
-
-
     }
 
     catch (err) {
@@ -163,7 +160,6 @@ projectModelObj.editProject = async (projectId, projectObj, currentPhaseNum) => 
         err.status = 500
         throw err
     }
-
 }
 
 // get country and category filters

@@ -22,12 +22,12 @@ describe('COMMON ROUTER - community API', () => {
         mockObj.restore();
     });
     it('testing save communities api', async function () {
-        
+
         const communities = {
             name: "TestUser12",
             place: "Test12"
         }
-        
+
         let payload = {
             orgName: 'creditsauthority',
             userName: 'ca'
@@ -61,12 +61,12 @@ describe('COMMON ROUTER - All community API', () => {
         mockObj.restore();
     });
     it('testing getCommunities api', async function () {
-        
+
         const communities = {
             name: "TestUser12",
             place: "Test12"
         }
-        
+
         let payload = {
             orgName: 'creditsauthority',
             userName: 'ca'
@@ -84,3 +84,89 @@ describe('COMMON ROUTER - All community API', () => {
         expect(response1.status).to.equal(500);
     })
 })
+
+describe('COMMON ROUTER - update-community API', () => {
+    let mockObj = ""
+    beforeEach(() => {
+        mockObj = sandbox.stub(commonService, 'updateCommunity');
+    });
+    afterEach(() => {
+        mockObj.restore();
+    });
+    it('testing update-community api', async function () {
+
+        const communities = {
+            name: "TestUser12",
+            place: "Test12"
+        }
+
+        let payload = {
+            orgName: 'creditsauthority',
+            userName: 'ca'
+        }
+        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+        mockObj.resolves(null)
+        const response = await request(app)
+            .put("/mongo/common/update-community").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+            .send({
+                'communityId': "23",
+                'name': "df",
+                'place': 'dfg',
+                'paymentDetails': '{paypal}'
+            });
+        expect(response.status).to.equal(200);
+
+        // expect(response.body).to.be.eql(communities);
+
+        //If communities fields are empty
+        mockObj.rejects('Bad Connection')
+        const response1 = await request(app)
+            .put("/mongo/common/update-community").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+            .send({
+
+            });
+        expect(response1.status).to.equal(500);
+    })
+})
+
+
+
+describe('COMMON ROUTER - listed API', () => {
+    let mockObj = ""
+    beforeEach(() => {
+        mockObj = sandbox.stub(commonService, 'getListedCommunity');
+    });
+    afterEach(() => {
+        mockObj.restore();
+    });
+    it('testing listed api', async function () {
+
+        const communityIds = []
+        let communities={}
+
+        let payload = {
+            orgName: 'ngo',
+            userName: 'ngo'
+        }
+        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+        mockObj.resolves(communities)
+        const response = await request(app)
+            .post("/mongo/common/community/listed").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+            .send({
+                communityIds
+            });
+        expect(response.status).to.equal(200);
+
+        // expect(response.body).to.be.eql(communities);
+
+        //If communities fields are empty
+        mockObj.rejects('Bad Connection')
+        const response1 = await request(app)
+            .post("/mongo/common/community/listed").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+            .send({
+
+            });
+        expect(response1.status).to.equal(500);
+    })
+})
+

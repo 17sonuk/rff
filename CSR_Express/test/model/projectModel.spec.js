@@ -30,6 +30,13 @@ const testProject = {
             "description": "Deposit the annual fee and exam fee of students"
         }
     ],
+    "question6": `question6`,
+    "question5": `question5`,
+    "question4": `question4`,
+    "question3": `question3`,
+    'question2': `question2`,
+    'question1': `question1`,
+    'projectSummary': `projectSummary`
 }
 
 describe('TESTING PROJECT MODEL - CREATE', () => {

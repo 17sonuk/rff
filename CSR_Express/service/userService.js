@@ -161,8 +161,6 @@ userService.checkUserNameValidty = (userName) => {
 userService.getUserDetails = (userName) => {
     return userModel.getUserDetails(userName, 'userName').then(data => {
         if (data) {
-            // data.pan = CryptoJS.AES.decrypt(data.pan, "Secret123PaN").toString(CryptoJS.enc.Utf8)
-            // data.contact[0].number = CryptoJS.AES.decrypt((data.contact[0].number), "Secret123CoN").toString(CryptoJS.enc.Utf8)
             return data;
         } else {
             let err = new Error("Bad Connection")
@@ -474,7 +472,6 @@ userService.updateUserProfile = async (userName, profileData) => {
                 throw err
             }
         }
-
     }
 
     if (user.role == 'Ngo' && !profileData.paymentDetails) {
