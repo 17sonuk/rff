@@ -1,14 +1,8 @@
-// const bcrypt = require("bcrypt");
 const CryptoJS = require('crypto-js');
-
 const mongoError = require('./mongoError')
 const logger = require('../loggers/logger');
-
 const { notificationModel, orgModel, txDescriptionModel } = require('./models')
-
 const userModel = {}
-
-logger.debug('<<<<<<<<<<<<<< user model >>>>>>>>>>>>>>>>>')
 
 // create
 userModel.create = async (obj) => {
@@ -64,9 +58,6 @@ userModel.deleteOne = async (filter) => {
 // onboarding of user
 userModel.registerUser = async (obj) => {
     let criteria = [{ userName: obj.userName }, { email: obj.email }]
-    // if (obj.regId) {
-    //     criteria.push({ regId: obj.regId });
-    // }
     try {
         let user = await orgModel.find({ $or: criteria })
         if (user.length > 0) {
@@ -77,15 +68,9 @@ userModel.registerUser = async (obj) => {
             if (user[0].userName == obj.userName) {
                 message += 'userName, ';
             }
-            // if (obj.regId && user[0].regId == obj.regId) {
-            //     message += 'regId, ';
-            // }
             message = message.slice(0, -2);
             return { success: false, message };
         } else {
-            //obj.phone.phoneNumber = (CryptoJS.AES.encrypt((obj.phone.phoneNumber).toString(), "Secret123CoN"))
-            // obj.pan = CryptoJS.AES.encrypt(obj.pan, "Secret123PaN");
-            // obj.password = bcrypt.hashSync(obj.password, 10);
             try {
                 console.log('mongo user')
                 let result = await orgModel.create(obj)
@@ -95,8 +80,6 @@ userModel.registerUser = async (obj) => {
                     return null
                 }
             } catch (createError) {
-                console.log('create error.........', createError)
-                // console.log(createError._message)
                 return mongoError(createError)
             }
         }
@@ -123,9 +106,6 @@ userModel.getUserDetails = (value, type = 'email') => {
 userModel.getUnapprovedUserDetails = () => {
     return orgModel.find({ status: 'created' }, { _id: 0 }).then(data => {
         if (data) {
-            // for (let i = 0; i < data.length; i++) {
-            //     data[i]['password'] = undefined;
-            // }
             return data
         } else {
             return null
@@ -256,8 +236,6 @@ userModel.updateNotification = (username, txId) => {
 }
 
 userModel.getNgoOrgName = (userName) => {
-    // let criteria = {}
-    // criteria[userName] = userName;
     console.log('username:' + userName)
     return orgModel.findOne({ userName: userName }, { _id: 0, orgName: 1 }).then(data => {
         console.log('orgname:' + data)
@@ -280,5 +258,4 @@ userModel.updateUserProfile = (userN, profileData) => {
     })
 }
 
-//userModel.getNgoOrgName('meryl')
 module.exports = userModel;

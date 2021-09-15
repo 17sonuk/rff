@@ -1,12 +1,10 @@
 require('dotenv').config();
 const { JWT_EXPIRY, TOKEN_SECRET, CA_EMAIL, CA_USERNAME, IT_EMAIL, GUEST_EMAIL } = process.env;
-
 const express = require('express');
 var jwt = require('jsonwebtoken');
 const mainRouter = express.Router();
 
 // Routers
-// const escrowRouter = require('./blockchain/escrowRouter');
 const countryRouter = require('./country/countryRouter');
 const fileMongoRouter = require('./mongo/fileRouter');
 const commonMongoRouter = require('./mongo/commonRouter');
@@ -32,20 +30,16 @@ const { fieldErrorMessage, generateError, getMessage } = require('../utils/funct
 // Authentication
 mainRouter.use((req, res, next) => {
     let skip = ['/users', '/psp/coinbase/chargeStatus']
-    //, '/country/countries', '/country/states', '/country/cities'
-    console.log(req.path)
     if (skip.includes(req.originalUrl) || skip.includes(req.path)) {
         next();
     } else {
         let authHeader = '';
-        // console.log('all cokies:', req.cookies)
         if (req.originalUrl === '/mongo/user/onboard' || req.originalUrl === '/mongo/user/checkUserNameValidity') {
             if (!req.headers.csrtoken) {
                 return next();
             }
         }
         authHeader = req.headers.csrtoken;
-        // console.log('cookie is: ', authHeader);
         if (authHeader) {
             const token = authHeader.split(' ')[1];
             jwt.verify(token, TOKEN_SECRET, (err, decoded) => {
@@ -60,7 +54,6 @@ mainRouter.use((req, res, next) => {
                     req.orgName = decoded.orgName;
                     req.email = decoded.email;
                     req.name = decoded.name;
-                    logger.debug(`Decoded from JWT token: useName - ${decoded.userName}, orgName - ${decoded.orgName}`);
                     next();
                 }
             })
@@ -74,7 +67,6 @@ mainRouter.use((req, res, next) => {
 
 // Auth0
 mainRouter.use(checkJwt);
-
 mainRouter.use((req, res, next) => {
 
     let roles = ['ngo', 'corporate', 'creditsauthority'];
@@ -108,7 +100,6 @@ mainRouter.use((req, res, next) => {
         if (authMap[req.userName].has(req.path) || req.path === '/psp/coinbase/charge' || req.path.startsWith("/mongo/project/all") || req.path.startsWith("/query/getRecord") || (req.path.startsWith("/mongo/project") && !guestForbiddenpaths.includes('/mongo/project'))) {
             return next();
         } else {
-            //console.log(authMap[req.userName].has(req.path))
             return generateError(e, next);
         }
     }
@@ -139,9 +130,6 @@ mainRouter.use((req, res, next) => {
 // Login and Generate JWT Token
 mainRouter.post('/users', async (req, res, next) => {
     let { email } = req.body;
-
-    logger.debug(`email : ${email}`);
-
     if (!email) {
         return res.json(fieldErrorMessage('\'email\''));
     }
@@ -152,7 +140,6 @@ mainRouter.post('/users', async (req, res, next) => {
     let orgName;
 
     let user = email.split("@")[0];
-    console.log(user);
     if (email === GUEST_EMAIL) {
         mongoResponse = { role: "Corporate", userName: user };
         userName = user;
@@ -198,13 +185,6 @@ mainRouter.post('/users', async (req, res, next) => {
             if (userName !== 'guest') {
                 finalResponse['name'] = mongoResponse.name;
             }
-
-            // res.cookie('csrtoken', token, {
-            //     maxAge: 1000 * 60 * 24,
-            //     httpOnly: true,
-            //     // sameSite: "none",
-            //     // secure: false
-            // })
             return res.json(finalResponse);
         } else {
             let err = new Error('Unauthorized user')
@@ -213,7 +193,6 @@ mainRouter.post('/users', async (req, res, next) => {
         }
     }
     catch (e) {
-        console.log("------------", e.message, Object.keys(e))
         generateError(e, next, 500, 'some error occurred');
     }
 });

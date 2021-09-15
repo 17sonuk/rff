@@ -3,8 +3,6 @@ const { expect } = require('chai');
 var sandbox = require("sinon").createSandbox();
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised)
-const sinon = require("sinon");
-
 const projectService = require('../../service/projectService');
 const projectModel = require('../../model/projectModel');
 const userModel = require('../../model/userModel');
@@ -21,7 +19,6 @@ describe('TESTING PROJECT SERVICE - CREATE PROJECT', () => {
         mockObj1.restore();
     });
     it('testing response for createProject', async () => {
-        // const testUserName="ngo501"
         const testProject = {
             "contributorsList": [],
             "images": [],
@@ -48,9 +45,6 @@ describe('TESTING PROJECT SERVICE - CREATE PROJECT', () => {
             "orgName":"ngo"
         }
 
-        // const testProjectBlank ={
-
-        // }
         mockObj1.resolves("ngo")
         mockObj.resolves(testProject);
         let res = await projectService.createProject("ngo501",testProject)
@@ -70,9 +64,7 @@ describe('TESTING PROJECT SERVICE - CREATE PROJECT', () => {
         mockObj1.resolves("ngo")
         mockObj.resolves({ message: 'Project ID already exist.', error: true });
         let res2 = await projectService.createProject("ngo501",testProject)
-        expect(res2.success).to.equal(false)
-        
-
+        expect(res2.success).to.equal(false) 
     })
 })
 

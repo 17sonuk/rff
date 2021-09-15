@@ -3,15 +3,12 @@ const { expect } = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const request = require('supertest');
 const fileService = require('../../service/fileService');
-const sinon = require("sinon");
 const app = require('../../app')
 chai.use(chaiAsPromised)
 var sandbox = require("sinon").createSandbox();
 require('dotenv').config();
 const { JWT_EXPIRY, TOKEN_SECRET, CA_EMAIL, IT_EMAIL, GUEST_EMAIL } = process.env;
 var jwt = require('jsonwebtoken');
-const { createSandbox } = require('sinon');
-var auth;
 
 describe('FILE ROUTER - getfile API', () => {
     let mockObj = ""
@@ -23,7 +20,6 @@ describe('FILE ROUTER - getfile API', () => {
     });
 
     it('testing getFiles api when file Hash is not present', async function () {
-        // let fileHash="";
         let payload = {
             orgName: 'ngo',
             userName: 'ngo1'
@@ -135,7 +131,6 @@ describe('FILE ROUTER - UploadFile API', () => {
         }
         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
         mockObj1.resolves(false)
-        // mockObj.resolves(file)
         const response = await request(app)
             .post("/mongo/file/upload")
             .set("csrtoken", "Bearer " + token)

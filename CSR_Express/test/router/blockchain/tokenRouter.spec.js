@@ -4,16 +4,12 @@ const chaiAsPromised = require('chai-as-promised');
 const request = require('supertest');
 const projectService = require('../../service/projectService');
 const commonService = require('../../service/commonService')
-const projectModel = require('../../model/projectModel');
-const sinon = require("sinon");
 const app = require('../../app')
 chai.use(chaiAsPromised)
 var sandbox = require("sinon").createSandbox();
 require('dotenv').config();
 const { JWT_EXPIRY, TOKEN_SECRET, CA_EMAIL, IT_EMAIL, GUEST_EMAIL } = process.env;
 var jwt = require('jsonwebtoken');
-const { createSandbox } = require('sinon');
-var auth;
 const invoke = require('../../fabric-sdk/invoke');
 const query = require('../../fabric-sdk/query');
 let fabricInvoke={};
@@ -101,7 +97,6 @@ describe('TOKEN ROUTER - /request API SUCCESS', () => {
         })
         console.log("Resp23:",response.body)
         expect(response.body.success).to.equal(true)
-        // expect(response.body.message).to.equal("'amount' field is missing or Invalid in the request")
     })
     
 })
@@ -147,7 +142,6 @@ describe('TOKEN ROUTER - /assign API SUCCESS', () => {
         })
         console.log("Resp23:",response.body)
         expect(response.body.success).to.equal(true)
-        // expect(response.body.message).to.equal("'amount' field is missing or Invalid in the request")
     })
     
 })
@@ -211,7 +205,6 @@ describe('TOKEN ROUTER - /reject API SUCCESS', () => {
         })
         console.log("Resp23:",response.body)
         expect(response.body.success).to.equal(true)
-        // expect(response.body.message).to.equal("'amount' field is missing or Invalid in the request")
     })
     
 })
@@ -346,7 +339,6 @@ describe('TOKEN ROUTER - /transfer API', () => {
         const response = await request(app)
         .post("/token/transfer").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
         .send({
-            // userName:"guest",
             amount: "200",
             projectId:"p01",
             phaseNumber:"0",
@@ -400,7 +392,6 @@ describe('TOKEN ROUTER - /transfer API SUCCESS', () => {
         })
         console.log("Resp23:",response.body)
         expect(response.body.success).to.equal(true)
-        // expect(response.body.message).to.equal("'amount' field is missing or Invalid in the request")
     })
     
 })
@@ -488,7 +479,6 @@ describe('TOKEN ROUTER - /all-requests API SUCCESS', () => {
         })
         console.log("Resp23:",response.body)
         expect(response.body.success).to.equal(true)
-        // expect(response.body.message).to.equal("'amount' field is missing or Invalid in the request")
     })
     
 })

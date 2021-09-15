@@ -1,6 +1,5 @@
 const e = require("cors");
 const axios = require('axios');
-const { stringify } = require("querystring");
 
 const functions = {}
 
@@ -11,12 +10,9 @@ functions.fieldErrorMessage = (field) => {
     }
 }
 
-// functions.FIELD_ERROR_MESSAGE = " field is missing or Invalid in the request"
-
 functions.generateError = (error, next, statusCode = '', customErrMsg = '') => {
     let status, message;
     
-    // console.log(error, error.message, Object.keys(error));
     console.log('error message',error.status);
     if (error.responses) {
         message = error.responses[0].response.message;
@@ -66,10 +62,8 @@ functions.paypalAuth0AccessToken = async () => {
                 grant_type: 'client_credentials',
             },
         });
-        console.log('access_token:::::: ', access_token);
         return access_token;
     } catch (e) {
-        console.error(e);
         return false;
     }
 }
@@ -82,8 +76,6 @@ functions.getPaymentStatus = async (accessToken, orderId) => {
             Authorization: `Bearer ${accessToken}`
         }
     });
-    console.log('response::::::::::');
-    console.log(response)
 }
 module.exports = functions;
 

@@ -3,17 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-
-	// "strconv"
 	"strings"
 
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
-
-// type ItData struct {
-// 	ObjectType  string            `json:"itData"`
-// 	Year      	map[string][]Pan  `json:"year"`
-// }
 
 type Liability struct {
 	ObjectType     string  `json:"objectType"`

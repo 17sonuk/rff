@@ -11,11 +11,6 @@ import (
 	"github.com/hyperledger/fabric-protos-go/ledger/queryresult"
 	"github.com/hyperledger/fabric-protos-go/peer"
 	"github.com/stretchr/testify/require"
-	// "github.com/hyperledger/fabric-chaincode-go/pkg/cid"
-	// "github.com/hyperledger/fabric-chaincode-go/shim"
-	// "github.com/hyperledger/fabric-contract-api-go/contractapi"
-	// "github.com/hyperledger/fabric-protos-go/tree/main/peer"
-	// "github.com/hyperledger/fabric-protos/tree/main/peer"
 )
 
 const ngoMsp4 = "NgoMSP"
@@ -152,16 +147,12 @@ func TestCommonQueryPagination(test *testing.T) {
 	s := string(jsonarg)
 
 	var arg1 [1]string
-	// arg[0] = squery
-	// arg[1] = PageSize
-	// arg[2] = Bookmark
 	jsonarg1, _ := json.Marshal(arg1)
 	s1 := string(jsonarg1)
 
 	var arg2 [3]string
 	arg[0] = squery
 	arg[1] = "0"
-	// arg[2] = Bookmark
 	jsonarg2, _ := json.Marshal(arg2)
 	s2 := string(jsonarg2)
 

@@ -15,15 +15,6 @@ let orgMap = {
 }
 
 router.get('/parked-by-corporate', async (req, res, next) => {
-
-    // //extract parameters from query.
-    // const parked = req.query.parked;
-    // logger.debug('parked : ' + parked);
-
-    // if (!parked) {
-    //     return res.json(fieldErrorMessage('\'parked\''));
-    // }
-
     let userDLTName = req.userName + "." + orgMap[req.orgName.toLowerCase()] + "." + BLOCKCHAIN_DOMAIN + ".com";
 
     let queryString = {
@@ -34,13 +25,6 @@ router.get('/parked-by-corporate', async (req, res, next) => {
         },
         "sort": [{ "date": "desc" }]
     }
-
-    // queryString["selector"]["txType"]["$in"] = ["TransferToken"]
-    // if (parked === "true") {
-    //     queryString["selector"]["txType"]["$in"] = ["FundsToEscrowAccount", "FundsToEscrowAccount_snapshot"]
-    // } else {
-    //     queryString["selector"]["txType"]["$in"] = ["TransferToken", "TransferToken_snapshot", "ReleaseFundsFromEscrow"]
-    // }
 
     let args = JSON.stringify(queryString);
     logger.debug(args);
@@ -64,21 +48,14 @@ router.get('/parked-by-corporate', async (req, res, next) => {
                 "fields": ["projectName"]
             }
 
-            // if (parked === "true" || message[i]["Record"]["txType"] === 'ReleaseFundsFromEscrow') {
-            //     projectQueryString["selector"]["_id"] = objRef.split('_')[1]
-            // }
-
             args = [JSON.stringify(projectQueryString)]
 
             let projectResponse = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
-            // projectResponse = projectResponse[0];
             projectResponse = JSON.parse(projectResponse.toString());
 
             projectResponse.forEach(elem => {
                 elem['Record'] = JSON.parse(elem['Record'])
             })
-
-            logger.debug(`response :  ${JSON.stringify(projectResponse, null, 2)}`)
 
             message[i]["Record"]["projectName"] = projectResponse[0]["Record"]["projectName"]
             message[i]["Record"]["from"] = splitOrgName(message[i]["Record"]["from"])
@@ -102,7 +79,6 @@ router.get('/transactions', async function (req, res, next) {
     }
 
     const args = JSON.stringify(queryString)
-    logger.debug(`query string:\n ${args}`);
 
     try {
         let message = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
@@ -111,8 +87,6 @@ router.get('/transactions', async function (req, res, next) {
         message.forEach(elem => {
             elem['Record'] = JSON.parse(elem['Record'])
         })
-
-        logger.debug(`response :  ${JSON.stringify(message, null, 2)}`)
 
         return res.json(getMessage(true, message));
     }

@@ -1,5 +1,3 @@
-// const bcrypt = require("bcrypt");
-
 const { model, models, Schema } = require("mongoose");
 
 const phaseSchema = new Schema({
@@ -122,28 +120,6 @@ const orgSchema = new Schema({
     paymentDetails: paymentSchema,
     seen: { type: Boolean, default: false }
 }, { collection: "OrganisationProfile" })
-
-// orgSchema.pre('validate', function (next) {
-
-//     if (this.role === 'Corporate') {
-//         if (!this.subRole) {
-//             return next(new Error('Donor type is missing/invalid!'));
-//         } else if (this.subRole === 'Institution' && !this.orgName) {
-//             return next(new Error('Company/Foundation/Fund Name is missing/invalid!'));
-//         }
-//     }
-//     if (this.role === 'Ngo') {
-//         let { addressLine1, addressLine2, city, state, country, zipCode } = this.address
-//         if (!addressLine1 || !addressLine2 || !city || !state || !country || !zipCode) {
-//             return next(new Error('some address info is missing/invalid!'));
-//         }
-
-//         if (this.paymentDetails.paymentType === 'Bank' && (!this.paymentDetails.bankDetails.bankAddress.city || !this.paymentDetails.bankDetails.bankAddress.country)) {
-//             return next(new Error('some bank address info is missing/invalid!'));
-//         }
-//     }
-//     next();
-// });
 
 const notificationSchema = new Schema({
     username: { type: String, required: true, maxLength: 50 },

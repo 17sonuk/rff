@@ -7,33 +7,6 @@ const { connectionToMongo, connectToMongo, disconnectMongo } = require('../../mo
 
 const userModel = require('../../model/userModel');
 
-// const testUser = {
-//     name: 'ngo1',
-//     description: '',
-//     pan: 'PAN123',
-//     email: 'info@ngo1.com',
-//     regId: 'reg001',
-//     address: {
-//         doorNo: '',
-//         flat: '',
-//         street: '',
-//         country: '',
-//         state: '',
-//         district: '',
-//         locality: '',
-//         pinCode: ''
-//     },
-//     contact: [
-//         {
-//             name: 'ngo1-office',
-//             number: '9898989898'
-//         }
-//     ],
-//     userName: 'ngo1',
-//     role: 'Ngo',
-//     status: 'created'
-// }
-
 const testUser = {
     firstName: 'Charles',
     lastName: 'Mack',
@@ -59,46 +32,17 @@ const testUser = {
             phoneNumber: '9765457'
         }
     ]
-    // paymentDetails: {
-    //     paymentType: "Paypal",
-    //     paypalEmailId : "corp@paypal.com",
-    //     cryptoAddress: '',
-    //     bankDetails:{
-    //         isUSbank:"No",
-    //         taxId:'P123',
-    //         beneficiaryName:'CP',
-    //         beneficiaryAddress:'address',
-    //         bankName: 'Test',
-    //         bankAddress: 'bankAddress',
-    //         bankPhone:{
-    //             countryCode: '+91',
-    //             phoneNumber: '97654678'
-    //         },
-    //         currencyType:"INR",
-    //         bankAccountNo:'',
-    //         ABAorRoutingNo: '',
-    //         BICSwiftorCHIPSUISSortCode:'',
-    //         IBANNo:''
-    //     }
-    // }
    
 }
 
 describe('testing user model - approve user', () => {
 
     before((done) => {
-
-        // const options = { useNewUrlParser: true, useUnifiedTopology: true };
-        // mongoose.connect('mongodb://localhost/CSR_test', options, function () {
-        /* Drop the DB */
-        // mongoose.connection.db.dropDatabase();
-        // });
         connectionToMongo('_test');
         done();
     })
 
     after((done) => {
-        // mongoose.disconnect()
         disconnectMongo()
             .then(() => {
                 console.log('Mongo connection closed.');
@@ -158,7 +102,6 @@ describe('testing user model - approve user', () => {
 
     it('testing response for getUserDetails', async () => {
         const res = await userModel.getUserDetails('info@corporate.com');
-
         expect(res).to.be.a('object');
     });
 
@@ -204,7 +147,6 @@ describe('testing user model - reject user', () => {
         userDetails.userName = 'newCorp';
         userDetails.email = 'newCorp@gmail.com';
 	    userDetails.regId = undefined;
-
         await userModel.registerUser(userDetails);
         const unapprovedUsers = await userModel.getUnapprovedUserDetails();
         const res = await userModel.rejectUser(unapprovedUsers[0].userName);
@@ -215,7 +157,6 @@ describe('testing user model - reject user', () => {
     });
 
     it('testing response for reject user who doesn\'t exist', async () => {
-
         const res = await userModel.rejectUser("wrong_user");
         expect(res).to.be.a('object');
         expect(res.n).to.equal(0);
@@ -255,7 +196,6 @@ describe('testing user model - notification', () => {
         expect(res.txId).to.equal('id-01');
         expect(res.seen).to.equal(false);
         expect(res.username).to.equal('corp1');
-
         notification.username = 'corp2';
         const res1 = await userModel.createNotification(notification);
         expect(res1).to.be.a('object');
@@ -279,38 +219,32 @@ describe('testing user model - notification', () => {
     });
 
     it('testing response for get notifications', async () => {
-
         const res = await userModel.getNotifications('corp1', false);
         expect(res).to.be.a('array');
         expect(res).to.have.lengthOf(1);
-
         const res1 = await userModel.getNotifications('corp2', false);
         expect(res1).to.be.a('array');
         expect(res1).to.have.lengthOf(1);
     });
 
     it('testing response for get notifications of non-existing user', async () => {
-
         const res = await userModel.getNotifications('wrong_user', false);
         expect(res).to.be.a('array');
         expect(res).to.have.lengthOf(0);
     });
 
     it('testing response for get notifications description', async () => {
-
         const res = await userModel.getNotificationDescription(notification.txId);
         expect(res).to.be.a('object');
         expect(res.txId).to.equal(notification.txId);
     });
 
     it('testing response for update notification', async () => {
-
         const res = await userModel.updateNotification('corp1', notification.txId);
         expect(res).to.be.a('object');
         expect(res.n).to.equal(1);
         expect(res.nModified).to.equal(1);
         expect(res.ok).to.equal(1);
-
         const res1 = await userModel.getNotifications('corp1', false);
         expect(res1).to.be.a('array');
         expect(res1).to.have.lengthOf(0);
@@ -318,22 +252,10 @@ describe('testing user model - notification', () => {
 })
 
 describe('testing user model - db unavailability', () => {
-
     it('testing response for db unavailability for all functions', async () => {
         const userDetails = testUser;
-
         const res = await userModel.registerUser(userDetails);
-
         expect(res).to.be.a('object');
         expect(res.success).to.equal(false);
     });
 })
-    // it('testing response for reject user who doesn\'t exist', async () => {
-
-    //     const res = await userModel.rejectUser("wrong_user");
-    //     expect(res).to.be.a('object');
-    //     // console.log(res)
-    //     expect(res.n).to.equal(0);
-    //     expect(res.deletedCount).to.equal(0);
-    //     expect(res.ok).to.equal(1);
-    // });

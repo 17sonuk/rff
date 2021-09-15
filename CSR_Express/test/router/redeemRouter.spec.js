@@ -2,22 +2,14 @@ const chai = require('chai');
 const { expect } = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const request = require('supertest');
-const projectService = require('../../service/projectService');
-const commonService = require('../../service/commonService')
-const projectModel = require('../../model/projectModel');
-const sinon = require("sinon");
 const app = require('../../app')
 chai.use(chaiAsPromised)
 var sandbox = require("sinon").createSandbox();
 require('dotenv').config();
 const { JWT_EXPIRY, TOKEN_SECRET, CA_EMAIL, IT_EMAIL, GUEST_EMAIL } = process.env;
 var jwt = require('jsonwebtoken');
-const { createSandbox } = require('sinon');
-var auth;
 const invoke = require('../../fabric-sdk/invoke');
 const query = require('../../fabric-sdk/query');
-const { doesNotMatch } = require('assert');
-
 
 describe('REDEEM ROUTER - /request API', () => {
     it('testing redeem router API when quantity field is empty', async function () {
@@ -363,9 +355,7 @@ describe('REDEEM ROUTER - /request API SUCCESS', () => {
             paymentDetails:paymentDetails
           
         })
-        console.log("Resp23:",response.body)
         expect(response.body.success).to.equal(true)
-        // expect(response.body.message).to.equal("'amount' field is missing or Invalid in the request")
     })
     
 })
@@ -428,9 +418,7 @@ describe('REDEEM ROUTER - /approve API SUCCESS', () => {
             paymentId:"34556"
           
         })
-        console.log("Resp23:",response.body)
         expect(response.body.success).to.equal(true)
-        // expect(response.body.message).to.equal("'amount' field is missing or Invalid in the request")
     })
     
 })
@@ -493,9 +481,7 @@ describe('REDEEM ROUTER - /reject API SUCCESS', () => {
             rejectionComments:"sdfghj"
           
         })
-        console.log("Resp23:",response.body)
         expect(response.body.success).to.equal(true)
-        // expect(response.body.message).to.equal("'amount' field is missing or Invalid in the request")
     })
     
 })
@@ -515,8 +501,6 @@ describe('REDEEM ROUTER - /request/all API', () => {
         const response = await request(app)
         .get("/redeem/request/all").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
         .query({
-            // qstring
-            // pageSize:"",
             status:"Requested",
             bookmark:""
         })
@@ -540,23 +524,6 @@ describe('REDEEM ROUTER - /request/all API', () => {
         expect(response.body.success).to.equal(false)
         expect(response.body.message).to.equal("'status' field is missing or Invalid in the request")
     });
-
-    // it('testing redeem router API when unauthorised use', async function () {
-    //     let payload = {
-    //         orgName: 'guest',
-    //         userName: 'guest'
-    //     }
-    //     const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
-    //     const response = await request(app)
-    //     .get("/redeem/request/all").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-    //     .query({
-    //         pageSize:10,
-    //         status:"Requested",
-    //         bookmark:""
-    //     })
-    //     expect(response.body.success).to.equal(false)
-    //     expect(response.body.message).to.equal("Unauthorized User")
-    // });
 
 });
 
@@ -588,12 +555,8 @@ describe('REDEEM ROUTER - /request/all API SUCCESS', () => {
             pageSize:10,
             status:"Requested",
             bookmark:""
-            // qString: JSON.stringify(queryString)
         })
-        console.log("Resp23:",response.body)
         expect(response.body.success).to.equal(true)
-        // expect(response.body.message).to.equal("'amount' field is missing or Invalid in the request")
-        // done()
     })
     
 })

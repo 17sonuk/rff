@@ -159,19 +159,15 @@ router.get('/request/all', async (req, res, next) => {
         "sort": [{ "date": "asc" }]
     }
 
-    if (req.orgName === 'creditsauthority') {
-        logger.debug('CA has requested...')
-    }
-    else if (req.orgName === 'ngo') {
+    if (req.orgName === 'ngo') {
         queryString['selector']['from'] = userDLTName
     }
-    else {
+    else if(req.orgName !== 'creditsauthority') {
         return res.json({ success: false, message: 'Unauthorised redeem request access...' })
     }
 
     let args = [JSON.stringify(queryString), pageSize, bookmark];
     args = JSON.stringify(args);
-    logger.debug('args : ' + args);
 
     try {
         let redeemRequests = await query.main(req.userName, req.orgName, "CommonQueryPagination", CHAINCODE_NAME, CHANNEL_NAME, args);
@@ -203,21 +199,13 @@ router.get('/request/all', async (req, res, next) => {
 });
 
 router.get('/request/forUserprofile', async (req, res, next) => {
-    logger.debug('==================== QUERY BY CHAINCODE: getAllRedeemRequests ==================');
     const userDLTName = req.query.ngo + "." + orgMap['ngo'] + "." + BLOCKCHAIN_DOMAIN + ".com";
-
     const pageSize = req.query.pageSize;
     const bookmark = req.query.bookmark;
     const status = req.query.status;
     const communityName = req.query.communityName ? decodeURIComponent(req.query.communityName) : '';
     const communityPlace = req.query.communityPlace ? decodeURIComponent(req.query.communityPlace) : '';
     const ngo = req.query.ngo;
-
-    logger.debug('pageSize : ' + pageSize + ' bookmark : ' + bookmark);
-    logger.debug('status : ' + status);
-    logger.debug('communityName : ' + communityName);
-    logger.debug('communityPlace : ' + communityPlace);
-    logger.debug('ngo : ' + ngo);
 
     if (!pageSize) {
         return res.json(fieldErrorMessage('\'pageSize\''));

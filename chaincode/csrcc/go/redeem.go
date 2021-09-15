@@ -29,8 +29,6 @@ type Redeem struct {
 	DocName           string         `json:"docName"`
 }
 
-//ReceiverId        string         `json:"receiverId"`
-
 type PaymentDetails struct {
 	PaymentType   string      `json:"paymentType"`
 	PaypalEmailId string      `json:"paypalEmailId"`
@@ -68,8 +66,6 @@ type Phone struct {
 }
 
 func (s *SmartContract) RedeemRequest(ctx contractapi.TransactionContextInterface, arg string) (bool, error) {
-	// InfoLogger.Printf("*************** RedeemRequest Started ***************")
-	// InfoLogger.Printf("args received:", arg)
 
 	//getusercontext to populate the required data
 	creator, err := ctx.GetStub().GetCreator()
@@ -78,10 +74,8 @@ func (s *SmartContract) RedeemRequest(ctx contractapi.TransactionContextInterfac
 	}
 	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
 	if mspId != NgoMSP {
-		// InfoLogger.Printf("only ngo can initiate redeem request")
 		return false, fmt.Errorf("only ngo can initiate redeem request")
 	}
-	// InfoLogger.Printf("current logged in user:", commonName, "with mspId:", mspId)
 
 	var args []string
 
@@ -113,7 +107,6 @@ func (s *SmartContract) RedeemRequest(ctx contractapi.TransactionContextInterfac
 	//check if the redeemId incoming is already used
 	getUuidAsBytes, _ := ctx.GetStub().GetState(redeemId)
 	if getUuidAsBytes != nil {
-		// InfoLogger.Printf("This redeem id is already used")
 		return false, fmt.Errorf("This redeem id is already used")
 	}
 
@@ -135,14 +128,9 @@ func (s *SmartContract) RedeemRequest(ctx contractapi.TransactionContextInterfac
 		return false, fmt.Errorf("error getting the balance of the ngo")
 	}
 	ngoBalance, _ := strconv.ParseFloat(string(getbalancebytes), 64)
-	// if balance < redeemObj.Qty {
-	// 	// InfoLogger.Printf("Maximum amount to redeem is:", balance, "but requested amount is:", qty)
-	// 	return false, fmt.Errorf("redeem amount cannot be more than the balance")
-	// }
 
 	balance := math.Round((projectState.TotalReceived-projectState.TotalRedeemed)*100) / 100
 	if balance < redeemObj.Qty {
-		// InfoLogger.Printf("Maximum amount to redeem is:", balance, "but requested amount is:", qty)
 		return false, fmt.Errorf("redeem amount cannot be more than maximum allowed amount")
 	}
 
@@ -197,13 +185,10 @@ func (s *SmartContract) RedeemRequest(ctx contractapi.TransactionContextInterfac
 		return false, fmt.Errorf(fmt.Sprintf("Failed to emit event"))
 	}
 
-	// InfoLogger.Printf("*************** RedeemRequest Successful ***************")
 	return true, nil
 }
 
 func (s *SmartContract) ApproveRedeemRequest(ctx contractapi.TransactionContextInterface, arg string) (bool, error) {
-	// InfoLogger.Printf("*************** ApproveRedeemRequest Started ***************")
-	// InfoLogger.Printf("args received:", arg)
 
 	//getusercontext to populate the required data
 	creator, err := ctx.GetStub().GetCreator()
@@ -212,10 +197,8 @@ func (s *SmartContract) ApproveRedeemRequest(ctx contractapi.TransactionContextI
 	}
 	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
 	if mspId != CreditsAuthorityMSP {
-		// InfoLogger.Printf("only creditsauthority can approve redeem request")
 		return false, fmt.Errorf("only creditsauthority can approve redeem request")
 	}
-	// InfoLogger.Printf("current logged in user:", commonName, "with mspId:", mspId)
 
 	var args []string
 
@@ -248,13 +231,11 @@ func (s *SmartContract) ApproveRedeemRequest(ctx contractapi.TransactionContextI
 		return false, fmt.Errorf(err.Error())
 	}
 	if len(queryResults) > 2 {
-		// InfoLogger.Printf("Transaction id:", paymentId, "is already used")
 		return false, fmt.Errorf("Transaction id: " + paymentId + " is already used")
 	}
 
 	redeemStateAsBytes, _ := ctx.GetStub().GetState(redeemId)
 	if redeemStateAsBytes == nil {
-		// InfoLogger.Printf("redeem request:", redeemId, "is not present")
 		return false, fmt.Errorf("redeem request: " + redeemId + " is not present")
 	}
 	redeemState := Redeem{}
@@ -289,7 +270,6 @@ func (s *SmartContract) ApproveRedeemRequest(ctx contractapi.TransactionContextI
 		return false, fmt.Errorf(fmt.Sprintf("Failed to emit event"))
 	}
 
-	// InfoLogger.Printf("*************** ApproveRedeemRequest Successful ***************")
 	return true, nil
 }
 
@@ -327,8 +307,6 @@ func (s *SmartContract) GetRedeemRequest(ctx contractapi.TransactionContextInter
 }
 
 func (s *SmartContract) RejectRedeemRequest(ctx contractapi.TransactionContextInterface, arg string) (bool, error) {
-	// InfoLogger.Printf("*************** rejectRedeemRequest Started ***************")
-	// InfoLogger.Printf("args received:", arg)
 
 	creator, err := ctx.GetStub().GetCreator()
 	if err != nil {
@@ -336,10 +314,8 @@ func (s *SmartContract) RejectRedeemRequest(ctx contractapi.TransactionContextIn
 	}
 	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
 	if mspId != CreditsAuthorityMSP {
-		// InfoLogger.Printf("only creditsauthority can verify/approve redeem request")
 		return false, fmt.Errorf("only creditsauthority can verify/approve redeem request")
 	}
-	// InfoLogger.Printf("current logged in user:", commonName, "with mspId:", mspId)
 
 	var args []string
 
@@ -371,7 +347,6 @@ func (s *SmartContract) RejectRedeemRequest(ctx contractapi.TransactionContextIn
 
 	redeemStateAsBytes, _ := ctx.GetStub().GetState(redeemId)
 	if redeemStateAsBytes == nil {
-		// InfoLogger.Printf("redeem request with id:", redeemId, " not found")
 		return false, fmt.Errorf("redeem request: " + redeemId + " not found")
 	}
 	redeemState := Redeem{}
@@ -431,6 +406,5 @@ func (s *SmartContract) RejectRedeemRequest(ctx contractapi.TransactionContextIn
 		return false, fmt.Errorf(fmt.Sprintf("Failed to emit event"))
 	}
 
-	// InfoLogger.Printf("*************** rejectRedeemRequest Successful ***************")
 	return true, nil
 }

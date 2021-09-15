@@ -1,13 +1,10 @@
 require('dotenv').config();
 const { SMTP_EMAIL, APP_PASSWORD, CHAINCODE_NAME, CHANNEL_NAME, ORG1_NAME, ORG2_NAME, ORG3_NAME, BLOCKCHAIN_DOMAIN, CA_USERANME } = process.env;
-
 const express = require('express');
 const router = express.Router();
 const { v4: uuid } = require('uuid');
-
 const logger = require('../../loggers/logger');
 const { fieldErrorMessage, generateError, getMessage, splitOrgName } = require('../../utils/functions');
-
 const invoke = require('../../fabric-sdk/invoke');
 const query = require('../../fabric-sdk/query');
 const projectService = require('../../service/projectService')
@@ -70,7 +67,6 @@ router.put('/approve', async (req, res, next) => {
     logger.debug('==================== INVOKE CREATE PROJECT ON CHAINCODE ==================');
     console.log('body approve: ', req.body)
     //set extra attributes in request body.
-    //req.body.blockchain["creationDate"] = Date.now();
     const projectId = req.body.projectId
     req.body.mongo.projectId = projectId
     let args = [JSON.stringify(req.body.blockchain), projectId, uuid().toString()];
@@ -84,10 +80,7 @@ router.put('/approve', async (req, res, next) => {
         successBlockchain = true
         let result = await projectService.updateProjectForApproval(projectId, req.body.mongo)
         console.log(result)
-        logger.debug('Mongo approve project success')
         return res.json(getMessage(true, "Project Approved succesfully"))
-
-        //return res.json({ ...getMessage(true, 'Successfully invoked ApproveProject'), 'projectId': projectId });
     }
     catch (e) {
         if (successBlockchain) {
@@ -101,8 +94,6 @@ router.put('/approve', async (req, res, next) => {
 
 //****************************** Update Project ******************************* - done
 router.put('/update', async (req, res, next) => {
-    logger.debug('==================== INVOKE RELEASE FUNDS TOKEN ON CHAINCODE ==================');
-
     //extract parameters from request body.
     const projectId = req.body.projectId;
     const phaseNumber = req.body.phaseNumber;
@@ -133,38 +124,7 @@ router.put('/update', async (req, res, next) => {
     }
 });
 
-//****************************** Project Update Visible To *******************************
-// router.put('/updateVisibleTo', async (req, res, next) => {
-//     logger.debug('==================== INVOKE UPDATE VISIBLE TO ON CHAINCODE ==================');
-
-//     //extract parameters from request body.
-//     const projectId = req.body.projectId;
-//     let corporateName = req.body.corporateName;
-
-//     if (!CHAINCODE_NAME) {
-//         return res.json(fieldErrorMessage('\'chaincodeName\''));
-//     } else if (!CHANNEL_NAME) {
-//         return res.json(fieldErrorMessage('\'channelName\''));
-//     } else if (!projectId) {
-//         return res.json(fieldErrorMessage('\'projectId\''));
-//     } else if (!corporateName) {
-//         corporateName = "all"
-//     }
-
-//     let args = [projectId, corporateName, Date.now().toString(), uuid().toString()];
-//     args = JSON.stringify(args);
-//     logger.debug('args  : ' + args);
-
-//     try {
-//         await invoke(req.userName, req.orgName, "UpdateVisibleTo", CHAINCODE_NAME, CHANNEL_NAME, args);
-//         return res.json(getMessage(true, 'Successfully invoked UpdateVisibleTo'));
-//     }
-//     catch (e) {
-//         generateError(e, next)
-//     }
-// });
-
-//****************************** validate a phase of a project
+//****************************** validate phase
 router.post('/validate-phase', async (req, res, next) => {
     logger.debug('==================== INVOKE VALIDATE PHASE TOKEN ON CHAINCODE ==================');
 
@@ -195,92 +155,13 @@ router.post('/validate-phase', async (req, res, next) => {
 
     try {
         await invoke.main(req.userName, req.orgName, "ValidatePhase", CHAINCODE_NAME, CHANNEL_NAME, args);
-        // return res.json(getMessage(true, 'Successfully invoked ValidatePhase'));
         logger.debug('Successfully invoked ValidatePhase')
 
         if (isValid === "true") {
             commonService.MilestoneEmail(projectId, phaseNumber, req.userName, req.orgName)
         }
         commonService.ProjectCompletionEmail(projectId, req.userName, req.orgName)
-
-        // let queryString = {
-        //     "selector": {
-        //         "_id": projectId
-        //     }
-        // }
-        // args = JSON.stringify(queryString)
-        // logger.debug(`query string:\n ${args}`);
-
-        // let message = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
-        // message = JSON.parse(message.toString());
-
-        // message.forEach(elem => {
-        //     elem['Record'] = JSON.parse(elem['Record'])
-        // })
-
-        // if (message.length > 0) {
-        //     if (message[0]['Record']['docType'] === 'Project') {
-        //         message = message[0]
-        //         if (message['Record']['projectState'] === "Validated") {
-
-        //             let contributorsObj = message['Record']['contributors']
-        //             // console.log('contributorsObj ', contributorsObj)
-        //             let contributors = []
-        //             for (let key in contributorsObj) {
-        //                 if (!key.startsWith("guest")) {
-        //                     // console.log('key', key)
-        //                     contributors.push(splitOrgName(key))
-        //                 }
-        //             }
-        //             // console.log('contributors: ', contributors)
-
-        //             let platformName="Rainforest Blockchain Platform"
-
-        //             let emailList= await commonService.getDonorEmailList(contributors)
-
-        //             let emails = ""
-        //             for (let i = 0; i < emailList.length; i++) {
-        //                 emails += emailList[i]
-        //                 if (i !== emailList.length - 1) {
-        //                     emails += ", "
-        //                 }
-        //             }
-
-        // let emailList = await orgModel.find({ userName: { $in: contributors } }, { _id: 0, email: 1 })
-        // // console.log('emailList: ', emailList)
-
-        // let emails = ""
-        // for (let i = 0; i < emailList.length; i++) {
-        //     emails += emailList[i]
-        //     if (i !== emailList.length - 1) {
-        //         emails += ", "
-        //     }
-        // }
-        // // console.log('emails: ', emails)
-
-        // transporter.verify().then((data) => {
-        //     console.log(data);
-        //     console.log('sending email to :', emails);
-        //     transporter.sendMail({
-        //         from: '"CSR Test Mail" <csr.rainforest@gmail.com', // sender address
-        //         bcc: emails, // list of receivers
-        //         subject: `${message['Record']['projectName']} is now completed`, // Subject line
-        //         text: ` Hi, ${message['Record']['projectName']} is now completed, thanks for your contribution `, // plain text body
-        //         //html: "<b>You have successfully onboarded to the CSR platform</b>", // html body
-        //     }).then(info => {
-        //         console.log({ info });
-        //     }).catch(console.error);
-        // }).catch(console.error);
-
-        //     return res.json(getMessage(true, "Project has been completed and donors have been notified!"));
-
-        // }
-        // else {
         return res.json(getMessage(true, "Successfully validated the phase"))
-        // }
-        // }
-        // }
-
     }
     catch (e) {
         generateError(e, next);
@@ -376,22 +257,6 @@ router.get('/all', async (req, res, next) => {
         if (ngoName.length != 0) {
             queryString["selector"]["ngo"] = ngoName + "." + ORG3_NAME + "." + BLOCKCHAIN_DOMAIN + ".com"
         }
-
-        // if (self !== "true") {
-        //     queryString["selector"]["$or"] = [
-        //         {
-        //             "visibleTo": null
-        //             // {"$exists": false}
-        //         },
-        //         {
-        //             "visibleTo": {
-        //                 "$in": [
-        //                     req.userName
-        //                 ]
-        //             }
-        //         }
-        //     ]
-        // }
     } else if (req.orgName === "corporate") {
         queryString["selector"]["contributors"] = {}
         queryString["selector"]["contributors"][orgDLTName.replace(/\./g, "\\\\.")] = "exists";
@@ -430,13 +295,10 @@ router.get('/all', async (req, res, next) => {
             return res.json(getMessage(false, errorMessage))
         }
         else {
-            // let responseMetaObj = new Object()
             message['Results'].forEach(elem => {
                 elem['Record'] = JSON.parse(elem['Record'])
             })
             let newObject = message['Results'];
-            // newObject.success = true
-
             let finalResponse = {}
             let allRecords = []
 
@@ -452,7 +314,6 @@ router.get('/all', async (req, res, next) => {
                 logger.debug(`Project ${i} : ${JSON.stringify(record, null, 2)}`);
 
                 let response = {}
-                // response["totalReceived"] = 0;
                 response["totalReceived"] = record.totalReceived;
                 response["ourContribution"] = 0;
 
@@ -462,12 +323,6 @@ router.get('/all', async (req, res, next) => {
 
                 let currentPhase = 0;
                 for (let f = 0; f < record.phases.length; f++) {
-                    // let phaseQty = record.phases[f]["qty"];
-                    // let phaseOutstandingQty = record.phases[f]["outstandingQty"]
-
-                    //response["totalReceived"] += (phaseQty - phaseOutstandingQty)
-
-                    // if (record.phases[f]["phaseState"] !== "Created" && record.phases[f]["phaseState"] !== "Complete") {
                     if (record.phases[f]["phaseState"] !== "Created") {
                         currentPhase = f
                     }
@@ -577,7 +432,6 @@ router.get('/corporate-project-details', async (req, res, next) => {
         return res.json(fieldErrorMessage('\'corporate\''));
     }
 
-    //let contributor = 'contributors.' + corporate + '\\.corporate\\.csr\\.com'
     let queryString = '{"selector":{"docType":"Project","contributors.' + corporate + '\\\\.' + ORG2_NAME + '\\\\.' + BLOCKCHAIN_DOMAIN + '\\\\.com":{"$exists":true}},"fields":["_id","ngo","projectName"]}'
 
     let args = queryString;
@@ -672,79 +526,8 @@ router.get('/corporate-project-transactions', async (req, res, next) => {
     }
 });
 
-// //gives all corporate names along with their contribution (NOT USED)
-// router.get('/locked-details', async (req, res, next) => {
-//     logger.debug('==================== QUERY BY CHAINCODE: getProjectLockedDetails ==================');
-//     const projectId = req.query.projectId;
-
-//     logger.debug('projectId : ' + projectId);
-
-//     if (!CHAINCODE_NAME) {
-//         return res.json(fieldErrorMessage('\'chaincodeName\''));
-//     }
-//     if (!CHANNEL_NAME) {
-//         return res.json(fieldErrorMessage('\'channelName\''));
-//     }
-//     if (!projectId) {
-//         return res.json(fieldErrorMessage('\'projectId\''));
-//     }
-
-//     // let args = JSON.stringify("queryString");
-//     // logger.debug('args : ' + args);
-
-//     try {
-//         let message = await query.main(req.userName, req.orgName, "GetAllCorporates", CHAINCODE_NAME, CHANNEL_NAME, '');
-//         logger.debug(`response1 :  ${JSON.stringify(message, null, 2)}`)
-
-//         let corporateList = message
-
-//         let result = []
-
-//         for (let corporate of corporateList) {
-
-//             let queryString = {
-//                 "selector": {
-//                     "_id": corporate + '_' + projectId
-//                 }
-//             }
-
-//             let args1 = JSON.stringify(queryString);
-//             logger.debug('args1 : ' + args1);
-
-//             let message1 = await query.main(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args1);
-//             message1 = JSON.parse(message1.toString());
-
-//             message1.forEach(elem => {
-//                 elem['Record'] = JSON.parse(elem['Record'])
-//             })
-
-//             logger.debug(`response2 :  ${JSON.stringify(message1, null, 2)}`)
-
-
-//             message1.forEach(e => {
-//                 let returnObject = {}
-//                 returnObject.corporate = splitOrgName(e.Record.corporate)
-//                 let totalsum = 0.0
-//                 e.Record.funds.forEach(f => {
-//                     totalsum += f.qty
-//                 })
-//                 returnObject.quantity = totalsum
-//                 result.push(returnObject)
-//             })
-//             return res.json({ ...getMessage(true, "CommonQuery successful"), Records: result })
-//         }
-//     }
-//     catch (e) {
-//         generateError(e, next)
-//     }
-// });
-
 //getOngoing project count for csr : 
 router.get('/total-corporate-ongoing-projects', async (req, res, next) => {
-    logger.debug('==================== QUERY BY CHAINCODE: getCorporateProjectOngoingCount ==================');
-    // const corporate = req.query.corporate;
-
-    logger.debug('corporate : ' + corporate);
 
     if (!CHAINCODE_NAME) {
         return res.json(fieldErrorMessage('\'chaincodeName\''));
@@ -756,7 +539,6 @@ router.get('/total-corporate-ongoing-projects', async (req, res, next) => {
         return res.json(fieldErrorMessage('\'corporate\''));
     }
 
-    // let contributor = 'contributors.' + corporate + '\\.corporate\\.csr\\.com'
     let args = '{"selector":{"docType":"Project","projectState": {"$ne": "Validated"} ,"contributors.' + req.userName + '\\\\.' + ORG2_NAME + '\\\\.' + BLOCKCHAIN_DOMAIN + '\\\\.com":{"$exists":true}},"fields":["_id"]}'
 
     logger.debug('args : ' + args);
@@ -774,186 +556,6 @@ router.get('/total-corporate-ongoing-projects', async (req, res, next) => {
     }
 });
 
-// // Get Total Amount Locked for ProjectId
-// router.get('/total-project-locked-amount', async (req, res, next) => {
-//     logger.debug('==================== QUERY BY CHAINCODE: getTotalAmountLockedForProjectId ==================');
-//     //const corporate = req.query.corporate
-//     const projectId = req.query.projectId
-
-//     //logger.debug('corporate : ' + corporate);
-//     logger.debug('projectId : ' + projectId);
-
-//     if (!CHAINCODE_NAME) {
-//         return res.json(fieldErrorMessage('\'chaincodeName\''));
-//     }
-//     if (!CHANNEL_NAME) {
-//         return res.json(fieldErrorMessage('\'channelName\''));
-//     }
-//     //if (!corporate) {
-//     //    return res.json(fieldErrorMessage('\'corporate\''));
-//     //    return;
-//     //}
-//     if (!projectId) {
-//         return res.json(fieldErrorMessage('\'projectId\''));
-//     }
-
-//     let queryString = {
-//         "selector": {
-//             "project": projectId,
-//             "docType": "EscrowDetails"
-//         },
-//         "fields": [
-//             "funds"
-//         ]
-//     }
-
-//     let args = JSON.stringify(queryString)
-//     logger.debug('args : ' + args);
-
-//     try {
-//         let message = await query.main(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args);
-//         message = JSON.parse(message.toString());
-
-//         message.forEach(elem => {
-//             elem['Record'] = JSON.parse(elem['Record'])
-//         })
-
-//         logger.debug(`response :  ${JSON.stringify(message, null, 2)}`)
-
-//         let result = 0
-
-//         message.forEach(e => {
-//             e.Record.funds.forEach(f => {
-//                 result += f.qty
-//             })
-//         })
-
-//         return res.json({ ...getMessage(true, 'CommonQuery successful'), lockedAmount: result })
-//     }
-//     catch (e) {
-//         generateError(e, next)
-//     }
-// });
-
-// //getCorporateProjectTransaction
-// router.get('/ngo-project-and-locked-details', async (req, res, next) => {
-//     logger.debug('==================== QUERY BY CHAINCODE: getNgoProjectAndLockedAmountDetails ==================');
-//     // const ngo = req.query.ngo
-
-//     // logger.debug('ngo : ' + ngo);
-
-//     if (!CHAINCODE_NAME) {
-//         return res.json(fieldErrorMessage('\'chaincodeName\''));
-//     }
-//     if (!CHANNEL_NAME) {
-//         return res.json(fieldErrorMessage('\'channelName\''));
-//     }
-//     // if (!ngo) {
-//     //     return res.json(fieldErrorMessage('\'ngo\''));
-//     // }
-
-//     let queryString = {
-//         "selector": {
-//             "docType": "Project",
-//             "ngo": req.userName + "." + ORG3_NAME + "." + BLOCKCHAIN_DOMAIN + ".com"
-//         },
-//         "fields": [
-//             "_id",
-//             "projectId",
-//             "phases",
-//             "totalProjectCost",
-//             "projectName",
-//             "endDate"
-//         ]
-//     }
-
-//     let args = JSON.stringify(queryString)
-//     logger.debug('args : ' + args);
-
-//     try {
-//         let message = await query.main(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args);
-//         message = JSON.parse(message.toString());
-
-//         message.forEach(elem => {
-//             elem['Record'] = JSON.parse(elem['Record'])
-//         })
-
-//         logger.debug(`response :  ${JSON.stringify(message, null, 2)}`)
-
-//         let response = []
-
-//         for (let i = 0; i < message.length; i++) {
-
-//             let obj = Object()
-//             obj.projectName = message[i].Record.projectName
-//             obj.totalProjectCost = message[i].Record.totalProjectCost
-
-//             //find amount locked for the project
-
-//             let queryString1 = {
-//                 "selector": {
-//                     "project": message[i].Key,
-//                     "docType": "EscrowDetails"
-//                 },
-//                 "fields": [
-//                     "funds"
-//                 ]
-//             }
-//             let args1 = JSON.stringify(queryString1)
-
-//             let message1 = await query.main(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args1);
-
-//             message1 = JSON.parse(message1.toString());
-
-//             message1.forEach(elem => {
-//                 elem['Record'] = JSON.parse(elem['Record'])
-//             })
-
-//             logger.debug(`response :  ${JSON.stringify(message1, null, 2)}`)
-
-//             let result = 0
-
-//             message1.forEach(e => {
-//                 e.Record.funds.forEach(f => {
-//                     result += f.qty
-//                 })
-//             })
-//             obj.locked = result
-//             obj.projectId = message[i].Key
-
-//             //get current phase details
-
-//             let amountCollected = 0
-//             for (let j = 0; j < message[i].Record.phases.length; j++) {
-
-//                 if (message[i].Record.phases[j].phaseState == "Complete") {
-//                     amountCollected += message[i].Record.phases[j].qty - message[i].Record.phases[j].outstandingQty
-//                     continue
-//                 }
-
-//                 if (message[i].Record.phases[j].phaseState != "Complete") {
-//                     amountCollected += message[i].Record.phases[j].qty - message[i].Record.phases[j].outstandingQty
-//                     let phase = new Object()
-//                     phase.phaseNumber = j
-//                     phase.endDate = message[i].Record.phases[j].endDate
-//                     phase.qty = message[i].Record.phases[j].qty
-//                     phase.outstandingQty = message[i].Record.phases[j].outstandingQty
-//                     phase.phaseState = message[i].Record.phases[j].phaseState
-//                     obj.phase = phase
-
-//                     break
-//                 }
-//             }
-//             obj.amountCollected = amountCollected
-//             response.push(obj)
-//         }
-//         return res.json({ ...getMessage(true, 'CommonQuery successful'), 'records': response })
-//     }
-//     catch (e) {
-//         generateError(e, next)
-//     }
-// });
-
 router.get('/ngo-project-transactions', async (req, res, next) => {
     logger.debug('==================== QUERY BY CHAINCODE: getNgoProjectTx ==================')
 
@@ -968,21 +570,6 @@ router.get('/ngo-project-transactions', async (req, res, next) => {
     if (!CHANNEL_NAME) {
         return res.json(fieldErrorMessage('\'channelName\''));
     }
-    // if (!projectId) {
-    //     return res.json(fieldErrorMessage('\'projectId\''));
-    // }
-
-    // let regex = projectId + "$";
-    // let queryString = {
-    //     "selector": {
-    //         "docType": "Transaction",
-    //         "to": orgDLTName,
-    //         "objRef": {
-    //             "$regex": regex
-    //         }
-    //     },
-    //     "sort": [{ "date": "desc" }]
-    // }
 
     let queryString = {
         "selector": {
@@ -1010,9 +597,7 @@ router.get('/ngo-project-transactions', async (req, res, next) => {
         message = JSON.parse(message.toString());
 
         let projectMemory = {}
-        if (!projectId) {
-            console.log("inside not projectid")
-            // var mongoProject = await projectService.getProjectsNGO(req.userName)
+        if (!projectId) {     
             var mongoProject = await projectModel.find({ ngo: req.userName }, { _id: 0, projectId: 1, projectName: 1, projectType: 1 })
 
             for (let d = 0; d < mongoProject.length; d++) {
@@ -1043,9 +628,7 @@ router.get('/ngo-project-transactions', async (req, res, next) => {
 });
 
 router.get('/transactions', async (req, res, next) => {
-    logger.debug('==================== QUERY BY CHAINCODE: projectIdTransaction ==================');
     const projectId = req.query.projectId
-
     logger.debug('projectId : ' + projectId);
 
     if (!CHAINCODE_NAME) {
@@ -1131,7 +714,6 @@ router.get('/getCorporateProjectDetails', async (req, res, next) => {
             let response = {}
             logger.debug(e["Record"]);
             let endDate = 0;
-            // response["totalReceived"] = 0;
             response["totalReceived"] = e["Record"]["totalReceived"]
             response["ourContribution"] = 0;
 
@@ -1140,9 +722,6 @@ router.get('/getCorporateProjectDetails', async (req, res, next) => {
             }
 
             for (let f = 0; f < e["Record"].phases.length; f++) {
-                //response["totalReceived"] += (e["Record"].phases[f]["qty"] - e["Record"].phases[f]["outstandingQty"])
-
-                // if (e["Record"].phases[f]["phaseState"] !== "Created" && e["Record"].phases[f]["phaseState"] !== "Complete") {
                 if (e["Record"].phases[f]["phaseState"] !== "Created") {
                     response["currentPhase"] = f + 1;
                     response["currentPhaseStatus"] = e["Record"].phases[f]["phaseState"];
@@ -1236,16 +815,10 @@ router.post('/delete', async (req, res, next) => {
 
 // get all projects by status
 router.get('/get-allprojects', async (req, res, next) => {
-    logger.debug('==================== QUERY BY CHAINCODE: getAllProjects ==================');
-
-    // ca, ngo, corporate
-    // place, projectType, approvalState, projectState, no. of contributors (mongo), funding progress, days until start
-
     const orgDLTName = req.userName + "." + orgMap[req.orgName.toLowerCase()] + "." + BLOCKCHAIN_DOMAIN + ".com";
     const pageSize = req.query.pageSize;
     const bookmark = req.query.bookmark;
     const status = decodeURIComponent(req.query.projectStatus);
-    // const validated = req.query.validated
     const projectType = req.query.projectType;
     const place = req.query.place;
 
@@ -1261,13 +834,6 @@ router.get('/get-allprojects', async (req, res, next) => {
     if (!status) {
         return res.json(fieldErrorMessage('\'status\''));
     }
-
-    // let queryS = {
-    //     "selector": {
-    //         "docType": "Project",
-    //         "projectState": "Seeking Validation"
-    //     }
-    // }
 
     let queryString = {
         "selector": {
@@ -1299,11 +865,6 @@ router.get('/get-allprojects', async (req, res, next) => {
     let args = [JSON.stringify(queryString), pageSize, bookmark];
     args = JSON.stringify(args);
 
-    // if (validated === true) {
-    //     args = [JSON.stringify(queryS), pageSize, bookmark];
-    //     args = JSON.stringify(args);
-    // }
-
     try {
         let message = await query.main(req.userName, req.orgName, "CommonQueryPagination", CHAINCODE_NAME, CHANNEL_NAME, args);
         message = JSON.parse(message.toString());
@@ -1312,13 +873,10 @@ router.get('/get-allprojects', async (req, res, next) => {
             return res.json(getMessage(false, errorMessage))
         }
         else {
-            // let responseMetaObj = new Object()
             message['Results'].forEach(elem => {
                 elem['Record'] = JSON.parse(elem['Record'])
             })
             let newObject = message['Results'];
-            // newObject.success = true
-
             let finalResponse = {}
             let allRecords = []
 
@@ -1334,7 +892,6 @@ router.get('/get-allprojects', async (req, res, next) => {
                 logger.debug(`Project ${i} : ${JSON.stringify(record, null, 2)}`);
 
                 let response = {}
-                // response["totalReceived"] = 0;
                 response["totalReceived"] = record.totalReceived;
                 response["ourContribution"] = 0;
 
@@ -1348,8 +905,6 @@ router.get('/get-allprojects', async (req, res, next) => {
                     let phaseOutstandingQty = record.phases[f]["outstandingQty"]
 
                     response["totalReceived"] += (phaseQty - phaseOutstandingQty)
-
-                    // if (record.phases[f]["phaseState"] !== "Created" && record.phases[f]["phaseState"] !== "Complete") {
                     if (record.phases[f]["phaseState"] !== "Created") {
                         currentPhase = f
                     }
@@ -1404,12 +959,7 @@ router.get('/get-allprojects', async (req, res, next) => {
 
 // get all filtered projects by status,place, projectType, approvalState, projectState,
 router.get('/filtered-projects', async (req, res, next) => {
-    logger.debug('==================== QUERY BY CHAINCODE: filtered-projects ==================');
-
-    // ca, ngo, corporate
-    // place, projectType, approvalState, projectState, no. of contributors (mongo), funding progress, days until start
     const orgDLTName = req.userName + "." + orgMap[req.orgName.toLowerCase()] + "." + BLOCKCHAIN_DOMAIN + ".com";
-
     const self = req.query.self;
     const applyFilter = req.query.applyFilter;
     const pageSize = req.query.pageSize;
@@ -1534,11 +1084,6 @@ router.get('/filtered-projects', async (req, res, next) => {
 
                 let currentPhase = 0;
                 for (let f = 0; f < response.phases.length; f++) {
-                    // let phaseQty = response.phases[f]["qty"];
-                    // let phaseOutstandingQty = response.phases[f]["outstandingQty"]
-
-                    // response["totalReceived"] += (phaseQty - phaseOutstandingQty)
-
                     if (response.phases[f]["phaseState"] !== "Created") {
                         currentPhase = f
                     }
@@ -1552,9 +1097,6 @@ router.get('/filtered-projects', async (req, res, next) => {
                 response['projectId'] = newObject[i]['Key']
                 response['contributors'] = Object.keys(response['contributors']).map(splitOrgName)
                 response['ngo'] = splitOrgName(response['ngo'])
-                // response['totalProjectCost'] = response['totalProjectCost']
-                // response['projectName'] = response['projectName']
-                // response['projectType'] = response['projectType']
                 response['totalPhases'] = response.phases.length
                 response["percentageFundReceived"] = (response["totalReceived"] / response['totalProjectCost']) * 100;
 
@@ -1636,8 +1178,6 @@ router.put('/abandon', async (req, res, next) => {
 
 //****************************** Edit Project *******************************
 router.put('/edit', async (req, res, next) => {
-
-    //extract parameters from request body.
     const projectId = req.body.projectId;
     const projectdetails = req.body.mongo;
     const projectblock = req.body.blockchain;
@@ -1658,9 +1198,6 @@ router.put('/edit', async (req, res, next) => {
 
     try {
         await invoke.main(req.userName, req.orgName, "EditProject", CHAINCODE_NAME, CHANNEL_NAME, args);
-        logger.debug('Successfully invoked EditProject')
-        // return res.json(getMessage(true, 'Successfully invoked EditProject'));
-
         let queryString = {
             "selector": {
                 "_id": projectId
@@ -1685,7 +1222,7 @@ router.put('/edit', async (req, res, next) => {
                     for (let f = 0; f < message['Record'].phases.length; f++) {
 
                         if (message["Record"].phases[f]["phaseState"] !== "Validated") {
-                            // message["Record"]["currentPhase"] = f;
+
                             currentPhaseNum = f;
                             break;
                         }
@@ -1703,8 +1240,6 @@ router.put('/edit', async (req, res, next) => {
         }
         projectService.editProject(projectId, projectdetails, currentPhaseNum)
             .then((data) => {
-                console.log(data)
-                logger.debug('Mongo edit project success')
                 return res.json(getMessage(true, "Edit project successfully"))
             })
             .catch(err => {
@@ -1738,7 +1273,6 @@ router.post('/initiate', async (req, res, next) => {
         await invoke.main(req.userName, req.orgName, "UpdateActualStartDate", CHAINCODE_NAME, CHANNEL_NAME, args);
         commonService.projectInitiation(projectId, req.userName, req.orgName)
             .then((data) => {
-                //res.json(data)
                 logger.info('email sent')
             })
             .catch(err => {
@@ -1790,7 +1324,6 @@ router.get('/userProfile/transactions', async (req, res, next) => {
         queryString['selector']['from'] = corporate + "." + orgMap['corporate'] + "." + BLOCKCHAIN_DOMAIN + ".com"
     }
     if (projectId) {
-        // queryString['selector']['objRef'] = projectId
         queryString['selector']['objRef'] = { '$regex': projectId }
         console.log("query: ", queryString)
     }

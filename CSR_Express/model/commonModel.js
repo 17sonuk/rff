@@ -57,23 +57,8 @@ commonModel.getCommunity = async (communityId) => {
         throw err
     })
 }
-// commonModel.getCommunity = async (name, place) => {
-//     let res = await communityModel.findOne({ $and: [{ name: name }, { place: place }] });
-//     if (res) {
-//         if (res.paymentDetails) {
-//             return res.paymentDetails
-//         } else {
-//             return null
-//         }
-//     } else {
-//         let err = new Error("Community does not exist")
-//         err.status = 500
-//         throw err
-//     }
-// }
 
 commonModel.deleteCommunities = async (communityIds) => {
-    // let myquery = { _id: { $in: communityIds } };
     return communityModel.deleteMany({ _id: { $in: communityIds } })
         .then(data => {
             console.log('deleted response:', data)

@@ -2,9 +2,7 @@ const chai = require('chai');
 const { expect } = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised)
-
 const { connectionToMongo, connectToMongo, disconnectMongo } = require('../../model/connection')
-
 const projectModel = require('../../model/projectModel');
 
 const testProject = {
@@ -44,7 +42,6 @@ describe('TESTING PROJECT MODEL - CREATE', () => {
         connectionToMongo('_test');
         done();
     })
-
     after((done) => {
         disconnectMongo()
             .then(() => {
@@ -53,7 +50,6 @@ describe('TESTING PROJECT MODEL - CREATE', () => {
             })
             .catch((err) => done(err))
     })
-
     it('testing response for createProject', async () => {
         const projectDetails = testProject;
         const res = await projectModel.createProject(projectDetails);
@@ -62,39 +58,33 @@ describe('TESTING PROJECT MODEL - CREATE', () => {
 
     it('testing if project already exists in mongo', async () => {
         const projectDetails = testProject;
-
         const res = await projectModel.createProject(projectDetails);
         expect(res).to.be.a('object');
         expect(res.error).to.equal(true);
     });
 
     it('testing get all ngo projects in mongo', async () => {
-
         const res = await projectModel.getAllProjectsNgo('ngo1');
         expect(res).to.be.a('array');
         expect(res).to.have.lengthOf(1);
-
         const res1 = await projectModel.getAllProjectsNgo('wrong_ngo');
         expect(res1).to.be.a('array');
         expect(res1).to.have.lengthOf(0);
     });
 
     it('testing get all projects donated by corp in mongo', async () => {
-
         const res = await projectModel.getProjectsCorporate('corp101');
         expect(res).to.be.a('array');
         expect(res).to.have.lengthOf(0);
     });
 
     it('testing get all projects in mongo', async () => {
-
         const res = await projectModel.getAllProjects();
         expect(res).to.be.a('array');
         expect(res).to.have.lengthOf(1);
     });
 
     it('testing get project by id in mongo', async () => {
-
         const res = await projectModel.getProjectById('p01');
         expect(res).to.be.a('object');
     });
@@ -103,7 +93,6 @@ describe('TESTING PROJECT MODEL - CREATE', () => {
         const res = await projectModel.addContributor('p01', 'corp1');
         expect(res).to.be.a('object');
         expect(res.message).to.equal('Contributor added successfully');
-
         const res1 = await projectModel.getProjectsCorporate('corp1');
         expect(res1).to.be.a('array');
         expect(res1).to.have.lengthOf(1);

@@ -8,15 +8,12 @@ const registerUser = require('../../fabric-sdk/registerUser');
 const abc = {
     registerUser: registerUser
 }
-const sinon = require("sinon");
 const app = require('../../app')
 chai.use(chaiAsPromised)
 var sandbox = require("sinon").createSandbox();
 require('dotenv').config();
 const { JWT_EXPIRY, TOKEN_SECRET, CA_EMAIL, IT_EMAIL, GUEST_EMAIL } = process.env;
 var jwt = require('jsonwebtoken');
-const { createSandbox } = require('sinon');
-var auth;
 
 
 describe('USER ROUTER - ONBOARD API', () => {

@@ -1,11 +1,6 @@
-const logger = require('../loggers/logger');
-
 const projectModel = require('../model/projectModel');
 const userModel = require('../model/userModel');
-
 const projectService = {};
-
-logger.debug('<<<<<<<<<<<<<< project service >>>>>>>>>>>>>>>>>')
 
 //Create project
 projectService.createProject = (userName, project) => {
@@ -14,7 +9,6 @@ projectService.createProject = (userName, project) => {
             project.orgName = data;
             return projectModel.createProject(project).then(projectData => {
                 if (projectData && projectData.error === true) {
-
                     return { success: false, message: projectData.message };
                 }
                 else if (!projectData) {
@@ -126,7 +120,6 @@ projectService.updateProjectForApproval = async (projectId, projectObj) => {
         return await projectModel.updateProjectForApproval(projectId, projectObj)
     }
     catch (error) {
-        console.log(error)
         let err = new Error("Approval failed!")
         err.status = 500
         throw err
@@ -136,11 +129,9 @@ projectService.updateProjectForApproval = async (projectId, projectObj) => {
 //edit project
 projectService.editProject = async (projectId, projectObj, currentPhaseNum) => {
     try {
-
         return await projectModel.editProject(projectId, projectObj, currentPhaseNum)
     }
     catch (error) {
-        console.log(error)
         let err = new Error("Edit failed!")
         err.status = 500
         throw err
@@ -149,7 +140,6 @@ projectService.editProject = async (projectId, projectObj, currentPhaseNum) => {
 
 //get country and category filters
 projectService.getFilters = (userName, orgName) => {
-    console.log('service')
     return projectModel.getFilters(userName, orgName).then(data => {
         if (data) {
             return data;

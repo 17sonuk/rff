@@ -10,11 +10,6 @@ import (
 
 	"github.com/hyperledger/fabric-protos-go/ledger/queryresult"
 	"github.com/stretchr/testify/require"
-	// "github.com/hyperledger/fabric-chaincode-go/pkg/cid"
-	// "github.com/hyperledger/fabric-chaincode-go/shim"
-	// "github.com/hyperledger/fabric-contract-api-go/contractapi"
-	// "github.com/hyperledger/fabric-samples/tree/v2.2.2/asset-transfer-private-data/chaincode-go/chaincode/mocks"
-	// "github.com/hyperledger/fabric-samples/asset-transfer-basic/chaincode-go/chaincode/mocks"
 )
 
 const ngoMsp2 = "NgoMSP"

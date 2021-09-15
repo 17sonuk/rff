@@ -1,11 +1,7 @@
 const express = require('express')
-const FormData = require('form-data');
 const router = express.Router()
-
 const fileService = require('../../service/fileService');
 const { fieldErrorMessage, generateError } = require('../../utils/functions');
-const logger = require('../../loggers/logger');
-
 
 router.get("/getfile", (req, res, next) => {
     if (!req.query.fileHash) {
@@ -21,8 +17,6 @@ router.get("/getfile", (req, res, next) => {
 router.post("/upload", async (req, res, next) => {
 
     let e = new Error('');
-    console.log('after error!!!')
-
     if (!req.files || !req.files.uploadedFile) {
         e.message = 'Please Upload a File';
         e.status = 400;
@@ -38,9 +32,6 @@ router.post("/upload", async (req, res, next) => {
 
     try {
         const isValidFile = await fileService.checkFormat(file.fileName, file.fileData.toString('base64'), file.fileSize, req.files.uploadedFile.mimetype);
-
-        console.log("is file valid?: ", isValidFile)
-
         if (isValidFile) {
             try {
                 const data = await fileService.insertFile(req.files.uploadedFile, file["fileHash"]);

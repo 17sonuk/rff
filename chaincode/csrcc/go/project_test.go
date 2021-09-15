@@ -10,11 +10,6 @@ import (
 
 	"github.com/hyperledger/fabric-protos-go/ledger/queryresult"
 	"github.com/stretchr/testify/require"
-	// "github.com/hyperledger/fabric-chaincode-go/pkg/cid"
-	// "github.com/hyperledger/fabric-chaincode-go/shim"
-	// "github.com/hyperledger/fabric-contract-api-go/contractapi"
-	// "github.com/hyperledger/fabric-samples/tree/v2.2.2/asset-transfer-private-data/chaincode-go/chaincode/mocks"
-	// "github.com/hyperledger/fabric-samples/asset-transfer-basic/chaincode-go/chaincode/mocks"
 )
 
 const ngoMsp = "NgoMSP"
@@ -713,14 +708,6 @@ func TestValidatePhase(test *testing.T) {
 			ValidationCriteria: map[string][]main.Criterion{"o1": crite},
 			CAValidation:       val,
 		},
-		// {Qty: 5000,
-		// 	OutstandingQty:     1000,
-		// 	PhaseState:         "Seeking Validation",
-		// 	StartDate:          20,
-		// 	EndDate:            30,
-		// 	ValidationCriteria: map[string][]main.Criterion{"o1": crite},
-		// 	CAValidation:       val,
-		// },
 	}
 	projObj02 := main.Project{
 		ObjectType:       "Project",
@@ -754,14 +741,6 @@ func TestValidatePhase(test *testing.T) {
 			ValidationCriteria: map[string][]main.Criterion{"o1": crite},
 			CAValidation:       val,
 		},
-		// {Qty: 5000,
-		// 	OutstandingQty:     1000,
-		// 	PhaseState:         "Seeking Validation",
-		// 	StartDate:          20,
-		// 	EndDate:            300,
-		// 	ValidationCriteria: map[string][]main.Criterion{"o1": crite},
-		// 	CAValidation:       val,
-		// },
 	}
 	projObj03 := main.Project{
 		ObjectType:       "Project",

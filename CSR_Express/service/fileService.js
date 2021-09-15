@@ -33,11 +33,8 @@ fileService.insertFile = (file, fileHash) => {
         // Uploading files to the bucket
         s3.upload(params, function (err, data) {
             if (err) {
-                console.log(err);
                 reject(err);
             }
-            console.log('s3 upload success!!!')
-            console.log(data);
             let insertFileResponse = {
                 fileName: file.name,
                 fileHash: fileHash,
@@ -46,50 +43,6 @@ fileService.insertFile = (file, fileHash) => {
             resolve(insertFileResponse)
         });
     })
-    // return fileModel.findOne({ fileHash: file.fileHash })
-    //     .then(data => {
-    //         if (data) {
-    //             let getUploadFileResponse = {
-    //                 fileHash: data.fileHash
-    //             }
-    //             return getUploadFileResponse
-    //         }
-    //         else {
-    //             // return fileModel.create({ fileName: file.fileName, fileData: file.fileData, fileHash: file.fileHash, fileSize: file.fileSize })
-    //             //     .then(data => {
-    //             //         let InsertFileResponse = {
-    //             //             fileName: data.fileName,
-    //             //             fileHash: data.fileHash,
-    //             //             fileSize: data.fileSize
-    //             //         }
-    //             //         return InsertFileResponse
-    //             //     })
-    //             //     .catch(err => {
-    //             //         err = new Error("Not able to save the file in DB")
-    //             //         err.status = 400
-    //             //         throw err
-    //             //     })
-
-    //             // exports.upload = (req, res, next) => {
-    //             //     var tmp_path = req.files.file.path;
-    //             //     // console.log("item", req.files.file)
-    //             //     var tmp_path = req.files.file.path;
-    //             //     image = fs.createReadStream(tmp_path);
-    //             //     imageName = req.files.file.name;
-    //             //     async.series([
-    //             //         createMainBucket,
-    //             //         createItemObject
-    //             //     ], (err, result) => {
-    //             //         if (err) return res.send(err)
-    //             //         else return res.json({ message: "Successfully uploaded" })
-    //             //     })
-    //             // }
-
-    //         }
-    //     })
-    //     .catch(err => {
-    //         return err
-    //     })
 }
 
 fileService.getFiles = (fileHash) => {
@@ -108,7 +61,6 @@ fileService.getFiles = (fileHash) => {
 
         s3.getObject(params, function (err, data) {
             if (err) {
-                console.log(err, err.stack); // an error occurred
                 reject(err)
             }
 
@@ -119,26 +71,6 @@ fileService.getFiles = (fileHash) => {
             resolve(getFileResponse)
         });
     });
-
-    // return fileModel.findOne({ fileHash: fileHash })
-    //     .then(data => {
-    //         if (data) {
-    //             let getFileResponse = {
-    //                 fileName: data.fileName,
-    //                 fileData: data.fileData
-    //             }
-    //             return getFileResponse
-    //         }
-    //         else {
-    //             let err = new Error("File does not exist")
-    //             err.status = 400
-    //             delete err.stack;
-    //             return Promise.reject(err)
-    //         }
-    //     })
-    //     .catch(err => {
-    //         return Promise.reject(err)
-    //     })
 }
 
 fileService.virusScan = (req, res, next) => {
@@ -149,8 +81,6 @@ fileService.virusScan = (req, res, next) => {
     }
 
     const inputFile = req.files.uploadedFile
-    // logger.debug(`FormData: ${JSON.stringify(inputFile, null, 2)}`);
-
     var bodyFormData = new FormData();
     bodyFormData.append('inputFile', inputFile.data, inputFile.name);
     bodyFormData.append('async', 'false');
@@ -165,10 +95,7 @@ fileService.virusScan = (req, res, next) => {
         },
         data: bodyFormData
     }).then(response => {
-        logger.debug(`Scan report: ${JSON.stringify(response.data, null, 2)}`);
-        // logger.info(response.data);
         if (response.data.status === "File is clean") {
-            logger.debug("========== Virus Scan Success =========")
             next()
         } else {
             let e = new Error('Infected file');
@@ -176,7 +103,6 @@ fileService.virusScan = (req, res, next) => {
             return generateError(e, next)
         }
     }).catch(error => {
-        logger.error(error)
         let e = new Error('File scan failed. Please try again!');
         e.status = 500;
         return generateError(e, next)
@@ -213,7 +139,6 @@ fileService.checkFormat = async (fileName, fileData, fileSize, mimeType) => {
                 reject(new Error("Invalid file format!!!"));
             }
 
-            console.log('file mime: ' + result);
             if (mimeType == result) {
                 resolve(true)
             } else {

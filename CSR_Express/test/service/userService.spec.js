@@ -3,21 +3,16 @@ const { expect } = require('chai');
 var sandbox = require("sinon").createSandbox();
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised)
-const sinon = require("sinon");
-
 const userService = require('../../service/userService');
 const userModel = require('../../model/userModel');
 
 describe('TESTING USER SERVICE - REGISTER', () => {
-    // let sandbox = "";
     let mockObj = ""
     beforeEach(() => {
-        // sandbox = sinon.createSandbox();
         mockObj = sandbox.stub(userModel, 'registerUser');
     });
 
     afterEach(() => {
-        // sandbox.restore();
         mockObj.restore();
     });
 
@@ -48,11 +43,8 @@ describe('TESTING USER SERVICE - REGISTER', () => {
                 }
             ]
         }
-        // let mockObj = sandbox.stub(userModel, 'registerUser').resolves('user successfully registered...');
-        // userService.registerUser(registerUserData).then(res => {
         mockObj.resolves('user successfully registered...');
         userService.registerUser(registerUserData).then(res => {
-            // sinon.assert.calledWith(registerUserData.status)
             expect(registerUserData.status).to.equal('created')
             expect(res).to.equal('user successfully registered...')
             userModel.registerUser.restore();
@@ -87,8 +79,6 @@ describe('TESTING USER SERVICE - REGISTER', () => {
                 }
             ]
         }
-        // let mockObj = sandbox.stub(userModel, 'registerUser').resolves('user successfully registered...');
-        // userService.registerUser(registerUserData).then(res => {
         mockObj.resolves('user successfully registered...');
         userService.registerUser(registerUserData).then(res => {
             expect(registerUserData.status).to.equal('approved')
@@ -188,7 +178,6 @@ describe('TESTING USER SERVICE - REGISTER', () => {
             userService.registerUser(registerUserData1).then(res => {
                 expect(registerUserData.status).to.equal('approved')
                 expect(res.message).to.equal('some address info is missing/invalid!')
-                // expect(userService.registerUser.bind(userService,registerUserData1)).to.throw(new Error('some address info is missing/invalid!'))
                 userModel.registerUser.restore()
             })
         }
@@ -317,13 +306,9 @@ describe('TESTING USER SERVICE - REGISTER', () => {
                 }
             ]
         }
-        mockObj.resolves('Donor type is missing/invalid!');
-        // userService.registerUser(registerUserData).then(res => {   
-        // let err = new Error('Donor type is missing/invalid!')
-        // err.status = 400  
+        mockObj.resolves('Donor type is missing/invalid!'); 
         expect(userService.registerUser.bind(userService, registerUserData)).to.throw('Donor type is missing/invalid!')
         userModel.registerUser.restore();
-        // })
         done()
     })
 
@@ -370,28 +355,15 @@ describe('TESTING USER SERVICE - REGISTER', () => {
 
 
 describe('TESTING USER SERVICE - GetUserDetails', () => {
-    // let sandbox = "";
     let mockObj = ""
     beforeEach(() => {
-        // sandbox = sinon.createSandbox();
         mockObj = sandbox.stub(userModel, 'getUserDetails');
     });
 
     afterEach(() => {
-        // sandbox.restore();
         mockObj.restore();
     });
 
-    // it('testing response for userName Validity', function (done) {
-    //     mockObj.resolves(null);
-    //     userService.checkUserNameValidty('ngo3').then(res => {
-    //         console.log("Response:", res)
-    //         expect(res).to.equal(true)
-    //         // console.log("tt",res===false)
-    //         userModel.getUserDetails.restore();
-    //     })
-    //     done()
-    // })
     it('testing response for userName Validity', async () => {
         mockObj.resolves(null);
         let res = await userService.checkUserNameValidty('ngo3')
@@ -428,14 +400,10 @@ describe('TESTING USER SERVICE - GetUserDetails', () => {
         }
 
         mockObj.resolves(registerUserData);
-        // expect(await userService.checkUserNameValidty('corp90')).to.eventually.be.rejectedWith("User already exists")
         try {
             let res = await userService.checkUserNameValidty('corp90')
-            // expect(res.message).to.equal("User already exists")
         } catch (err) {
-
             expect(err.message).to.equal("User already exists")
-
         }
         userModel.getUserDetails.restore();
     })
@@ -877,8 +845,6 @@ describe('TESTING USER SERVICE - Notification', () => {
         } catch (err) {
             expect(err.message).to.equal('Bad Connection')
         }
-
-
     })
 
 })
@@ -894,8 +860,6 @@ describe('TESTING USER SERVICE - TxDescription', () => {
     });
 
     it('testing response for Notification', async () => {
-
-
         const TxDesc = {
             txId: 't101',
             description: 'Desc'
@@ -914,10 +878,7 @@ describe('TESTING USER SERVICE - TxDescription', () => {
         } catch (err) {
             expect(err.message).to.equal('Bad Connection')
         }
-
-
     })
-
 })
 
 describe('TESTING USER SERVICE - getNotification', () => {

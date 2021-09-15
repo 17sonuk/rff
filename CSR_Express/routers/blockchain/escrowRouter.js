@@ -1,13 +1,9 @@
 require('dotenv').config();
 const { CHAINCODE_NAME, CHANNEL_NAME } = process.env;
-
 const express = require('express');
 const router = express.Router();
-
 const { v4: uuid } = require('uuid');
-const logger = require('../../loggers/logger');
 const invoke = require('../../fabric-sdk/invoke');
-
 const { fieldErrorMessage, generateError, getMessage } = require('../../utils/functions');
 
 router.post('/fund/reserve', async (req, res, next) => {
@@ -29,7 +25,6 @@ router.post('/fund/reserve', async (req, res, next) => {
     date.setHours(0, 0, 0)
 
     let args = [id, amount, Date.now().toString(), uuid().toString(), date.valueOf().toString()]
-    logger.debug('args  : ' + args);
     args = JSON.stringify(args);
 
     try {
@@ -58,7 +53,6 @@ router.post('/fund/release', async (req, res, next) => {
     }
 
     let args = [projectId, amount, Date.now().toString(), uuid().toString(), rating, reviewMsg, phaseNumber]
-    logger.debug('args  : ' + args);
     args = JSON.stringify(args);
 
     try {

@@ -3,15 +3,12 @@ const { expect } = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const request = require('supertest');
 const commonService = require('../../service/commonService');
-const sinon = require("sinon");
 const app = require('../../app')
 chai.use(chaiAsPromised)
 var sandbox = require("sinon").createSandbox();
 require('dotenv').config();
 const { JWT_EXPIRY, TOKEN_SECRET, CA_EMAIL, IT_EMAIL, GUEST_EMAIL } = process.env;
 var jwt = require('jsonwebtoken');
-const { createSandbox } = require('sinon');
-var auth;
 
 describe('COMMON ROUTER - community API', () => {
     let mockObj = ""

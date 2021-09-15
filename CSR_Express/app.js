@@ -43,16 +43,8 @@ const limiter = rateLimit({
         let error = new Error('................limit exceeded.....................');
         error.status = 200;
         next(error);
-        //res.status(429).send();
     },
 });
-//app.use(limiter);
-
-// app.options('*', cors());
-// app.use(cors({
-//     // origin: ['http://127.0.0.1:4200', 'https://127.0.0.1:4200', 'https://52.66.199.83:4000'],
-//     // credentials: true
-// }));
 
 app.options('*', cors());
 app.use(cors());
@@ -78,7 +70,6 @@ app.use((err, req, res, next) => {
     res.locals.error = NODE_ENV === 'development' ? err : {};
 
     // add this line to include winston logging
-    // logger.error(`${req.method} - ${req.ip} - ${req.originalUrl} - ${err.status || 500}\n${err.stack || err}`);
     logger.error(err.stack || err.message || err);
 
     // render the error page

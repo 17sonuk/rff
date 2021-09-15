@@ -7,16 +7,7 @@ import (
 	"testing"
 
 	mocks "csrcc/go/mocks"
-
-	// "chaincode/go/pkg/mod/github.com/stretchr/testify@v1.7.0/require"
-
-	// "github.com/hyperledger/fabric-chaincode-go/pkg/cid"
-	// "github.com/hyperledger/fabric-chaincode-go/shim"
-	// "github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/stretchr/testify/require"
-	// "github.com/hyperledger/fabric-samples/tree/v2.2.2/asset-transfer-private-data/chaincode-go/chaincode/mocks"
-	// "github.com/hyperledger/fabric-samples/asset-transfer-basic/chaincode-go/chaincode/mocks"
-	// "chaincode/go/pkg/mod/github.com/hyperledger/fabric-chaincode-go@v0.0.0-20210603161043-af0e3898842a/pkg/cid"
 )
 
 const ca3 = "CreditsAuthorityMSP"
@@ -177,15 +168,6 @@ func TestRequestTokens(test *testing.T) {
 
 	ex1, err = csr.RequestTokens(transactionContext, s)
 	require.EqualError(test, err, "only corporate can initiate requestTokens", ex1)
-
-	// transactionContext, chaincodeStub = prepMocksAsCorp()
-	// transactionContext.GetStubReturns(chaincodeStub)
-
-	// chaincodeStub.GetStateReturnsOnCall(0, nil, nil)
-	// chaincodeStub.GetStateReturnsOnCall(1, nil, nil)
-	// chaincodeStub.GetStateReturnsOnCall(2, []byte(txid), nil)
-	// ex1, errr := csr.RequestTokens(transactionContext, s)
-	// require.EqualError(test, errr, "Failed to add a Tx: ", ex1)
 }
 
 func TestTransferTokens(test *testing.T) {

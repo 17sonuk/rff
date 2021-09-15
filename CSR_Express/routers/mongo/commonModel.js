@@ -3,8 +3,6 @@ const { orgModel, communityModel, donorModel } = require('./models');
 
 const commonModel = {}
 
-logger.debug('<<<<<<<<<<<<<< common model >>>>>>>>>>>>>>>>>');
-
 // upload Balance Sheet for corporate
 commonModel.uploadBalanceSheet = (userName, file) => {
     return orgModel.updateOne({ userName: userName, role: 'Corporate' }, { $push: { file: file } }).then(data => {
@@ -20,12 +18,10 @@ commonModel.saveCommunities = async (communityArr) => {
     let finalList = [];
     for (let i = 0; i < communityArr.length; i++) {
         let res = await communityModel.findOne({ $and: [{ name: communityArr[i].name }, { place: communityArr[i].place }] });
-        console.log('community res:', res);
         if (!res) {
             finalList.push(communityArr[i]);
         }
     }
-    console.log('finalList: ', finalList)
     return communityModel.insertMany(finalList).then(data => {
         if (data) {
             return data
@@ -44,7 +40,6 @@ commonModel.getCommunities = () => {
 commonModel.getCommunity = (communityId) => {
     return communityModel.findOne({ _id: communityId })
         .then(data => {
-            console.log('community data', data);
             return data;
         })
         .catch(err => {
@@ -57,7 +52,6 @@ commonModel.getCommunity = (communityId) => {
 commonModel.getCommunityByNameAndPlace = (name, place) => {
     return communityModel.findOne({ $and: [{ name: name }, { place: place }] })
         .then(data => {
-            console.log('community data', data);
             return data;
         })
         .catch(err => {
@@ -68,10 +62,8 @@ commonModel.getCommunityByNameAndPlace = (name, place) => {
 }
 
 commonModel.deleteCommunities = async (communityIds) => {
-    // let myquery = { _id: { $in: communityIds } };
     return communityModel.deleteMany({ _id: { $in: communityIds } })
         .then(data => {
-            console.log('deleted response:', data)
             return data;
         })
         .catch(err => {

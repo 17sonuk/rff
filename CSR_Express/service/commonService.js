@@ -9,10 +9,9 @@ const mongoProjectService = require('../service/projectService');
 const { orgModel } = require('../model/models');
 const nodemailer = require('nodemailer');
 const moment = require('moment');
-const { v4: uuid } = require('uuid');
 const { SMTP_EMAIL, APP_PASSWORD, CHAINCODE_NAME, CHANNEL_NAME, PLATFORM_NAME } = process.env;
 const query = require('../fabric-sdk/query');
-const { fieldErrorMessage, generateError, getMessage, splitOrgName } = require('../utils/functions');
+const { splitOrgName } = require('../utils/functions');
 
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
@@ -25,8 +24,6 @@ const transporter = nodemailer.createTransport({
 
 const commonService = {};
 
-logger.debug('<<<<<<<<<<<<<< common service >>>>>>>>>>>>>>>>>');
-
 // upload Balance sheet:
 commonService.uploadBalanceSheet = (file) => {
     return commonModel.uploadBalanceSheet(file).then(data => {
@@ -38,7 +35,6 @@ commonService.uploadBalanceSheet = (file) => {
 commonService.saveCommunities = (communityArr) => {
     return commonModel.saveCommunities(communityArr).then(data => {
         if (data) return data;
-
         let err = new Error("Bad Connection")
         err.status = 500
         throw err
@@ -48,7 +44,6 @@ commonService.saveCommunities = (communityArr) => {
 commonService.getCommunities = () => {
     return commonModel.getCommunities().then(data => {
         if (data) return data;
-
         let err = new Error("Bad Connection")
         err.status = 500
         throw err
@@ -69,22 +64,9 @@ commonService.getCommunity = async (communityId) => {
     })
 }
 
-// commonService.getCommunityByNameAndPlace = (name, place) => {
-//     return commonModel.getCommunityByNameAndPlace (name, place).then(data => {
-//         if (data) {
-//             return data;
-//         } else {
-//             let err = new Error("No payment details stored for this community")
-//             err.status = 500
-//             throw err
-//         }
-//     })
-// }
-
 commonService.deleteCommunities = (communityIds) => {
     return commonModel.deleteCommunities(communityIds).then(data => {
         if (data) return data;
-
         let err = new Error("Bad Connection")
         err.status = 500
         throw err
@@ -94,7 +76,6 @@ commonService.deleteCommunities = (communityIds) => {
 commonService.saveDonor = (donor) => {
     return commonModel.saveDonor(donor).then(data => {
         if (data) return data;
-
         let err = new Error("Bad Connection")
         err.status = 500
         throw err
@@ -104,7 +85,6 @@ commonService.saveDonor = (donor) => {
 commonService.getDonors = () => {
     return commonModel.getDonors().then(data => {
         if (data) return data;
-
         let err = new Error("Bad Connection")
         err.status = 500
         throw err
@@ -113,9 +93,7 @@ commonService.getDonors = () => {
 
 commonService.updateCommunity = (communityId, name, place, paymentDetails) => {
     return commonModel.updateCommunity(communityId, name, place, paymentDetails).then(data => {
-        console.log("data in service :", data)
         if (data) return data;
-
         let err = new Error("Bad Connection")
         err.status = 500
         throw err
@@ -125,15 +103,12 @@ commonService.updateCommunity = (communityId, name, place, paymentDetails) => {
 
 commonService.getListedCommunity = (communityIds, orgName) => {
     return commonModel.getListedCommunity(communityIds, orgName).then(data => {
-        console.log("data in service :", data)
         if (data) return data;
-
         let err = new Error("No data found")
         err.status = 500
         throw err
 
     }).catch(er => {
-        console.log(er)
         let err = new Error("Bad Connection")
         err.status = 500
         throw err
@@ -144,7 +119,6 @@ commonService.getListedCommunity = (communityIds, orgName) => {
 commonService.getOrgDetails = (userName) => {
     return commonModel.getOrgDetails(userName).then(data => {
         if (data) return data;
-
         let err = new Error("No data found")
         err.status = 500
         throw err
@@ -173,11 +147,9 @@ commonService.sendEmailToDonor = async (email, name, amount, projectId, address)
 }
 
 commonService.projectInitiation = async (projectId, username, orgname) => {
-
     let projectData = await mongoProjectService.getProjectById(projectId)
     let projectName = projectData.projectName
     let desc = projectData.phases[0].description
-
     let emailList = await orgModel.find({ role: "Corporate" }, { _id: 0, email: 1, firstName: 1 })
 
     let queryString = {
@@ -196,20 +168,16 @@ commonService.projectInitiation = async (projectId, username, orgname) => {
     })
 
     const endDate = message[0]['Record'].phases[0].endDate
-    //var mydate = new Date(message[0]['Record'].phases[0].endDate);
 
     transporter.verify().then((data) => {
         for (i = 0; i < emailList.length; i++) {
             let htmlBody = initiateEmailTemplate.projectInitiationEmail(projectName, emailList[i].firstName, desc, moment(endDate).format('MMMM MM YYYY'))
-            console.log(data);
-            console.log('sending email to :', emailList[i].email);
             transporter.sendMail({
                 from: '"CSR Test Mail" <csr.rainforest@gmail.com', // sender address
                 to: emailList[i].email, // list of receivers
                 subject: `${projectName} has initiated work - stay tuned for project updates`, // Subject line
                 html: htmlBody, // html body
             }).then(info => {
-                //console.log({ info });
             }).catch(error => {
                 console.log(error)
             });
@@ -220,7 +188,6 @@ commonService.projectInitiation = async (projectId, username, orgname) => {
 commonService.getDonorEmailList = (contributors) => {
     return commonModel.getDonorEmailList(contributors).then(data => {
         if (data) return data;
-
         let err = new Error("No data found")
         err.status = 500
         throw err
@@ -265,6 +232,8 @@ commonService.ProjectCompletionEmail = async (projectId, username, orgname) => {
         amount += redeemMsg[i].Record.qty
     }
 
+
+
     if (message.length > 0) {
         if (message[0]['Record']['docType'] === 'Project') {
             message = message[0]
@@ -279,6 +248,7 @@ commonService.ProjectCompletionEmail = async (projectId, username, orgname) => {
                 let donorList = await orgModel.find({ userName: { $in: contributors } }, { _id: 0, email: 1, firstName: 1, orgName: 1, subRole: 1 })
                 if (donorList.length > 0) {
                     for (let i = 0; i < donorList.length; i++) {
+
                         let name = donorList[i].firstName
                         if (donorList[i].subRole === "Institution") {
                             name = donorList[i].orgName
@@ -287,14 +257,11 @@ commonService.ProjectCompletionEmail = async (projectId, username, orgname) => {
                         let htmlBody = await ProjCompletionTemplate.projectCompleteEmail(name, message['Record']['projectName'], amount, projectId)
 
                         transporter.verify().then((data) => {
-                            console.log(data);
                             transporter.sendMail({
                                 from: '"CSR Test Mail" <rainforest.csr@gmail.com', // sender address
                                 to: donorList[i].email, // list of receivers
                                 subject: `${PLATFORM_NAME}: ${message['Record']['projectName']} is successfully completed!`, // Subject line
                                 html: htmlBody, // html body
-                                // text: ` Hi, ${message['Record']['projectName']} is now completed, thanks for your contribution `, // plain text body
-                                // html: "<b>You have successfully onboarded to the CSR platform</b>", // html body
                             }).then(info => {
                                 console.log({ info });
                             }).catch(console.error);
@@ -314,8 +281,6 @@ commonService.MilestoneEmail = async (projectId, phaseNumber, username, orgname)
         }
     }
     let args = JSON.stringify(queryString)
-    logger.debug(`query string:\n ${args}`);
-
     let message = await query.main(username, orgname, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
     message = JSON.parse(message.toString());
 
@@ -334,7 +299,6 @@ commonService.MilestoneEmail = async (projectId, phaseNumber, username, orgname)
                     contributors.push(splitOrgName(key))
                 }
             }
-
             let donorList = await orgModel.find({ userName: { $in: contributors } }, { _id: 0, email: 1, firstName: 1, orgName: 1, subRole: 1 })
 
             if (donorList.length > 0) {
@@ -351,14 +315,11 @@ commonService.MilestoneEmail = async (projectId, phaseNumber, username, orgname)
                     let htmlBody = await MilestoneEmailTemplate.milestoneEmail(name, message['Record']['projectName'], amount, projectId, desc1)
 
                     transporter.verify().then((data) => {
-                        console.log(data);
                         transporter.sendMail({
                             from: '"CSR Test Mail" <rainforest.csr@gmail.com', // sender address
                             to: donorList[i].email, // list of receivers
                             subject: `${PLATFORM_NAME}: ${message['Record']['projectName']} successfully met a project milestone!`, // Subject line
                             html: htmlBody, // html body
-                            // text: ` Hi, ${message['Record']['projectName']} is now completed, thanks for your contribution `, // plain text body
-                            // html: "<b>You have successfully onboarded to the CSR platform</b>", // html body
                         }).then(info => {
                             console.log({ info });
                         }).catch(console.error);
@@ -369,24 +330,5 @@ commonService.MilestoneEmail = async (projectId, phaseNumber, username, orgname)
 
     }
 }
-
-// commonService.ProjectCompletionEmail = async (emails, platformName, projectName, amount) => {
-//     let htmlBody = await ProjCompletionTemplate.projectCompleteEmail(platformName, projectName, amount)
-
-//     transporter.verify().then((data) => {
-//         console.log(data);
-//         console.log('sending email to :', emails);
-//         transporter.sendMail({
-//             from: '"CSR Test Mail" <csr.rainforest@gmail.com', // sender address
-//             bcc: emails, // list of receivers
-//             subject: `${platformName}: ${projectName} is successfully completed!`, // Subject line
-//             html: htmlBody, // html body
-//             // text: ` Hi, ${message['Record']['projectName']} is now completed, thanks for your contribution `, // plain text body
-//             // html: "<b>You have successfully onboarded to the CSR platform</b>", // html body
-//         }).then(info => {
-//             console.log({ info });
-//         }).catch(console.error);
-//     }).catch(console.error);
-// }
 
 module.exports = commonService;

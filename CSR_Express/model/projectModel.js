@@ -1,10 +1,5 @@
-const logger = require('../loggers/logger');
-
 const { projectModel } = require('./models');
-
 const projectModelObj = {}
-
-logger.debug('<<<<<<<<<<<<<< project model >>>>>>>>>>>>>>>>>')
 
 //create a new project
 projectModelObj.createProject = (projectData) => {
@@ -22,7 +17,6 @@ projectModelObj.createProject = (projectData) => {
             })
         }
     })
-    // })
 }
 
 //get projects for ngo
@@ -92,36 +86,12 @@ projectModelObj.deleteProjectById = (projectId) => {
 
 //approval project update
 projectModelObj.updateProjectForApproval = async (projectId, projectObj) => {
-
-    // const session = await projectModel.startSession();
-    // session.startTransaction();
-
-    console.log('transaction started')
-
     try {
-        // const opts = { session };
 
         let updateRes = await projectModel.updateOne({ projectId: projectId }, { $set: projectObj });
-        console.log('update res: ', updateRes)
-
-        // const deleteResult = await projectModel.deleteOne({ projectId: projectId }, opts);
-        // console.log('deleted', deleteResult)
-
-        // const saveResult = await projectModel.create(projectObj, opts);
-        // console.log('approved', saveResult)
-        // // const saveResult = await projectModel(projectData).save(opts);
-
-        // console.log('transacrion end')
-        // await session.commitTransaction();
-        // session.endSession();
         return { success: true, message: 'project successfully approved' }
     }
     catch (error) {
-        console.log(error)
-        // If an error occurred, abort the whole transaction and
-        // undo any changes that might have happened
-        // await session.abortTransaction();
-        // session.endSession();
         throw error;
     }
 }

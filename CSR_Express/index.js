@@ -38,10 +38,6 @@ app.get('/test', (req, res, next) => {
     res.send('success!!!!!!!!!!')
 })
 
-// app.listen(PORT, () => {
-//     logger.info(`Express is running on port ${PORT}`);
-// });
-
 const credentials = { key: privateKey, cert: certificate }; // https
 
 const httpsServer = https.createServer(credentials, app); // https

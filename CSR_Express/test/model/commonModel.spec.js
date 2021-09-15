@@ -2,9 +2,7 @@ const chai = require('chai');
 const { expect } = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised)
-
 const { connectionToMongo, connectToMongo, disconnectMongo } = require('../../model/connection')
-
 const commonModel = require('../../model/commonModel');
 
 describe('TESTING COMMON MODEL', () => {
@@ -34,7 +32,6 @@ describe('TESTING COMMON MODEL', () => {
             place:"Test"
         }]
         const res = await commonModel.saveCommunities(communities);
-        console.log("Response345:",res)
         expect(res).to.have.lengthOf(1);
         expect(res[0].name).to.equal('TestUser')
         expect(res[0].place).to.equal('Test')
@@ -42,7 +39,6 @@ describe('TESTING COMMON MODEL', () => {
     
     it('testing response for getCommunities', async () => {
         const res = await commonModel.getCommunities();
-        console.log("Response:",res)
         expect(res).to.have.lengthOf(1);
         expect(res[0].name).to.equal('TestUser')
         expect(res[0].place).to.equal('Test')
@@ -54,7 +50,6 @@ describe('TESTING COMMON MODEL', () => {
             name: "Ngo"
         }
         const res = await commonModel.saveDonor(donor);
-        console.log("Response:",res)
         expect(res).to.be.a('object');
         expect(res.email).to.equal('ngo@ngo.com')
         expect(res.name).to.equal('Ngo')
@@ -86,7 +81,6 @@ describe('TESTING COMMON MODEL', () => {
     
     it('testing response for getDonors', async () => {
         const res = await commonModel.getDonors();
-        console.log("Response",res);
         expect(res[0].email).to.equal('ngo@ngo.com')
         expect(res[0].name).to.equal('Ngo')
     });

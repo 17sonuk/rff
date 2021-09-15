@@ -1,8 +1,6 @@
 require('dotenv').config();
 const { connect, disconnect, connection } = require('mongoose');
-
 const logger = require('../loggers/logger');
-
 const dbHost = process.env.DB_HOST || 'localhost';
 const dbPort = process.env.DB_PORT || '27017';
 const dbName = process.env.DB_NAME || 'CSR';

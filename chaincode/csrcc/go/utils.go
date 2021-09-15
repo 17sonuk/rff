@@ -1,19 +1,10 @@
 package main
 
 import (
-	//"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
-
-	//"encoding/pem"
-
 	"fmt"
 	"strings"
-
-	//"github.com/golang/protobuf/proto"
-
-	//"github.com/hyperledger/fabric-protos-go/msp"
-
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
@@ -52,7 +43,6 @@ func gqs(a []string) string {
 	for i := 0; i < len(a); i = i + 2 {
 		res = res + "\"" + a[i] + "\":\"" + a[i+1] + "\""
 		if i != len(a)-2 {
-			//InfoLogger.Printf(i)
 			res = res + ","
 		}
 	}
@@ -68,9 +58,6 @@ func getCorporates(ctx contractapi.TransactionContextInterface) []string {
 
 	if corporatesBytes != nil {
 		json.Unmarshal(corporatesBytes, &corporates)
-		// if err != nil {
-		// 	return false, fmt.Errorf(err.Error())
-		// }
 	}
 	return corporates
 }
@@ -133,28 +120,6 @@ func getTxCreatorInfo(ctx contractapi.TransactionContextInterface, creator []byt
 	strClientName := strings.Split(strArr2[0], "=")[1] //username
 
 	return clientMSPId, strClientName + mspMap[clientMSPId], nil
-
-	// var certASN1 *pem.Block
-	// var cert *x509.Certificate
-	// var err error
-
-	// creatorSerializedId := &msp.SerializedIdentity{}
-	// err = proto.Unmarshal(creator, creatorSerializedId)
-	// if err != nil {
-	// 	fmt.Printf("Error unmarshalling creator identity: " + err.Error())
-	// 	return "", "", err
-	// }
-
-	// if len(creatorSerializedId.IdBytes) == 0 {
-	// 	return "", "", errors.New("Empty certificate")
-	// }
-	// certASN1, _ = pem.Decode(creatorSerializedId.IdBytes)
-	// cert, err = x509.ParseCertificate(certASN1.Bytes)
-
-	// if err != nil {
-	// 	return "", "", err
-	// }
-	// return creatorSerializedId.Mspid, cert.Subject.CommonName + "." + cert.Issuer.Organization[0], nil
 }
 
 // add a corporate with Email

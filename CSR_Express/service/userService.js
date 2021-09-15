@@ -3,15 +3,12 @@ const bcrypt = require("bcrypt");
 const CryptoJS = require('crypto-js');
 const userModel = require('../model/userModel');
 const mongoError = require('../model/mongoError')
-
 const individualRegEmailTemplate = require('../email-templates/individualRegEmail');
 const institutionRegEmailTemplate = require('../email-templates/institutionRegEmail');
-
 const userService = {};
 const { v4: uuid } = require('uuid');
 require('dotenv').config();
 const { SMTP_EMAIL, APP_PASSWORD, PLATFORM_NAME } = process.env;
-
 const nodemailer = require('nodemailer');
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
@@ -21,8 +18,6 @@ const transporter = nodemailer.createTransport({
         pass: APP_PASSWORD,
     },
 });
-
-logger.debug('<<<<<<<<<<<<<< user service >>>>>>>>>>>>>>>>>')
 
 //Onboarding of user
 // mandatory fields
@@ -125,8 +120,6 @@ userService.registerUser = (obj) => {
     }
 
     obj['status'] = 'approved';
-
-    //obj['date'] = new Date().getTime();
     return userModel.registerUser(obj).then(data => {
         if (data) {
             if (data.success === false) {
@@ -193,11 +186,6 @@ userService.getUserRedeemAccount = (userName) => {
 userService.getUnapprovedUserDetails = () => {
     return userModel.getUnapprovedUserDetails().then(data => {
         if (data) {
-            // for (let i = 0; i < data.length; i++) {
-            //     data[i].pan = CryptoJS.AES.decrypt(data[i].pan, "Secret123PaN").toString(CryptoJS.enc.Utf8)
-            //     data[i].contact[0].number = CryptoJS.AES.decrypt((data[i].contact[0].number), "Secret123CoN").toString(CryptoJS.enc.Utf8)
-            // }
-
             return data;
         } else {
             let err = new Error("Bad Connection")
@@ -273,16 +261,6 @@ userService.rejectUser = (userName) => {
 userService.login = (email) => {
     return userModel.getUserDetails(email).then(data => {
         if (data) {
-            //check password
-            // if (password == null || password == undefined || password.length == 0) {
-            //     return { success: false, message: 'wrong credentials!' };
-            // }
-
-            // const result = bcrypt.compareSync(password, data['password']);
-
-            // if (result == false) {
-            //     return { success: false, message: 'wrong credentials!' };
-            // } else
             if (data['status'] == 'approved') {
                 let finalResponse = {
                     'success': true,
@@ -338,7 +316,6 @@ userService.getAmountFromBalanceSheet = (userName) => {
             } else if (j < 3) {
                 return { success: false, message: 'balance sheets are not avilable.' };
             }
-
         } else {
             return { success: false, message: 'not getting files from db' };
         }
@@ -513,15 +490,6 @@ userService.updateUserProfile = async (userName, profileData) => {
             }
         }
 
-        // use if phone number is mandatory
-        // if (profileData.paymentDetails.paymentType === 'Bank' && profileData.paymentDetails.bankDetails.bankPhone) {
-        //     if (!isPhoneValid(profileData.paymentDetails.bankDetails.bankPhone)) {
-        //     let err = new Error("Some phone details are empty")
-        //     err.status = 401
-        //     throw err
-        //     }
-        // }
-
         if (profileData.paymentDetails.paymentType === 'Bank' && !profileData.paymentDetails.bankDetails.bankPhone) {
             let err = new Error("Some phone details are empty")
             err.status = 401
@@ -579,15 +547,6 @@ userService.sendEmailForDonorRegistration = async (req) => {
 
         } catch (emailError) {
             console.error(emailError)
-            // if (registerError.status === 400) {
-            //     return generateError(registerError, next, 400, `${req.body.userName} is already registered in blockchain`);
-            // }
-            // try {
-            //     await userService.resetUserStatus(req.body.userName)
-
-            // } catch (resetStatusError) {
-            //     return generateError(resetStatusError, next);
-            // }
         }
     }
 }

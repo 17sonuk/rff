@@ -28,8 +28,6 @@ type CommonResponsePaginated struct {
 // Mango query: {"selector": {"type": "FundRequest"}}, PageSize: 10, Bookmark: 'sfdrr4wereaf'
 func (s *SmartContract) CommonQuery(ctx contractapi.TransactionContextInterface, queryString string) ([]CommonResponse, error) {
 
-	// InfoLogger.Printf("- common query queryString: ", queryString)
-
 	resultsIterator, err := ctx.GetStub().GetQueryResult(queryString)
 	if err != nil {
 		return nil, err
@@ -54,8 +52,6 @@ func (s *SmartContract) CommonQuery(ctx contractapi.TransactionContextInterface,
 
 func (s *SmartContract) CommonQueryPagination(ctx contractapi.TransactionContextInterface, arg string) (*CommonResponsePaginated, error) {
 
-	// InfoLogger.Printf("*****************CommonQueryPagination********************")
-
 	var args []string
 
 	err := json.Unmarshal([]byte(arg), &args)
@@ -68,9 +64,6 @@ func (s *SmartContract) CommonQueryPagination(ctx contractapi.TransactionContext
 	}
 
 	queryString := args[0]
-	// InfoLogger.Printf("QUERY STRING:", queryString)
-
-	//return type of ParseInt is int64
 	pageSize, err := strconv.ParseInt(args[1], 10, 32)
 	if err != nil || pageSize <= 0 {
 		return nil, fmt.Errorf("Invalid page size!")
@@ -82,8 +75,6 @@ func (s *SmartContract) CommonQueryPagination(ctx contractapi.TransactionContext
 		return nil, err
 	}
 	defer resultsIterator.Close()
-
-	// InfoLogger.Printf("RESPONSE METADATA")
 
 	commonResponsePaginated := new(CommonResponsePaginated)
 	commonResponsePaginated.RecordsCount = fmt.Sprintf("%v", responseMetadata.FetchedRecordsCount)
@@ -104,46 +95,8 @@ func (s *SmartContract) CommonQueryPagination(ctx contractapi.TransactionContext
 
 	commonResponsePaginated.Results = results
 
-	// InfoLogger.Printf("*****************CommonQueryPagination successful********************")
 	return commonResponsePaginated, nil
 }
-
-// func (s *SmartContract) QueryForSnapshot(ctx contractapi.TransactionContextInterface, arg string) ([]byte, error) {
-
-// 	var args []string
-
-// 	err := json.Unmarshal([]byte(arg), &args)
-// 	if err != nil {
-// 		return nil, fmt.Errorf(err.Error())
-// 	}
-
-// 	corporates := getCorporates(ctx)
-
-// 	var buffer bytes.Buffer
-// 	buffer.WriteString("[")
-// 	bArrayMemberAlreadyWritten := false
-
-// 	for _, corporate := range corporates {
-// 		qtyBytes, err := ctx.GetStub().GetState(corporate + "_snapshot")
-// 		if err != nil {
-// 			return nil, fmt.Errorf("Failed to get snapshot: " + err.Error())
-// 		}
-// 		tokenBalance := string(qtyBytes)
-
-// 		if bArrayMemberAlreadyWritten == true {
-// 			buffer.WriteString(",")
-// 		}
-// 		buffer.WriteString("{\"corporateName\":\"")
-// 		buffer.WriteString(corporate)
-// 		buffer.WriteString("\", \"balance\":")
-// 		buffer.WriteString(tokenBalance)
-// 		buffer.WriteString("}")
-// 		bArrayMemberAlreadyWritten = true
-// 	}
-// 	buffer.WriteString("]")
-
-// 	return buffer.Bytes(), nil
-// }
 
 //returns all transactions between 2 dates.
 func (s *SmartContract) QueryForTransactionRange(ctx contractapi.TransactionContextInterface, arg string) ([]byte, error) {
@@ -186,8 +139,6 @@ func (s *SmartContract) QueryForTransactionRange(ctx contractapi.TransactionCont
 
 func GetQueryResultForQueryString(ctx contractapi.TransactionContextInterface, queryString string) ([]byte, error) {
 
-	//InfoLogger.Printf("- getQueryResultForQueryString queryString:\n%s\n", queryString)
-
 	resultsIterator, err := ctx.GetStub().GetQueryResult(queryString)
 
 	if err != nil {
@@ -196,14 +147,12 @@ func GetQueryResultForQueryString(ctx contractapi.TransactionContextInterface, q
 	if resultsIterator != nil {
 		defer resultsIterator.Close()
 	}
-	//defer resultsIterator.Close()
 
 	buffer, err := ConstructQueryResponseFromIterator(resultsIterator)
 	if err != nil {
 		return nil, err
 	}
 
-	//InfoLogger.Printf("- getQueryResultForQueryString queryResult:\n%s\n", buffer.String())
 	return buffer.Bytes(), nil
 }
 
@@ -231,7 +180,6 @@ func ConstructQueryResponseFromIterator(resultsIterator shim.StateQueryIteratorI
 			buffer.WriteString("\"")
 
 			buffer.WriteString(", \"Record\":")
-			// Record is a JSON object, so we write as-is
 			buffer.WriteString(string(queryResponse.Value))
 			buffer.WriteString("}")
 			bArrayMemberAlreadyWritten = true
@@ -271,7 +219,6 @@ func TempConstructQueryResponseFromIterator(resultsIterator shim.StateQueryItera
 	for resultsIterator.HasNext() {
 		queryResponse, err := resultsIterator.Next()
 		InfoLogger.Printf("queryResponse")
-		//InfoLogger.Printf(queryResponse)
 		if err != nil {
 			return nil, err
 		}
@@ -279,16 +226,8 @@ func TempConstructQueryResponseFromIterator(resultsIterator shim.StateQueryItera
 		if bArrayMemberAlreadyWritten == true {
 			buffer.WriteString(",")
 		}
-		// buffer.WriteString("{\"Key\":")
-		// buffer.WriteString("\"")
-		// buffer.WriteString(queryResponse.Key)
-		// buffer.WriteString("\"")
-
-		//buffer.WriteString("{\"Record\":")
-		// Record is a JSON object, so we write as-is
 
 		buffer.WriteString(string(queryResponse.Value))
-		//buffer.WriteString("}")
 		bArrayMemberAlreadyWritten = true
 	}
 	buffer.WriteString("]")
@@ -298,13 +237,6 @@ func TempConstructQueryResponseFromIterator(resultsIterator shim.StateQueryItera
 
 func (s *SmartContract) GeneralQueryFunction(ctx contractapi.TransactionContextInterface, arg string) ([]byte, error) {
 	InfoLogger.Printf("*************** generalQueryFunction Started ***************")
-
-	// var args []string
-
-	// err := json.Unmarshal([]byte(arg), &args)
-	// if err != nil {
-	// 	return nil, fmt.Errorf(err.Error())
-	// }
 
 	queryString := arg
 
@@ -328,14 +260,11 @@ func (s *SmartContract) GeneralQueryFunctionPagination(ctx contractapi.Transacti
 		return nil, fmt.Errorf(err.Error())
 	}
 
-	//   0
-	// "queryString"
 	if len(args) < 3 {
 		return nil, fmt.Errorf("Incorrect number of arguments. Expecting 3")
 	}
 
 	queryString := args[0]
-	//return type of ParseInt is int64
 	pageSize, err := strconv.ParseInt(args[1], 10, 32)
 	if err != nil {
 		return nil, fmt.Errorf(err.Error())
@@ -442,7 +371,6 @@ func (s *SmartContract) QueryByKey(ctx contractapi.TransactionContextInterface, 
 
 ///to get balence of any org
 func (s *SmartContract) GetBalance(ctx contractapi.TransactionContextInterface) ([]byte, error) {
-	// InfoLogger.Printf("*************** getBalance Started ***************")
 
 	//getusercontext to populate the required data
 	creator, err := ctx.GetStub().GetCreator()
@@ -450,46 +378,19 @@ func (s *SmartContract) GetBalance(ctx contractapi.TransactionContextInterface) 
 		return nil, fmt.Errorf("Error getting transaction creator: " + err.Error())
 	}
 	_, commonName, _ := getTxCreatorInfo(ctx, creator)
-	//InfoLogger.Printf("current logged in user :", commonName, " with mspId :", mspId)
 
 	allBalances := make(map[string]float64)
 	amount := 0.0
 
 	tokenBalanceAsBytes, _ := ctx.GetStub().GetState(commonName)
-	// snapshotBalanceAsBytes, _ := ctx.GetStub().GetState(commonName + "_snapshot")
 
-	// //fetch all escrow funds
-	// queryString := fmt.Sprintf("{\"selector\":{\"docType\":\"EscrowDetails\", \"corporate\": \"%s\"}}", commonName)
-	// queryResults, err := GetQueryResultForQueryString(ctx, queryString)
-	// if err != nil {
-	// 	return nil, fmt.Errorf(err.Error())
-	// }
-	// InfoLogger.Printf("query result:", string(queryResults))
-
-	// var result []map[string]interface{}
-	// err = json.Unmarshal([]byte(queryResults), &result)
-
-	// for _, value := range result {
-	// 	for _, fundObj := range value["Record"].(map[string]interface{})["funds"].([]interface{}) {
-	// 		amount += fundObj.(map[string]interface{})["qty"].(float64)
-	// 	}
-	// }
-
-	// if amount > 0.0 {
-	// 	allBalances["escrowBalance"] = amount
-	// }
 	if tokenBalanceAsBytes != nil {
 		amount, _ = strconv.ParseFloat(string(tokenBalanceAsBytes), 64)
 		allBalances["balance"] = amount
 	}
-	// if snapshotBalanceAsBytes != nil {
-	// 	amount, _ = strconv.ParseFloat(string(snapshotBalanceAsBytes), 64)
-	// 	allBalances["snapshotBalance"] = amount
-	// }
 
 	balJSON, _ := json.Marshal(allBalances)
 	jsonStr := string(balJSON)
-	// InfoLogger.Printf("*************** getBalance Successfull ***************")
 	return []byte(jsonStr), nil
 }
 
@@ -528,8 +429,6 @@ func (s *SmartContract) GetProjectTransactions(ctx contractapi.TransactionContex
 type Record struct {
 	Qty             float64 `json:qty`
 	Balance         float64 `json:balance`
-	// EscrowBalance   float64 `json:escrowBalance`
-	// SnapshotBalance float64 `json:snapshotBalance`
 	Corporate       string  `json:corporate`
 	Id              string  `json:_id`
 	ProjectCount    float64 `json:projectCount`
@@ -569,8 +468,6 @@ func (s *SmartContract) GetCorporateDetails(ctx contractapi.TransactionContextIn
 		InfoLogger.Printf(string(result1))
 		json.Unmarshal(result2, &recordObj)
 		balance := recordObj.Balance
-		// escrowBalance := recordObj.EscrowBalance
-		// snapshotBalance := recordObj.SnapshotBalance
 
 		//get the no of ongoing projects they are working
 		list1 := strings.Split(org, ".")
@@ -592,8 +489,6 @@ func (s *SmartContract) GetCorporateDetails(ctx contractapi.TransactionContextIn
 		recordObj.Corporate = org
 		recordObj.Qty = sum
 		recordObj.Balance = balance
-		// recordObj.EscrowBalance = escrowBalance
-		// recordObj.SnapshotBalance = snapshotBalance
 		recordObj.ProjectCount = float64(projectCount)
 
 		endResult = append(endResult, recordObj)
@@ -618,36 +513,11 @@ func (s *SmartContract) GetBalanceCorporate(ctx contractapi.TransactionContextIn
 	orgName := arg
 
 	tokenBalanceAsBytes, _ := ctx.GetStub().GetState(orgName)
-	// snapshotBalanceAsBytes, _ := ctx.GetStub().GetState(orgName + "_snapshot")
 
-	// //fetch all escrow funds
-	// queryString := fmt.Sprintf("{\"selector\":{\"docType\":\"EscrowDetails\", \"corporate\": \"%s\"}}", orgName)
-	// queryResults, err := GetQueryResultForQueryString(ctx, queryString)
-	// if err != nil {
-	// 	return "", fmt.Errorf(err.Error())
-	// }
-	// InfoLogger.Printf("query result:", string(queryResults))
-
-	// var result []map[string]interface{}
-	// err = json.Unmarshal([]byte(queryResults), &result)
-
-	// for _, value := range result {
-	// 	for _, fundObj := range value["Record"].(map[string]interface{})["funds"].([]interface{}) {
-	// 		amount = math.Round((amount+fundObj.(map[string]interface{})["qty"].(float64))*100) / 100
-	// 	}
-	// }
-
-	// if amount > 0.0 {
-	// 	allBalances["escrowBalance"] = amount
-	// }
 	if tokenBalanceAsBytes != nil {
 		amount, _ = strconv.ParseFloat(string(tokenBalanceAsBytes), 64)
 		allBalances["balance"] = amount
 	}
-	// if snapshotBalanceAsBytes != nil {
-	// 	amount, _ = strconv.ParseFloat(string(snapshotBalanceAsBytes), 64)
-	// 	allBalances["snapshotBalance"] = amount
-	// }
 
 	balJSON, _ := json.Marshal(allBalances)
 	jsonStr := string(balJSON)
@@ -656,16 +526,12 @@ func (s *SmartContract) GetBalanceCorporate(ctx contractapi.TransactionContextIn
 }
 
 func (s *SmartContract) GetAllCorporates(ctx contractapi.TransactionContextInterface) ([]string, error) {
-	// InfoLogger.Printf("*************** getAllCorporates Started ***************")
 
 	corporatesBytes, _ := ctx.GetStub().GetState("corporates")
-
-	// InfoLogger.Printf("CorporateBytes Length: ", len(string(corporatesBytes)))
 
 	var result []string
 
 	if corporatesBytes == nil || len(string(corporatesBytes)) <= 2 {
-		// InfoLogger.Printf("Inside if condition. No corporates.")
 		return nil, nil
 	}
 
@@ -673,7 +539,6 @@ func (s *SmartContract) GetAllCorporates(ctx contractapi.TransactionContextInter
 	if err != nil {
 		return nil, fmt.Errorf(err.Error())
 	}
-
-	// InfoLogger.Printf("*************** getAllCorporates Successfull ***************")
+	
 	return result, nil
 }

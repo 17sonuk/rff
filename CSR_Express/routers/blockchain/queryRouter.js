@@ -1044,7 +1044,6 @@ router.get('/ngoReport-userProfile', async function (req, res, next) {
 
             to = splitOrgName(to)
             from = splitOrgName(from)
-            // console.log("transaction type: ",txType,to , from )
             if (txType == "TransferToken") {
                 ngoMap[to]['totalReceived'] += qty
                 if (!(ngoMap[to]['projectsFunded'].includes(objRef))) {

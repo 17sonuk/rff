@@ -3,20 +3,11 @@ const router = express.Router();
 
 require('dotenv').config();
 const { SMTP_EMAIL, APP_PASSWORD, ORG1_NAME, ORG2_NAME, ORG3_NAME, BLOCKCHAIN_DOMAIN } = process.env;
-
-const logger = require('../../loggers/logger');
 const { generateError, getMessage } = require('../../utils/functions');
-
 const userService = require('../../service/userService');
-
 const mongoProjectService = require('../../service/projectService');
-
 const registerUser = require('../../fabric-sdk/registerUser');
-
 const { orgModel } = require('../../model/models')
-
-logger.debug('<<<<<<<<<<<<<< user router >>>>>>>>>>>>>>>>>')
-
 const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
@@ -36,16 +27,10 @@ let orgMap = {
 
 //Onboarding of user
 router.post('/onboard', (req, res, next) => {
-    logger.debug(`router-onboarding: ${JSON.stringify(req.body, null, 2)}`);
-
     return userService.registerUser(req.body)
         .then((data) => {
-            console.log('user route data::::: ')
-            console.log(data)
-
             return registerUser(req.body.userName, req.body['role'].toLowerCase())
                 .then((response) => {
-                    logger.debug('blockchain register successful')
                     userService.sendEmailForDonorRegistration(req);
                     //send registration success message
                     return res.json(getMessage(true, "User onboarded successfully!"));
@@ -55,19 +40,14 @@ router.post('/onboard', (req, res, next) => {
                     userSerive.deleteUser(req.body.userName)
                     return generateError(registerError, next, 500, 'Couldn\'t register user in blockchain! Please report');
                 });
-            //res.json(data)
         })
         .catch(err => {
-            //  console.log("mongodb error",err)
-            logger.error('could not register user!')
             return generateError(err, next);
-            // next(err)
         })
 })
 
 // get username validity
 router.post('/checkUserNameValidity', (req, res, next) => {
-    logger.debug("router-checkUserNameValidity");
     userService.checkUserNameValidty(req.body.userName)
         .then((data) => {
             res.json(data)
@@ -77,19 +57,10 @@ router.post('/checkUserNameValidity', (req, res, next) => {
 
 //get user details
 router.get('/profile', (req, res, next) => {
-    logger.debug("router-profile");
-    // if(req.email !== req.query.email){
-    //     let err= new Error('Unauthorized user!')
-    //     err.status=401
-    //     return next(err)
-    // }
-
     let userName = req.userName;
-
     if (req.orgName === 'creditsauthority') {
         userName = req.query.userName;
     }
-
     userService.getUserDetails(userName)
         .then((data) => {
             res.json(data)
@@ -99,7 +70,6 @@ router.get('/profile', (req, res, next) => {
 
 // get user redeem account
 router.get('/redeemAccount', (req, res, next) => {
-    logger.debug("router-redeemAccount");
     userService.getUserRedeemAccount(req.userName)
         .then((data) => {
             res.json(data)
@@ -109,8 +79,6 @@ router.get('/redeemAccount', (req, res, next) => {
 
 //get unapproved user details
 router.get('/unapproved-users', (req, res, next) => {
-    logger.debug(`router-getUnapprovedUsers`);
-
     userService.getUnapprovedUserDetails()
         .then((data) => {
             res.json(data)
@@ -133,20 +101,16 @@ router.get('/getApprovedInstitutions', async (req, res, next) => {
 
 //approve user
 router.post('/approve-user', async (req, res, next) => {
-    logger.debug(`router-approveUser: ${JSON.stringify(req.body, null, 2)}`);
-
     try {
         let orgName = await userService.approveUser(req.body.userName);
         try {
             await registerUser(req.body.userName, orgName);
             transporter.verify()
                 .then((data) => {
-                    console.log(data);
                     let receiverEmail = ''
                     orgModel.findOne({ userName: req.body.userName }, { _id: 0, email: 1 })
                         .then((email) => {
                             receiverEmail = email
-                            console.log('sending email to :' + receiverEmail.email);
                             transporter.sendMail({
                                 from: '"CSR Test Mail" <csr.rainforest@gmail.com', // sender address
                                 to: receiverEmail.email, // list of receivers // 'c1@gmail.com, c2@outlook.com'
@@ -180,8 +144,6 @@ router.post('/approve-user', async (req, res, next) => {
 //project completed
 
 router.post('/project-completed', async (req, res, next) => {
-    logger.debug('router-projectCompleted');
-
     try {
         let projectData = await mongoProjectService.getProjectById(req.body.projectId)
         try {
@@ -192,8 +154,6 @@ router.post('/project-completed', async (req, res, next) => {
                 }
             }
             transporter.verify().then((data) => {
-                console.log(data);
-                console.log('sending email to :' + emailList);
                 transporter.sendMail({
                     from: '"CSR Test Mail" <csr.rainforest@gmail.com', // sender address
                     bcc: emailList, // list of receivers
@@ -226,8 +186,6 @@ router.post('/reject-user', (req, res, next) => {
 
 //get profit amount of corporate for Current financial year
 router.get('/profit-corporate', (req, res, next) => {
-    logger.debug(`router-getProfitCorporate: ${JSON.stringify(req.body, null, 2)}`);
-
     userService.getAmountFromBalanceSheet(req.query.userName)
         .then((data) => {
             res.json(data)
@@ -237,14 +195,7 @@ router.get('/profit-corporate', (req, res, next) => {
 
 //get notification - true for unseen and false for seen
 router.get('/notification/:seen', (req, res, next) => {
-    logger.debug("router-getNotification");
-
-    // if (req.userName.startsWith('ca')) {
-    //     req.userName = 'ca';
-    // }
-
     let name = req.userName + "." + orgMap[req.orgName.toLowerCase()] + "." + BLOCKCHAIN_DOMAIN + ".com";
-
     userService.getNotifications(name, req.params.seen)
         .then((data) => {
             res.json(data)
@@ -253,11 +204,6 @@ router.get('/notification/:seen', (req, res, next) => {
 })
 
 router.put('/notification', (req, res, next) => {
-    logger.debug("router-updateNotification");
-    // if (req.userName.startsWith('ca')) {
-    //     req.userName = 'ca';
-    // }
-
     let name = req.userName + "." + orgMap[req.orgName.toLowerCase()] + "." + BLOCKCHAIN_DOMAIN + ".com";
     userService.updateNotification(name, req.body.txId)
         .then((data) => {
@@ -267,7 +213,6 @@ router.put('/notification', (req, res, next) => {
 })
 
 router.put('/update', (req, res, next) => {
-    logger.debug("We  are trying to update the user Profile");
     userService.updateUserProfile(req.userName, req.body).then((data) => {
         res.json(data)
     }).catch(err => next(err))
