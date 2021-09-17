@@ -146,6 +146,16 @@ commonService.sendEmailToDonor = async (email, name, amount, projectId, address)
     }).catch(console.error);
 }
 
+commonService.sendEmail = (email, name, amount, projectId, address) => {
+    commonService.sendEmailToDonor(email, name, amount, projectId, address)
+    .then((data) => {
+        logger.debug('email sent to donor')
+    })
+    .catch(err => {
+        generateError(err, next, 500, 'Failed to send email to donor');
+    })
+}
+
 commonService.projectInitiation = async (projectId, username, orgname) => {
     let projectData = await mongoProjectService.getProjectById(projectId)
     let projectName = projectData.projectName

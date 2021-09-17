@@ -90,7 +90,11 @@ router.post('/transfer', async (req, res, next) => {
     if (!donorDetails) {
         return res.json(fieldErrorMessage('\'donorDetails\''));
     }
-    if (req.userName === 'guest' && !donorDetails.paymentId) {
+    // if (req.userName === 'guest' && !donorDetails.paymentId) {
+    //     return res.json(fieldErrorMessage('\'paymentId\''));
+    // }
+
+    if (!donorDetails.paymentId) {
         return res.json(fieldErrorMessage('\'paymentId\''));
     }
 
@@ -103,10 +107,11 @@ router.post('/transfer', async (req, res, next) => {
         notes = donorDetails.email + "\n" + "PaymentId - " + donorDetails.paymentId + "\n" + notes
     }
 
-    let args = [amount, projectId, notes, Date.now().toString(), uuid().toString()]
-    if (req.userName === 'guest') {
-        args[4] = donorDetails.paymentId;
-    }
+    // let args = [amount, projectId, notes, Date.now().toString(), uuid().toString()]
+    // if (req.userName === 'guest') {
+    //     args[4] = donorDetails.paymentId;
+    // }
+    let args = [amount, projectId, notes, Date.now().toString(), donorDetails.paymentId]
     args = JSON.stringify(args);
 
     try {
@@ -133,38 +138,54 @@ router.post('/transfer', async (req, res, next) => {
                 })
         }
 
+        // //call a service that sends email to donor
+        // if (req.userName !== '') {
+        //     if (req.userName === 'guest' && donorDetails.email != "") {
+        //         commonService.sendEmailToDonor(donorDetails.email, 'Guest', amount, projectId, '')
+        //             .then((data) => {
+        //                 logger.debug('email sent to donor')
+        //             })
+        //             .catch(err => {
+        //                 generateError(err, next, 500, 'Failed to send email to donor');
+        //             })
+        //     }
+        //     else if (req.userName !== 'guest') {
+        //         let orgDetails = await commonService.getOrgDetails(req.userName);
+
+        //         if (orgDetails && orgDetails.email) {
+        //             let donorName = orgDetails.firstName;
+
+        //             if (orgDetails.subRole === 'Institution') {
+        //                 donorName = orgDetails.orgName;
+        //             }
+
+        //             commonService.sendEmailToDonor(orgDetails.email, donorName, amount, projectId, orgDetails.address)
+        //                 .then((data) => {
+        //                     logger.debug('email send to donor')
+        //                 })
+        //                 .catch(err => {
+        //                     generateError(err, next, 500, 'Failed to send email to donor');
+        //                 })
+        //         }
+        //     } else {
+        //         logger.debug("No email is sent since no email is provided by guest user")
+        //     }
+        // }
         //call a service that sends email to donor
-        if (req.userName !== '') {
-            if (req.userName === 'guest' && donorDetails.email != "") {
-                commonService.sendEmailToDonor(donorDetails.email, 'Guest', amount, projectId, '')
-                    .then((data) => {
-                        logger.debug('email sent to donor')
-                    })
-                    .catch(err => {
-                        generateError(err, next, 500, 'Failed to send email to donor');
-                    })
-            }
-            else if (req.userName !== 'guest') {
-                let orgDetails = await commonService.getOrgDetails(req.userName);
-
-                if (orgDetails && orgDetails.email) {
-                    let donorName = orgDetails.firstName;
-
-                    if (orgDetails.subRole === 'Institution') {
-                        donorName = orgDetails.orgName;
-                    }
-
-                    commonService.sendEmailToDonor(orgDetails.email, donorName, amount, projectId, orgDetails.address)
-                        .then((data) => {
-                            logger.debug('email send to donor')
-                        })
-                        .catch(err => {
-                            generateError(err, next, 500, 'Failed to send email to donor');
-                        })
+        if (req.userName === 'guest' && donorDetails.email != "") {
+            commonService.sendEmail(donorDetails.email, 'Guest', amount, projectId, '')
+        }
+        else if (req.userName !== 'guest') {
+            let orgDetails = await commonService.getOrgDetails(req.userName);
+            if (orgDetails) {
+                let donorName = orgDetails.firstName;
+                if (orgDetails.subRole === 'Institution') {
+                    donorName = orgDetails.orgName;
                 }
-            } else {
-                logger.debug("No email is sent since no email is provided by guest user")
+                commonService.sendEmail(orgDetails.email, donorName, amount, projectId, orgDetails.address)
             }
+        } else {
+            logger.debug("No email is sent since no email is provided by guest user")
         }
     }
     catch (e) {

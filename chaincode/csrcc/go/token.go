@@ -414,27 +414,27 @@ func (s *SmartContract) TransferTokens(ctx contractapi.TransactionContextInterfa
 		return false, fmt.Errorf("error saving/updating project " + err.Error())
 	}
 
-	if commonName != guest+"."+corporate+"."+domain {
-		//if qty is still remaining, use the current account
-		if qty > 0.0 {
-			//reduce token balance from sender
-			tokenBalanceInBytes, _ := ctx.GetStub().GetState(fromAddress)
-			tokenBalance := 0.0
-			if tokenBalanceInBytes != nil {
-				fmt.Println(strconv.ParseFloat(string(tokenBalanceInBytes), 64))
-				tokenBalance, _ = strconv.ParseFloat(string(tokenBalanceInBytes), 64)
-			}
-			fmt.Println("test balance")
-			fmt.Println(tokenBalance)
+	// if commonName != guest+"."+corporate+"."+domain {
+	// 	//if qty is still remaining, use the current account
+	// 	if qty > 0.0 {
+	// 		//reduce token balance from sender
+	// 		tokenBalanceInBytes, _ := ctx.GetStub().GetState(fromAddress)
+	// 		tokenBalance := 0.0
+	// 		if tokenBalanceInBytes != nil {
+	// 			fmt.Println(strconv.ParseFloat(string(tokenBalanceInBytes), 64))
+	// 			tokenBalance, _ = strconv.ParseFloat(string(tokenBalanceInBytes), 64)
+	// 		}
+	// 		fmt.Println("test balance")
+	// 		fmt.Println(tokenBalance)
 
-			if tokenBalance >= qty {
-				finalQty := fmt.Sprintf("%0.2f", math.Round((tokenBalance-qty)*100)/100)
-				ctx.GetStub().PutState(fromAddress, []byte(finalQty))
-			} else {
-				return false, fmt.Errorf("Not enough balance. Available balance: " + fmt.Sprintf("%0.2f", tokenBalance))
-			}
-		}
-	}
+	// 		if tokenBalance >= qty {
+	// 			finalQty := fmt.Sprintf("%0.2f", math.Round((tokenBalance-qty)*100)/100)
+	// 			ctx.GetStub().PutState(fromAddress, []byte(finalQty))
+	// 		} else {
+	// 			return false, fmt.Errorf("Not enough balance. Available balance: " + fmt.Sprintf("%0.2f", tokenBalance))
+	// 		}
+	// 	}
+	// }
 
 	//Add token balance to receiver's wallet
 	receiverTokenBalanceAsBytes, _ := ctx.GetStub().GetState(projectObj.NGO)
