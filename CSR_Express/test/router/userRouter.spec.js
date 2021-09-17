@@ -106,7 +106,7 @@ describe('USER ROUTER - ONBOARD API when there is bearer token', () => {
         }
         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
         mockObj.resolves(Data)
-        mockObj1.resolves(false)
+        mockObj1.resolves(null)
 
         const response = await request(app)
             .post("/mongo/user/onboard").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
@@ -423,124 +423,6 @@ describe('USER ROUTER - Redeem Account API', () => {
 })
 
 
-describe('USER ROUTER - unapproved-users API', () => {
-    let mockObj = ""
-    beforeEach(() => {
-        mockObj = sandbox.stub(userService, 'getUnapprovedUserDetails');
-    });
-    afterEach(() => {
-        mockObj.restore();
-    });
-
-    it('testing getUnapprovedUserDetails API', async function () {
-
-        const dataVal1 = {
-            firstName: "corp67",
-            lastName: " xyz",
-            orgName: "corporate",
-            userName: "corp2",
-            email: "corp2@gmail.com",
-            role: "Corporate",
-            subRole: "Individual",
-            description: "some desc",
-            address: {
-                addressLine1: "address1",
-                addressLine2: "address2",
-                city: "city1",
-                state: "state1",
-                zipCode: "123456",
-                country: "Brazil"
-            },
-            phone: [{
-                countryCode: "91",
-                phoneNumber: "8989897878"
-            }],
-
-        }
-
-        let payload = {
-            orgName: 'creditsauthority',
-            userName: 'ca'
-        }
-        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
-
-        mockObj.resolves(dataVal1)
-
-        const response = await request(app)
-            .get("/mongo/user/unapproved-users").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-        expect(response.body).to.be.eql(dataVal1);
-
-        //If data is not present
-        mockObj.rejects('Bad Connection')
-        const response1 = await request(app)
-            .get("/mongo/user/unapproved-users").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-        expect(response1.status).to.equal(500);
-    })
-})
-
-
-
-describe('USER ROUTER - reject-user API', () => {
-    let mockObj = ""
-    beforeEach(() => {
-        mockObj = sandbox.stub(userService, 'rejectUser');
-    });
-    afterEach(() => {
-        mockObj.restore();
-    });
-
-    it('testing rejectUser API', async function () {
-
-        const dataVal1 = {
-            firstName: "corp67",
-            lastName: " xyz",
-            orgName: "corporate",
-            userName: "corp2",
-            email: "corp2@gmail.com",
-            role: "Corporate",
-            subRole: "Individual",
-            description: "some desc",
-            address: {
-                addressLine1: "address1",
-                addressLine2: "address2",
-                city: "city1",
-                state: "state1",
-                zipCode: "123456",
-                country: "Brazil"
-            },
-            phone: [{
-                countryCode: "91",
-                phoneNumber: "8989897878"
-            }],
-
-        }
-
-        let payload = {
-            orgName: 'creditsauthority',
-            userName: 'ca'
-        }
-        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
-
-        mockObj.resolves(dataVal1)
-
-        const response = await request(app)
-            .post("/mongo/user/reject-user").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-            .send({
-                userName: "corp2"
-            })
-        expect(response.body).to.be.eql(dataVal1);
-
-        //If data is not present
-        mockObj.rejects('Bad Connection')
-        const response1 = await request(app)
-            .post("/mongo/user/reject-user").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-            .send({
-                userName: "corp2"
-            })
-        expect(response1.status).to.equal(500);
-    })
-})
-
 
 
 describe('USER ROUTER - Notification API', () => {
@@ -630,5 +512,124 @@ describe('USER ROUTER - UpdateNotification API', () => {
         expect(response1.status).to.equal(500);
     })
 })
+
+
+// describe('USER ROUTER - unapproved-users API', () => {
+//     let mockObj = ""
+//     beforeEach(() => {
+//         mockObj = sandbox.stub(userService, 'getUnapprovedUserDetails');
+//     });
+//     afterEach(() => {
+//         mockObj.restore();
+//     });
+
+//     it('testing getUnapprovedUserDetails API', async function () {
+
+//         const dataVal1 = {
+//             firstName: "corp67",
+//             lastName: " xyz",
+//             orgName: "corporate",
+//             userName: "corp2",
+//             email: "corp2@gmail.com",
+//             role: "Corporate",
+//             subRole: "Individual",
+//             description: "some desc",
+//             address: {
+//                 addressLine1: "address1",
+//                 addressLine2: "address2",
+//                 city: "city1",
+//                 state: "state1",
+//                 zipCode: "123456",
+//                 country: "Brazil"
+//             },
+//             phone: [{
+//                 countryCode: "91",
+//                 phoneNumber: "8989897878"
+//             }],
+
+//         }
+
+//         let payload = {
+//             orgName: 'creditsauthority',
+//             userName: 'ca'
+//         }
+//         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+
+//         mockObj.resolves(dataVal1)
+
+//         const response = await request(app)
+//             .get("/mongo/user/unapproved-users").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+//         expect(response.body).to.be.eql(dataVal1);
+
+//         //If data is not present
+//         mockObj.rejects('Bad Connection')
+//         const response1 = await request(app)
+//             .get("/mongo/user/unapproved-users").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+//         expect(response1.status).to.equal(500);
+//     })
+// })
+
+
+
+// describe('USER ROUTER - reject-user API', () => {
+//     let mockObj = ""
+//     beforeEach(() => {
+//         mockObj = sandbox.stub(userService, 'rejectUser');
+//     });
+//     afterEach(() => {
+//         mockObj.restore();
+//     });
+
+//     it('testing rejectUser API', async function () {
+
+//         const dataVal1 = {
+//             firstName: "corp67",
+//             lastName: " xyz",
+//             orgName: "corporate",
+//             userName: "corp2",
+//             email: "corp2@gmail.com",
+//             role: "Corporate",
+//             subRole: "Individual",
+//             description: "some desc",
+//             address: {
+//                 addressLine1: "address1",
+//                 addressLine2: "address2",
+//                 city: "city1",
+//                 state: "state1",
+//                 zipCode: "123456",
+//                 country: "Brazil"
+//             },
+//             phone: [{
+//                 countryCode: "91",
+//                 phoneNumber: "8989897878"
+//             }],
+
+//         }
+
+//         let payload = {
+//             orgName: 'creditsauthority',
+//             userName: 'ca'
+//         }
+//         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+
+//         mockObj.resolves(dataVal1)
+
+//         const response = await request(app)
+//             .post("/mongo/user/reject-user").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+//             .send({
+//                 userName: "corp2"
+//             })
+//         expect(response.body).to.be.eql(dataVal1);
+
+//         //If data is not present
+//         mockObj.rejects('Bad Connection')
+//         const response1 = await request(app)
+//             .post("/mongo/user/reject-user").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+//             .send({
+//                 userName: "corp2"
+//             })
+//         expect(response1.status).to.equal(500);
+//     })
+// })
 
 

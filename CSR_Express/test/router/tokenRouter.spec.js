@@ -101,114 +101,6 @@ describe('TOKEN ROUTER - /request API SUCCESS', () => {
 
 })
 
-
-describe('TOKEN ROUTER - /assign API', () => {
-    it('testing token router API when paymentId field is empty', async function () {
-        let payload = {
-            orgName: 'creditsauthority',
-            userName: 'ca'
-        }
-        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
-        const response = await request(app)
-            .post("/token/assign").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-            .send({
-                paymentId: ""
-            })
-        expect(response.body.success).to.equal(false)
-        expect(response.body.message).to.equal("'paymentId' field is missing or Invalid in the request")
-    });
-
-});
-
-describe('TOKEN ROUTER - /assign API SUCCESS', () => {
-    let mockObj = ""
-    beforeEach(() => {
-        mockObj = sandbox.stub(invoke, 'main');
-    });
-    afterEach(() => {
-        mockObj.restore();
-    });
-    it('testing token assign API', async function () {
-        mockObj.resolves(null)
-        let payload = {
-            orgName: 'creditsauthority',
-            userName: 'ca'
-        }
-        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
-        const response = await request(app)
-            .post("/token/assign").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-            .send({
-                paymentId: "10001"
-            })
-        console.log("Resp23:", response.body)
-        expect(response.body.success).to.equal(true)
-    })
-
-})
-
-
-describe('TOKEN ROUTER - /reject API', () => {
-    it('testing token router API when paymentId field is empty', async function () {
-        let payload = {
-            orgName: 'creditsauthority',
-            userName: 'ca'
-        }
-        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
-        const response = await request(app)
-            .post("/token/reject").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-            .send({
-                paymentId: "",
-                comment: "dsfgj"
-            })
-        expect(response.body.success).to.equal(false)
-        expect(response.body.message).to.equal("'paymentId' field is missing or Invalid in the request")
-    });
-
-    it('testing token router API when comment field is empty', async function () {
-        let payload = {
-            orgName: 'creditsauthority',
-            userName: 'ca'
-        }
-        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
-        const response = await request(app)
-            .post("/token/reject").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-            .send({
-                paymentId: "10001",
-                comment: ""
-            })
-        expect(response.body.success).to.equal(false)
-        expect(response.body.message).to.equal("'comment' field is missing or Invalid in the request")
-    });
-
-});
-
-describe('TOKEN ROUTER - /reject API SUCCESS', () => {
-    let mockObj = ""
-    beforeEach(() => {
-        mockObj = sandbox.stub(invoke, 'main');
-    });
-    afterEach(() => {
-        mockObj.restore();
-    });
-    it('testing token reject API', async function () {
-        mockObj.resolves(null)
-        let payload = {
-            orgName: 'creditsauthority',
-            userName: 'ca'
-        }
-        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
-        const response = await request(app)
-            .post("/token/reject").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-            .send({
-                paymentId: "10001",
-                comment: "dsfgj"
-            })
-        console.log("Resp23:", response.body)
-        expect(response.body.success).to.equal(true)
-    })
-
-})
-
 describe('TOKEN ROUTER - /transfer API', () => {
     it('testing token router API when amount field is empty', async function () {
         let payload = {
@@ -392,93 +284,202 @@ describe('TOKEN ROUTER - /transfer API SUCCESS', () => {
 
 })
 
-describe('TOKEN ROUTER - /all-requests API', () => {
-    it('testing token router API when pageSize field is empty', async function () {
-        let payload = {
-            orgName: 'creditsauthority',
-            userName: 'ca'
-        }
-        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
-        const response = await request(app)
-            .get("/token/all-requests").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-            .send({
-                pageSize: "",
-                status: "true"
-            })
-        expect(response.body.success).to.equal(false)
-        expect(response.body.message).to.equal("'pageSize' field is missing or Invalid in the request")
-    });
+// describe('TOKEN ROUTER - /assign API', () => {
+//     it('testing token router API when paymentId field is empty', async function () {
+//         let payload = {
+//             orgName: 'creditsauthority',
+//             userName: 'ca'
+//         }
+//         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+//         const response = await request(app)
+//             .post("/token/assign").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+//             .send({
+//                 paymentId: ""
+//             })
+//         expect(response.body.success).to.equal(false)
+//         expect(response.body.message).to.equal("'paymentId' field is missing or Invalid in the request")
+//     });
 
-    it('testing token router API when status field is empty', async function () {
-        let payload = {
-            orgName: 'creditsauthority',
-            userName: 'ca'
-        }
-        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
-        const response = await request(app)
-            .get("/token/all-requests").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-            .query({
-                pageSize: 2000,
-                status: ""
-            })
-        expect(response.body.success).to.equal(false)
-        expect(response.body.message).to.equal("'status' field is missing or Invalid in the request")
-    });
+// });
 
-    // it('testing token router API when unauthorised use', async function () {
-    //     let payload = {
-    //         orgName: 'guest',
-    //         userName: 'guest'
-    //     }
-    //     const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
-    //     const response = await request(app)
-    //         .get("/token/all-requests").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-    //         .send({
-    //             pageSize: 10,
-    //             status: "true"
-    //         })
-    //     expect(response.body.success).to.equal(false)
-    //     expect(response.body.message).to.equal("Unauthorised token tx request access...")
-    // });
+// describe('TOKEN ROUTER - /assign API SUCCESS', () => {
+//     let mockObj = ""
+//     beforeEach(() => {
+//         mockObj = sandbox.stub(invoke, 'main');
+//     });
+//     afterEach(() => {
+//         mockObj.restore();
+//     });
+//     it('testing token assign API', async function () {
+//         mockObj.resolves(null)
+//         let payload = {
+//             orgName: 'creditsauthority',
+//             userName: 'ca'
+//         }
+//         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+//         const response = await request(app)
+//             .post("/token/assign").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+//             .send({
+//                 paymentId: "10001"
+//             })
+//         console.log("Resp23:", response.body)
+//         expect(response.body.success).to.equal(true)
+//     })
 
-});
+// })
 
-describe('TOKEN ROUTER - /all-requests API SUCCESS', () => {
-    let mockObj = ""
-    let msg = {
-        Results: [],
-        RecordsCount: '0',
-        Bookmark: 'nil'
-    }
-    var buffer = Buffer.from(JSON.stringify(msg));
 
-    beforeEach(() => {
-        mockObj = sandbox.stub(query, 'main');
-    });
-    afterEach(() => {
-        mockObj.restore();
-    });
-    it('testing token all-request API', async function () {
-        mockObj.resolves(buffer)
-        let payload = {
-            orgName: 'creditsauthority',
-            userName: 'ca'
-        }
-        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
-        const response = await request(app)
-            .get("/token/all-requests").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-            .query({
-                pageSize: "1",
-                bookmark: "",
-                status: "Requested"
-            })
-        // .send({
-        //     // qString: JSON.stringify(queryString),
-        //     pageSize:"1",
-        //     bookmark:"",
-        //     status:"Requested"
-        // })
-        console.log("Resp23:", response.body)
-        expect(response.body.success).to.equal(true)
-    })
-})
+// describe('TOKEN ROUTER - /reject API', () => {
+//     it('testing token router API when paymentId field is empty', async function () {
+//         let payload = {
+//             orgName: 'creditsauthority',
+//             userName: 'ca'
+//         }
+//         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+//         const response = await request(app)
+//             .post("/token/reject").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+//             .send({
+//                 paymentId: "",
+//                 comment: "dsfgj"
+//             })
+//         expect(response.body.success).to.equal(false)
+//         expect(response.body.message).to.equal("'paymentId' field is missing or Invalid in the request")
+//     });
+
+//     it('testing token router API when comment field is empty', async function () {
+//         let payload = {
+//             orgName: 'creditsauthority',
+//             userName: 'ca'
+//         }
+//         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+//         const response = await request(app)
+//             .post("/token/reject").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+//             .send({
+//                 paymentId: "10001",
+//                 comment: ""
+//             })
+//         expect(response.body.success).to.equal(false)
+//         expect(response.body.message).to.equal("'comment' field is missing or Invalid in the request")
+//     });
+
+// });
+
+// describe('TOKEN ROUTER - /reject API SUCCESS', () => {
+//     let mockObj = ""
+//     beforeEach(() => {
+//         mockObj = sandbox.stub(invoke, 'main');
+//     });
+//     afterEach(() => {
+//         mockObj.restore();
+//     });
+//     it('testing token reject API', async function () {
+//         mockObj.resolves(null)
+//         let payload = {
+//             orgName: 'creditsauthority',
+//             userName: 'ca'
+//         }
+//         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+//         const response = await request(app)
+//             .post("/token/reject").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+//             .send({
+//                 paymentId: "10001",
+//                 comment: "dsfgj"
+//             })
+//         console.log("Resp23:", response.body)
+//         expect(response.body.success).to.equal(true)
+//     })
+
+// })
+
+
+
+// describe('TOKEN ROUTER - /all-requests API', () => {
+//     it('testing token router API when pageSize field is empty', async function () {
+//         let payload = {
+//             orgName: 'creditsauthority',
+//             userName: 'ca'
+//         }
+//         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+//         const response = await request(app)
+//             .get("/token/all-requests").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+//             .send({
+//                 pageSize: "",
+//                 status: "true"
+//             })
+//         expect(response.body.success).to.equal(false)
+//         expect(response.body.message).to.equal("'pageSize' field is missing or Invalid in the request")
+//     });
+
+//     it('testing token router API when status field is empty', async function () {
+//         let payload = {
+//             orgName: 'creditsauthority',
+//             userName: 'ca'
+//         }
+//         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+//         const response = await request(app)
+//             .get("/token/all-requests").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+//             .query({
+//                 pageSize: 2000,
+//                 status: ""
+//             })
+//         expect(response.body.success).to.equal(false)
+//         expect(response.body.message).to.equal("'status' field is missing or Invalid in the request")
+//     });
+
+//     // it('testing token router API when unauthorised use', async function () {
+//     //     let payload = {
+//     //         orgName: 'guest',
+//     //         userName: 'guest'
+//     //     }
+//     //     const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+//     //     const response = await request(app)
+//     //         .get("/token/all-requests").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+//     //         .send({
+//     //             pageSize: 10,
+//     //             status: "true"
+//     //         })
+//     //     expect(response.body.success).to.equal(false)
+//     //     expect(response.body.message).to.equal("Unauthorised token tx request access...")
+//     // });
+
+// });
+
+// describe('TOKEN ROUTER - /all-requests API SUCCESS', () => {
+//     let mockObj = ""
+//     let msg = {
+//         Results: [],
+//         RecordsCount: '0',
+//         Bookmark: 'nil'
+//     }
+//     var buffer = Buffer.from(JSON.stringify(msg));
+
+//     beforeEach(() => {
+//         mockObj = sandbox.stub(query, 'main');
+//     });
+//     afterEach(() => {
+//         mockObj.restore();
+//     });
+//     it('testing token all-request API', async function () {
+//         mockObj.resolves(buffer)
+//         let payload = {
+//             orgName: 'creditsauthority',
+//             userName: 'ca'
+//         }
+//         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+//         const response = await request(app)
+//             .get("/token/all-requests").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+//             .query({
+//                 pageSize: "1",
+//                 bookmark: "",
+//                 status: "Requested"
+//             })
+//         // .send({
+//         //     // qString: JSON.stringify(queryString),
+//         //     pageSize:"1",
+//         //     bookmark:"",
+//         //     status:"Requested"
+//         // })
+//         console.log("Resp23:", response.body)
+//         expect(response.body.success).to.equal(true)
+//     })
+// })

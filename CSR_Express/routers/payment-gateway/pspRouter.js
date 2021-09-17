@@ -60,13 +60,13 @@ router.use('/coinbase/chargeStatus', async (req, res, next) => {
     try {
         const isVerified = Webhook.verifySigHeader(JSON.stringify(body), signature, COINBASE_WEBHOOK_SECRET);
         if (isVerified) {
-            if (body.event.type === 'charge:created') {
+            if (body.event.type === 'charge:confirmed') {
                 const response = await paymentService.saveTx(body.event.data, next);
                 return res.send(response)
             }
             return res.send(`coinbase payment with id ${body.event.id} is in state ${body.event.type}`)
         }
-        return res.send(`signature of coinbase payment with id ${body.event.id} couldn't be verified `)
+        return res.send(`signature of coinbase payment with id ${body.event.id} couldn't be verified`)
     }
     catch (error) {
         return generateError(error, next);

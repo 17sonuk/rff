@@ -77,13 +77,13 @@ router.get('/:projectId', (req, res, next) => {
         .catch(err => next(err))
 })
 
-//is it really getting used?
-router.put('/updateProject', (req, res, next) => {
-    projectService.updateProjectById(req.body)
-        .then((data) => {
-            res.json(data)
-        })
-        .catch(err => next(err))
-})
+// //is it really getting used? : not using
+// router.put('/updateProject', (req, res, next) => {
+//     projectService.updateProjectById(req.body)
+//         .then((data) => {
+//             res.json(data)
+//         })
+//         .catch(err => next(err))
+// })
 
 module.exports = router;

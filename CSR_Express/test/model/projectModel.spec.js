@@ -97,4 +97,45 @@ describe('TESTING PROJECT MODEL - CREATE', () => {
         expect(res1).to.be.a('array');
         expect(res1).to.have.lengthOf(1);
     });
+
+    it('testing response for updateProjectById', async () => {
+        const projectDetails = testProject;
+        const res = await projectModel.updateProjectById(projectDetails);
+        expect(res).to.be.a('object');
+    });
+
+    it('testing response for updateProjectForApproval', async () => {
+        const projectDetails = testProject;
+        const projectId = "p01";
+        const res = await projectModel.updateProjectForApproval(projectId,projectDetails);
+        expect(res).to.be.a('object');
+    });
+
+    it('testing response for deleteProjectById', async () => {
+        const projectId = "p01";
+        const res = await projectModel.deleteProjectById(projectId);
+        expect(res).to.be.a('object');
+    });
+
+    it('testing response for editProject', async () => {
+        const projectDetails = testProject;
+        const projectId = "p01";
+        const res = await projectModel.editProject(projectId,projectDetails,0);
+        expect(res).to.be.a('object');
+    });
+
+    it('testing response for getFilters', async () => {
+        const userName = "ngo";
+        const orgName = "ngo";
+        const res = await projectModel.getFilters(userName,orgName);
+        expect(res).to.be.a('object');
+    });
+
+    it('testing response for getProjectsByCommunity', async () => {
+        const communityId = "";
+        let response=[]
+        const res = await projectModel.getProjectsByCommunity(communityId);
+        expect(res).to.be.a('array');
+        // expect(res.success).to.equal(true);
+    });
 })

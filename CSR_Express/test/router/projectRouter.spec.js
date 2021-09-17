@@ -12,6 +12,7 @@ var jwt = require('jsonwebtoken');
 const invoke = require('../../fabric-sdk/invoke');
 const query = require('../../fabric-sdk/query');
 const { projectModel } = require('../../model/models')
+
 describe('PROJECT ROUTER - create project API', () => {
     let mockObj = ""
     beforeEach(() => {
@@ -336,6 +337,234 @@ describe('PROJECT ROUTER - countryAndProjectTypeFilter API', () => {
 
 
 /////////////////////////////////////////////////BLOCKCHAIN projectRouter.js\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+describe('BLOCKCHAIN PROJECT ROUTER - /initiate API', () => {
+    it('testing blockchain project router API when projectId field is empty', async function () {
+        let payload = {
+            userName: 'ca',
+            orgName: 'ngo'
+        }
+        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+        const response = await request(app)
+            .post("/project/initiate").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+            .send({
+                projectId: ""
+            })
+        expect(response.body.success).to.equal(false)
+        expect(response.body.message).to.equal("'projectId' field is missing or Invalid in the request")
+    });
+
+})
+
+describe('BLOCKCHAIN PROJECT ROUTER - /initiate API SUCCESS', () => {
+    let mockObj = ""
+    // let mockObj1 = ""
+
+    // let resp={
+    //     getMessage:{
+    //         success: true,
+    //         message: "Successfully invoked CreateProject"
+    //     },
+    //     projectId:"p01"
+    // }
+    let transactionList = []
+    let buffer = Buffer.from(JSON.stringify(transactionList));
+
+    beforeEach(() => {
+        mockObj = sandbox.stub(invoke, 'main');
+        // mockObj1 = sandbox.stub(query, 'main');
+
+    });
+    afterEach(() => {
+        mockObj.restore();
+        // mockObj1.restore();
+
+    });
+    it('testing blockchain project initiate API', async function () {
+        mockObj.resolves(null)
+        // mockObj1.resolves(buffer)
+
+        let payload = {
+            userName: 'ca',
+            orgName: 'ngo'
+        }
+        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+        const response = await request(app)
+            .post("/project/initiate").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+            .send({
+                projectId: "p01"
+
+            })
+        console.log("Resp23:", response.body)
+        expect(response.body.success).to.equal(true)
+        // expect(response.body.message).to.equal("'amount' field is missing or Invalid in the request")
+    })
+})
+
+describe('BLOCKCHAIN PROJECT ROUTER - /abandon API', () => {
+    it('testing blockchain project router API when projectId field is empty', async function () {
+        let payload = {
+            userName: 'ca',
+            orgName: 'creditsauthority'
+        }
+        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+        const response = await request(app)
+            .put("/project/abandon").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+            .send({
+                projectId: "",
+                comments: "dfg"
+            })
+        expect(response.body.success).to.equal(false)
+        expect(response.body.message).to.equal("'projectId' field is missing or Invalid in the request")
+    });
+
+    it('testing blockchain project router API when comments field is empty', async function () {
+        let payload = {
+            userName: 'ca',
+            orgName: 'creditsauthority'
+        }
+        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+        const response = await request(app)
+            .put("/project/abandon").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+            .send({
+                projectId: "p01",
+                comments: ""
+
+            })
+        expect(response.body.success).to.equal(false)
+        expect(response.body.message).to.equal("'comments' field is missing or Invalid in the request")
+    });
+
+})
+
+describe('BLOCKCHAIN PROJECT ROUTER - /abandon API SUCCESS', () => {
+    let mockObj = ""
+    // let mockObj1 = ""
+
+    // let resp={
+    //     getMessage:{
+    //         success: true,
+    //         message: "Successfully invoked CreateProject"
+    //     },
+    //     projectId:"p01"
+    // }
+    let transactionList = []
+    let buffer = Buffer.from(JSON.stringify(transactionList));
+
+    beforeEach(() => {
+        mockObj = sandbox.stub(invoke, 'main');
+        // mockObj1 = sandbox.stub(query, 'main');
+
+    });
+    afterEach(() => {
+        mockObj.restore();
+        // mockObj1.restore();
+
+    });
+    it('testing blockchain project abandon API', async function () {
+        mockObj.resolves(null)
+        // mockObj1.resolves(buffer)
+
+        let payload = {
+            userName: 'ca',
+            orgName: 'creditsauthority'
+        }
+        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+        const response = await request(app)
+            .put("/project/abandon").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+            .send({
+                projectId: "p01",
+                comments: "dfg",
+
+            })
+        console.log("Resp23:", response.body)
+        expect(response.body.success).to.equal(true)
+        // expect(response.body.message).to.equal("'amount' field is missing or Invalid in the request")
+    })
+})
+
+
+describe('BLOCKCHAIN PROJECT ROUTER - /delete API', () => {
+    it('testing blockchain project router API when projectId field is empty', async function () {
+        let payload = {
+            userName: 'ca',
+            orgName: 'creditsauthority'
+        }
+        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+        const response = await request(app)
+            .post("/project/delete").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+            .send({
+                projectId: "",
+                comments: "dfg"
+            })
+        expect(response.body.success).to.equal(false)
+        expect(response.body.message).to.equal("'projectId' field is missing or Invalid in the request")
+    });
+
+    it('testing blockchain project router API when comments field is empty', async function () {
+        let payload = {
+            userName: 'ca',
+            orgName: 'creditsauthority'
+        }
+        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+        const response = await request(app)
+            .post("/project/delete").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+            .send({
+                projectId: "p01",
+                comments: ""
+
+            })
+        expect(response.body.success).to.equal(false)
+        expect(response.body.message).to.equal("'comments' field is missing or Invalid in the request")
+    });
+
+})
+
+describe('BLOCKCHAIN PROJECT ROUTER - /delete API SUCCESS', () => {
+    let mockObj = ""
+    let mockObj1 = ""
+
+    // let resp={
+    //     getMessage:{
+    //         success: true,
+    //         message: "Successfully invoked CreateProject"
+    //     },
+    //     projectId:"p01"
+    // }
+    let transactionList = []
+    let buffer = Buffer.from(JSON.stringify(transactionList));
+
+    beforeEach(() => {
+        mockObj = sandbox.stub(invoke, 'main');
+        mockObj1 = sandbox.stub(projectService, 'deleteProjectById');
+
+    });
+    afterEach(() => {
+        mockObj.restore();
+        mockObj1.restore();
+
+    });
+    it('testing blockchain project delete API', async function () {
+        mockObj.resolves(null)
+        mockObj1.resolves(null)
+
+        let payload = {
+            userName: 'ca',
+            orgName: 'creditsauthority'
+        }
+        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+        const response = await request(app)
+            .post("/project/delete").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+            .send({
+                projectId: "p01",
+                comments: "dfg",
+
+            })
+        console.log("Resp23:", response.body)
+        expect(response.body.success).to.equal(true)
+        // expect(response.body.message).to.equal("'amount' field is missing or Invalid in the request")
+    })
+})
 
 
 describe('BLOCKCHAIN PROJECT ROUTER - /userProfile/transactions API SUCCESS', () => {
@@ -1114,183 +1343,7 @@ describe('BLOCKCHAIN PROJECT ROUTER - /filtered-projects API SUCCESS', () => {
 })
 
 
-describe('BLOCKCHAIN PROJECT ROUTER - /all API', () => {
-    it('testing blockchain project router API when self field is empty', async function () {
-        let payload = {
-            userName: 'ngo2',
-            orgName: 'ngo'
-        }
-        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
-        const response = await request(app)
-            .get("/project/all").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-            .query({
-                self: "",
-                ongoing: "true",
-                newRecords: "1",
-                pageSize: "10",
-                bookmark: "Something",
-                ngoName: "ngo",
-                projectType: "Education",
-                place: "fg"
 
-            })
-        expect(response.body.success).to.equal(false)
-        expect(response.body.message).to.equal("'self' field is missing or Invalid in the request")
-    });
-
-    it('testing blockchain project router API when ongoing field is empty', async function () {
-        let payload = {
-            userName: 'ngo2',
-            orgName: 'ngo'
-        }
-        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
-        const response = await request(app)
-            .get("/project/all").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-            .query({
-                self: "1",
-                ongoing: "",
-                newRecords: "1",
-                pageSize: "10",
-                bookmark: "Something",
-                ngoName: "ngo",
-                projectType: "Education",
-                place: "fg"
-            })
-        expect(response.body.success).to.equal(false)
-        expect(response.body.message).to.equal("'ongoing' field is missing or Invalid in the request")
-    });
-
-    it('testing blockchain project router API when newRecords field is empty', async function () {
-        let payload = {
-            userName: 'ngo2',
-            orgName: 'ngo'
-        }
-        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
-        const response = await request(app)
-            .get("/project/all").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-            .query({
-                self: 1,
-                ongoing: "true",
-                newRecords: "",
-                pageSize: "10",
-                bookmark: "Something",
-                ngoName: "ngo",
-                projectType: "Education",
-                place: "fg"
-
-            })
-        expect(response.body.success).to.equal(false)
-        expect(response.body.message).to.equal("'newRecords' field is missing or Invalid in the request")
-    });
-
-    it('testing blockchain project router API when pageSize field is empty', async function () {
-        let payload = {
-            userName: 'ngo2',
-            orgName: 'ngo'
-        }
-        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
-        const response = await request(app)
-            .get("/project/all").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-            .query({
-                self: 1,
-                ongoing: "true",
-                newRecords: "1",
-                pageSize: "",
-                bookmark: "Something",
-                ngoName: "ngo",
-                projectType: "Education",
-                place: "fg"
-
-            })
-        expect(response.body.success).to.equal(false)
-        expect(response.body.message).to.equal("'pageSize' field is missing or Invalid in the request")
-    });
-
-})
-
-describe('BLOCKCHAIN PROJECT ROUTER - /all API SUCCESS', () => {
-    let mockObj = ""
-    let finalres = {
-        Results: [],
-        RecordsCount: 1,
-        bookmark: "nil"
-    }
-
-    let msg = {
-        success: true,
-        message: finalres
-    }
-    let transactionList = []
-    let buffer = Buffer.from(JSON.stringify(finalres));
-
-    beforeEach(() => {
-        mockObj = sandbox.stub(query, 'main');
-    });
-    afterEach(() => {
-        mockObj.restore();
-    });
-    it('testing blockchain project all API', async function () {
-        mockObj.resolves(buffer)
-        let payload = {
-            userName: 'ngo2',
-            orgName: 'ngo'
-        }
-        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
-        const response = await request(app)
-            .get("/project/all").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-            .query({
-                self: "self",
-                ongoing: "true",
-                newRecords: "1",
-                pageSize: "10",
-                bookmark: "Something",
-                ngoName: "ngo",
-                projectType: "Education",
-                place: "fg"
-
-            })
-        console.log("Resp23:", response.body)
-        expect(response.body.success).to.equal(true)
-        // expect(response.body.message).to.equal("'amount' field is missing or Invalid in the request")
-    })
-})
-
-describe('BLOCKCHAIN PROJECT ROUTER - /total-ongoing-projects API SUCCESS', () => {
-    let mockObj = ""
-    let finalres = {
-        getmessage: {
-            success: true,
-            message: "CommonQuery successful"
-        },
-        projectCount: 1
-    }
-    let msg = {
-        Results: [],
-        RecordsCount: '0',
-        Bookmark: 'nil'
-    }
-    var buffer = Buffer.from(JSON.stringify(msg));
-
-    beforeEach(() => {
-        mockObj = sandbox.stub(query, 'main');
-    });
-    afterEach(() => {
-        mockObj.restore();
-    });
-    it('testing blockchain project total-ongoing-projects API', async function () {
-        mockObj.resolves(buffer)
-        let payload = {
-            userName: 'ca',
-            orgName: 'creditsauthority'
-        }
-        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
-        const response = await request(app)
-            .get("/project/total-ongoing-projects").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-        console.log("Resp23:", response.body)
-        expect(response.body.success).to.equal(true)
-        // expect(response.body.message).to.equal("'amount' field is missing or Invalid in the request")
-    })
-})
 
 describe('BLOCKCHAIN PROJECT ROUTER - /corporate-project-transactions API', () => {
     it('testing blockchain project router API when corporate field is empty', async function () {
@@ -1365,80 +1418,6 @@ describe('BLOCKCHAIN PROJECT ROUTER - /corporate-project-transactions API SUCCES
         // expect(response.body.message).to.equal("'amount' field is missing or Invalid in the request")
     })
 })
-
-// describe('BLOCKCHAIN PROJECT ROUTER - /total-corporate-ongoing-projects API', () => {
-//     it('testing blockchain project router API when corporate field is empty', async function () {
-//         let payload = {
-//             userName: 'corp2',
-//             orgName: 'corporate'
-//         }
-//         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
-//         const response = await request(app)
-//             .get("/project/total-corporate-ongoing-projects").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-//             .send({
-//                 corporate: "",
-//                 projectId: "p01"
-
-//             })
-//         expect(response.body.success).to.equal(false)
-//         expect(response.body.message).to.equal("'corporate' field is missing or Invalid in the request")
-//     });
-// })
-
-// describe('BLOCKCHAIN PROJECT ROUTER - /total-corporate-ongoing-projects API SUCCESS', () => {
-//     let mockObj = ""
-//     let finalres = {
-//         getmessage: {
-//             success: true,
-//             message: "CommonQuery successful"
-//         },
-//         projectCount: "1"
-//     }
-//     let transactionList = []
-//     let buffer = Buffer.from(JSON.stringify(transactionList));
-
-//     beforeEach(() => {
-//         mockObj = sandbox.stub(query, 'main');
-//     });
-//     afterEach(() => {
-//         mockObj.restore();
-//     });
-//     it('testing blockchain project total-corporate-ongoing-projects API', async function () {
-//         mockObj.resolves(buffer)
-//         let payload = {
-//             userName: 'corp2',
-//             orgName: 'corporate'
-//         }
-//         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
-//         const response = await request(app)
-//             .get("/project/total-corporate-ongoing-projects").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-//             .query({
-//                 corporate: "keanu"
-
-//             })
-//         console.log("Resp23:", response.body)
-//         expect(response.body.success).to.equal(true)
-//         // expect(response.body.message).to.equal("'amount' field is missing or Invalid in the request")
-//     })
-// })
-
-// describe('BLOCKCHAIN PROJECT ROUTER - /ngo-project-transactions API', () => {
-//     // it('testing blockchain project router API when projectId field is empty', async function () {
-//     //     let payload = {
-//     //         userName: 'ngo2',
-//     //         orgName: 'ngo'
-//     //     }
-//     //     const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
-//     //     const response = await request(app)
-//     //         .get("/project/ngo-project-transactions").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-//     //         .send({
-//     //             projectId: ""
-
-//     //         })
-//     //     expect(response.body.success).to.equal(false)
-//     //     expect(response.body.message).to.equal("'projectId' field is missing or Invalid in the request")
-//     // });
-// })
 
 describe('BLOCKCHAIN PROJECT ROUTER - /ngo-project-transactions API SUCCESS', () => {
     let mockObj = ""
@@ -1532,57 +1511,312 @@ describe('BLOCKCHAIN PROJECT ROUTER - /transactions API SUCCESS', () => {
     })
 })
 
-describe('BLOCKCHAIN PROJECT ROUTER - /getCorporateProjectDetails API', () => {
-    it('testing blockchain project router API when corporate field is empty', async function () {
-        let payload = {
-            userName: 'ca',
-            orgName: 'creditsauthority'
-        }
-        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
-        const response = await request(app)
-            .get("/project/getCorporateProjectDetails").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-            .send({
-                corporate: ""
+// describe('BLOCKCHAIN PROJECT ROUTER - /getCorporateProjectDetails API', () => {
+//     it('testing blockchain project router API when corporate field is empty', async function () {
+//         let payload = {
+//             userName: 'ca',
+//             orgName: 'creditsauthority'
+//         }
+//         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+//         const response = await request(app)
+//             .get("/project/getCorporateProjectDetails").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+//             .send({
+//                 corporate: ""
 
-            })
-        expect(response.body.success).to.equal(false)
-        expect(response.body.message).to.equal("'corporate' field is missing or Invalid in the request")
-    });
-})
+//             })
+//         expect(response.body.success).to.equal(false)
+//         expect(response.body.message).to.equal("'corporate' field is missing or Invalid in the request")
+//     });
+// })
 
-describe('BLOCKCHAIN PROJECT ROUTER - /getCorporateProjectDetails API SUCCESS', () => {
-    let mockObj = ""
-    let finalres = {
-        getmessage: {
-            success: true,
-            message: "CommonQuery successful"
-        },
-        records: "1"
-    }
-    let transactionList = []
-    let buffer = Buffer.from(JSON.stringify(transactionList));
+// describe('BLOCKCHAIN PROJECT ROUTER - /getCorporateProjectDetails API SUCCESS', () => {
+//     let mockObj = ""
+//     let finalres = {
+//         getmessage: {
+//             success: true,
+//             message: "CommonQuery successful"
+//         },
+//         records: "1"
+//     }
+//     let transactionList = []
+//     let buffer = Buffer.from(JSON.stringify(transactionList));
 
-    beforeEach(() => {
-        mockObj = sandbox.stub(query, 'main');
-    });
-    afterEach(() => {
-        mockObj.restore();
-    });
-    it('testing blockchain project getCorporateProjectDetails API', async function () {
-        mockObj.resolves(buffer)
-        let payload = {
-            userName: 'ca',
-            orgName: 'creditsauthority'
-        }
-        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
-        const response = await request(app)
-            .get("/project/getCorporateProjectDetails").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-            .query({
-                args: "keanu"
+//     beforeEach(() => {
+//         mockObj = sandbox.stub(query, 'main');
+//     });
+//     afterEach(() => {
+//         mockObj.restore();
+//     });
+//     it('testing blockchain project getCorporateProjectDetails API', async function () {
+//         mockObj.resolves(buffer)
+//         let payload = {
+//             userName: 'ca',
+//             orgName: 'creditsauthority'
+//         }
+//         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+//         const response = await request(app)
+//             .get("/project/getCorporateProjectDetails").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+//             .query({
+//                 args: "keanu"
 
-            })
-        console.log("Resp23:", response.body)
-        expect(response.body.success).to.equal(true)
-        // expect(response.body.message).to.equal("'amount' field is missing or Invalid in the request")
-    })
-})
+//             })
+//         console.log("Resp23:", response.body)
+//         expect(response.body.success).to.equal(true)
+//         // expect(response.body.message).to.equal("'amount' field is missing or Invalid in the request")
+//     })
+// })
+
+// describe('BLOCKCHAIN PROJECT ROUTER - /total-corporate-ongoing-projects API', () => {
+//     it('testing blockchain project router API when corporate field is empty', async function () {
+//         let payload = {
+//             userName: 'corp2',
+//             orgName: 'corporate'
+//         }
+//         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+//         const response = await request(app)
+//             .get("/project/total-corporate-ongoing-projects").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+//             .send({
+//                 corporate: "",
+//                 projectId: "p01"
+
+//             })
+//         expect(response.body.success).to.equal(false)
+//         expect(response.body.message).to.equal("'corporate' field is missing or Invalid in the request")
+//     });
+// })
+
+// describe('BLOCKCHAIN PROJECT ROUTER - /total-corporate-ongoing-projects API SUCCESS', () => {
+//     let mockObj = ""
+//     let finalres = {
+//         getmessage: {
+//             success: true,
+//             message: "CommonQuery successful"
+//         },
+//         projectCount: "1"
+//     }
+//     let transactionList = []
+//     let buffer = Buffer.from(JSON.stringify(transactionList));
+
+//     beforeEach(() => {
+//         mockObj = sandbox.stub(query, 'main');
+//     });
+//     afterEach(() => {
+//         mockObj.restore();
+//     });
+//     it('testing blockchain project total-corporate-ongoing-projects API', async function () {
+//         mockObj.resolves(buffer)
+//         let payload = {
+//             userName: 'corp2',
+//             orgName: 'corporate'
+//         }
+//         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+//         const response = await request(app)
+//             .get("/project/total-corporate-ongoing-projects").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+//             .query({
+//                 corporate: "keanu"
+
+//             })
+//         console.log("Resp23:", response.body)
+//         expect(response.body.success).to.equal(true)
+//         // expect(response.body.message).to.equal("'amount' field is missing or Invalid in the request")
+//     })
+// })
+
+// describe('BLOCKCHAIN PROJECT ROUTER - /ngo-project-transactions API', () => {
+//     // it('testing blockchain project router API when projectId field is empty', async function () {
+//     //     let payload = {
+//     //         userName: 'ngo2',
+//     //         orgName: 'ngo'
+//     //     }
+//     //     const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+//     //     const response = await request(app)
+//     //         .get("/project/ngo-project-transactions").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+//     //         .send({
+//     //             projectId: ""
+
+//     //         })
+//     //     expect(response.body.success).to.equal(false)
+//     //     expect(response.body.message).to.equal("'projectId' field is missing or Invalid in the request")
+//     // });
+// })
+
+
+
+
+// describe('BLOCKCHAIN PROJECT ROUTER - /all API', () => {
+//     it('testing blockchain project router API when self field is empty', async function () {
+//         let payload = {
+//             userName: 'ngo2',
+//             orgName: 'ngo'
+//         }
+//         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+//         const response = await request(app)
+//             .get("/project/all").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+//             .query({
+//                 self: "",
+//                 ongoing: "true",
+//                 newRecords: "1",
+//                 pageSize: "10",
+//                 bookmark: "Something",
+//                 ngoName: "ngo",
+//                 projectType: "Education",
+//                 place: "fg"
+
+//             })
+//         expect(response.body.success).to.equal(false)
+//         expect(response.body.message).to.equal("'self' field is missing or Invalid in the request")
+//     });
+
+//     it('testing blockchain project router API when ongoing field is empty', async function () {
+//         let payload = {
+//             userName: 'ngo2',
+//             orgName: 'ngo'
+//         }
+//         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+//         const response = await request(app)
+//             .get("/project/all").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+//             .query({
+//                 self: "1",
+//                 ongoing: "",
+//                 newRecords: "1",
+//                 pageSize: "10",
+//                 bookmark: "Something",
+//                 ngoName: "ngo",
+//                 projectType: "Education",
+//                 place: "fg"
+//             })
+//         expect(response.body.success).to.equal(false)
+//         expect(response.body.message).to.equal("'ongoing' field is missing or Invalid in the request")
+//     });
+
+//     it('testing blockchain project router API when newRecords field is empty', async function () {
+//         let payload = {
+//             userName: 'ngo2',
+//             orgName: 'ngo'
+//         }
+//         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+//         const response = await request(app)
+//             .get("/project/all").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+//             .query({
+//                 self: 1,
+//                 ongoing: "true",
+//                 newRecords: "",
+//                 pageSize: "10",
+//                 bookmark: "Something",
+//                 ngoName: "ngo",
+//                 projectType: "Education",
+//                 place: "fg"
+
+//             })
+//         expect(response.body.success).to.equal(false)
+//         expect(response.body.message).to.equal("'newRecords' field is missing or Invalid in the request")
+//     });
+
+//     it('testing blockchain project router API when pageSize field is empty', async function () {
+//         let payload = {
+//             userName: 'ngo2',
+//             orgName: 'ngo'
+//         }
+//         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+//         const response = await request(app)
+//             .get("/project/all").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+//             .query({
+//                 self: 1,
+//                 ongoing: "true",
+//                 newRecords: "1",
+//                 pageSize: "",
+//                 bookmark: "Something",
+//                 ngoName: "ngo",
+//                 projectType: "Education",
+//                 place: "fg"
+
+//             })
+//         expect(response.body.success).to.equal(false)
+//         expect(response.body.message).to.equal("'pageSize' field is missing or Invalid in the request")
+//     });
+
+// })
+
+// describe('BLOCKCHAIN PROJECT ROUTER - /all API SUCCESS', () => {
+//     let mockObj = ""
+//     let finalres = {
+//         Results: [],
+//         RecordsCount: 1,
+//         bookmark: "nil"
+//     }
+
+//     let msg = {
+//         success: true,
+//         message: finalres
+//     }
+//     let transactionList = []
+//     let buffer = Buffer.from(JSON.stringify(finalres));
+
+//     beforeEach(() => {
+//         mockObj = sandbox.stub(query, 'main');
+//     });
+//     afterEach(() => {
+//         mockObj.restore();
+//     });
+//     it('testing blockchain project all API', async function () {
+//         mockObj.resolves(buffer)
+//         let payload = {
+//             userName: 'ngo2',
+//             orgName: 'ngo'
+//         }
+//         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+//         const response = await request(app)
+//             .get("/project/all").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+//             .query({
+//                 self: "self",
+//                 ongoing: "true",
+//                 newRecords: "1",
+//                 pageSize: "10",
+//                 bookmark: "Something",
+//                 ngoName: "ngo",
+//                 projectType: "Education",
+//                 place: "fg"
+
+//             })
+//         console.log("Resp23:", response.body)
+//         expect(response.body.success).to.equal(true)
+//         // expect(response.body.message).to.equal("'amount' field is missing or Invalid in the request")
+//     })
+// })
+
+// describe('BLOCKCHAIN PROJECT ROUTER - /total-ongoing-projects API SUCCESS', () => {
+//     let mockObj = ""
+//     let finalres = {
+//         getmessage: {
+//             success: true,
+//             message: "CommonQuery successful"
+//         },
+//         projectCount: 1
+//     }
+//     let msg = {
+//         Results: [],
+//         RecordsCount: '0',
+//         Bookmark: 'nil'
+//     }
+//     var buffer = Buffer.from(JSON.stringify(msg));
+
+//     beforeEach(() => {
+//         mockObj = sandbox.stub(query, 'main');
+//     });
+//     afterEach(() => {
+//         mockObj.restore();
+//     });
+//     it('testing blockchain project total-ongoing-projects API', async function () {
+//         mockObj.resolves(buffer)
+//         let payload = {
+//             userName: 'ca',
+//             orgName: 'creditsauthority'
+//         }
+//         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+//         const response = await request(app)
+//             .get("/project/total-ongoing-projects").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+//         console.log("Resp23:", response.body)
+//         expect(response.body.success).to.equal(true)
+//         // expect(response.body.message).to.equal("'amount' field is missing or Invalid in the request")
+//     })
+// })

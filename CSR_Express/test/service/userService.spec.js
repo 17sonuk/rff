@@ -5,6 +5,7 @@ const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised)
 const userService = require('../../service/userService');
 const userModel = require('../../model/userModel');
+const messages = require('../../loggers/messages');
 
 describe('TESTING USER SERVICE - REGISTER', () => {
     let mockObj = ""
@@ -173,16 +174,16 @@ describe('TESTING USER SERVICE - REGISTER', () => {
 
         }
 
-        mockObj.resolves('some address info is missing/invalid!');
+        mockObj.resolves(messages.error.INVALID_ADDRESS);
         try {
             userService.registerUser(registerUserData1).then(res => {
                 expect(registerUserData.status).to.equal('approved')
-                expect(res.message).to.equal('some address info is missing/invalid!')
+                expect(res.message).to.equal(messages.error.INVALID_ADDRESS)
                 userModel.registerUser.restore()
             })
         }
         catch (err) {
-            expect(err.message).to.equal('some address info is missing/invalid!')
+            expect(err.message).to.equal(messages.error.INVALID_ADDRESS)
         }
         done()
     })
@@ -220,15 +221,15 @@ describe('TESTING USER SERVICE - REGISTER', () => {
 
         }
 
-        mockObj.resolves('Paypal email id is missing!');
+        mockObj.resolves(messages.error.MISSING_PAYPAL_ID);
         try {
             userService.registerUser(registerUserData1).then(res => {
                 expect(registerUserData.status).to.equal('approved')
-                expect(res).to.throw('Paypal email id is missing!')
+                expect(res).to.throw(messages.error.MISSING_PAYPAL_ID)
                 userModel.registerUser.restore();
             })
         } catch (err) {
-            expect(err.message).to.equal('Paypal email id is missing!')
+            expect(err.message).to.equal(messages.error.MISSING_PAYPAL_ID)
         }
         done()
     })
@@ -266,15 +267,15 @@ describe('TESTING USER SERVICE - REGISTER', () => {
 
         }
 
-        mockObj.resolves('Crypto id is missing');
+        mockObj.resolves(messages.error.MISSING_CRYPTO_ID);
         try {
             userService.registerUser(registerUserData1).then(res => {
                 expect(registerUserData.status).to.equal('approved')
-                expect(res).to.throw('Crypto id is missing')
+                expect(res).to.throw(messages.error.MISSING_CRYPTO_ID)
                 userModel.registerUser.restore();
             })
         } catch (err) {
-            expect(err.message).to.equal('Crypto id is missing')
+            expect(err.message).to.equal(messages.error.MISSING_CRYPTO_ID)
         }
         done()
     })
@@ -306,8 +307,8 @@ describe('TESTING USER SERVICE - REGISTER', () => {
                 }
             ]
         }
-        mockObj.resolves('Donor type is missing/invalid!'); 
-        expect(userService.registerUser.bind(userService, registerUserData)).to.throw('Donor type is missing/invalid!')
+        mockObj.resolves(messages.error.InvalidDonorType); 
+        expect(userService.registerUser.bind(userService, registerUserData)).to.throw(messages.error.InvalidDonorType)
         userModel.registerUser.restore();
         done()
     })

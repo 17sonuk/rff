@@ -88,8 +88,6 @@ router.get('/unapproved-users', (req, res, next) => {
 
 //get unapproved user details
 router.get('/getApprovedInstitutions', async (req, res, next) => {
-    logger.debug(`router-getApprovedInstitutions`);
-
     try {
         let result = await userService.getApprovedInstitutions();
         res.json(result)
@@ -99,99 +97,6 @@ router.get('/getApprovedInstitutions', async (req, res, next) => {
     }
 })
 
-//approve user
-router.post('/approve-user', async (req, res, next) => {
-    try {
-        let orgName = await userService.approveUser(req.body.userName);
-        try {
-            await registerUser(req.body.userName, orgName);
-            transporter.verify()
-                .then((data) => {
-                    let receiverEmail = ''
-                    orgModel.findOne({ userName: req.body.userName }, { _id: 0, email: 1 })
-                        .then((email) => {
-                            receiverEmail = email
-                            transporter.sendMail({
-                                from: '"CSR Test Mail" <csr.rainforest@gmail.com', // sender address
-                                to: receiverEmail.email, // list of receivers // 'c1@gmail.com, c2@outlook.com'
-                                subject: "Testing csr mail", // Subject line
-                                text: "Congrats " + req.body.userName + ", You have successfully onboarded to the CSR platform!", // plain text body
-                                //html: "<b>You have successfully onboarded to the CSR platform</b>", // html body
-                            }).then(info => {
-                                console.log({ info });
-                            }).catch(console.error);
-                        })
-                })
-                .catch(console.error);
-            return res.json(getMessage(true, "User approved successfully!"));
-        } catch (registerError) {
-            if (registerError.status === 400) {
-                return generateError(registerError, next, 400, `${req.body.userName} is already registered in blockchain`);
-            }
-            try {
-                await userService.resetUserStatus(req.body.userName)
-                return generateError(registerError, next, 500, 'Couldn\'t register user in blockchain!');
-            } catch (resetStatusError) {
-                return generateError(resetStatusError, next);
-            }
-        }
-    } catch (approveErr) {
-        return generateError(approveErr, next);
-    }
-})
-
-
-//project completed
-
-router.post('/project-completed', async (req, res, next) => {
-    try {
-        let projectData = await mongoProjectService.getProjectById(req.body.projectId)
-        try {
-            let emailList = orgModel.find({ userName: { $in: contributorsList } }, { _id: 0, email: 1 })
-            for (let i = 0; i < emailList.length; i++) {
-                if (i != 0) {
-                    emailList += ', '
-                }
-            }
-            transporter.verify().then((data) => {
-                transporter.sendMail({
-                    from: '"CSR Test Mail" <csr.rainforest@gmail.com', // sender address
-                    bcc: emailList, // list of receivers
-                    subject: `${projectData.projectName} is now completed`, // Subject line
-                    text: ` Hi ${donorList.name}, ${projectData.projectName} is now completed, thanks for your contribution `, // plain text body
-                    //html: "<b>You have successfully onboarded to the CSR platform</b>", // html body
-                }).then(info => {
-                    console.log({ info });
-                }).catch(console.error);
-            }).catch(console.error);
-            return res.json(getMessage(true, "Project has been completed and donors have been notified!"));
-        } catch (err3) {
-            return generateError(err3, next);
-        }
-    } catch (err4) {
-        return generateError(err4, next);
-    }
-})
-
-//reject user
-router.post('/reject-user', (req, res, next) => {
-    logger.debug(`router-rejectUser: ${JSON.stringify(req.body, null, 2)}`);
-
-    userService.rejectUser(req.body.userName)
-        .then((data) => {
-            res.json(data)
-        })
-        .catch(err => next(err))
-})
-
-//get profit amount of corporate for Current financial year
-router.get('/profit-corporate', (req, res, next) => {
-    userService.getAmountFromBalanceSheet(req.query.userName)
-        .then((data) => {
-            res.json(data)
-        })
-        .catch(err => next(err))
-})
 
 //get notification - true for unseen and false for seen
 router.get('/notification/:seen', (req, res, next) => {
@@ -217,4 +122,100 @@ router.put('/update', (req, res, next) => {
         res.json(data)
     }).catch(err => next(err))
 })
+
+
+
+// //approve user : not using
+// router.post('/approve-user', async (req, res, next) => {
+//     try {
+//         let orgName = await userService.approveUser(req.body.userName);
+//         try {
+//             await registerUser(req.body.userName, orgName);
+//             transporter.verify()
+//                 .then((data) => {
+//                     let receiverEmail = ''
+//                     orgModel.findOne({ userName: req.body.userName }, { _id: 0, email: 1 })
+//                         .then((email) => {
+//                             receiverEmail = email
+//                             transporter.sendMail({
+//                                 from: '"CSR Test Mail" <csr.rainforest@gmail.com', // sender address
+//                                 to: receiverEmail.email, // list of receivers // 'c1@gmail.com, c2@outlook.com'
+//                                 subject: "Testing csr mail", // Subject line
+//                                 text: "Congrats " + req.body.userName + ", You have successfully onboarded to the CSR platform!", // plain text body
+//                                 //html: "<b>You have successfully onboarded to the CSR platform</b>", // html body
+//                             }).then(info => {
+//                                 console.log({ info });
+//                             }).catch(console.error);
+//                         })
+//                 })
+//                 .catch(console.error);
+//             return res.json(getMessage(true, "User approved successfully!"));
+//         } catch (registerError) {
+//             if (registerError.status === 400) {
+//                 return generateError(registerError, next, 400, `${req.body.userName} is already registered in blockchain`);
+//             }
+//             try {
+//                 await userService.resetUserStatus(req.body.userName)
+//                 return generateError(registerError, next, 500, 'Couldn\'t register user in blockchain!');
+//             } catch (resetStatusError) {
+//                 return generateError(resetStatusError, next);
+//             }
+//         }
+//     } catch (approveErr) {
+//         return generateError(approveErr, next);
+//     }
+// })
+
+
+// //project completed : not using
+
+// router.post('/project-completed', async (req, res, next) => {
+//     try {
+//         let projectData = await mongoProjectService.getProjectById(req.body.projectId)
+//         try {
+//             let emailList = orgModel.find({ userName: { $in: contributorsList } }, { _id: 0, email: 1 })
+//             for (let i = 0; i < emailList.length; i++) {
+//                 if (i != 0) {
+//                     emailList += ', '
+//                 }
+//             }
+//             transporter.verify().then((data) => {
+//                 transporter.sendMail({
+//                     from: '"CSR Test Mail" <csr.rainforest@gmail.com', // sender address
+//                     bcc: emailList, // list of receivers
+//                     subject: `${projectData.projectName} is now completed`, // Subject line
+//                     text: ` Hi ${donorList.name}, ${projectData.projectName} is now completed, thanks for your contribution `, // plain text body
+//                     //html: "<b>You have successfully onboarded to the CSR platform</b>", // html body
+//                 }).then(info => {
+//                     console.log({ info });
+//                 }).catch(console.error);
+//             }).catch(console.error);
+//             return res.json(getMessage(true, "Project has been completed and donors have been notified!"));
+//         } catch (err3) {
+//             return generateError(err3, next);
+//         }
+//     } catch (err4) {
+//         return generateError(err4, next);
+//     }
+// })
+
+// //reject user : not using
+// router.post('/reject-user', (req, res, next) => {
+//     userService.rejectUser(req.body.userName)
+//         .then((data) => {
+//             res.json(data)
+//         })
+//         .catch(err => next(err))
+// })
+
+// //get profit amount of corporate for Current financial year : not using
+// router.get('/profit-corporate', (req, res, next) => {
+//     userService.getAmountFromBalanceSheet(req.query.userName)
+//         .then((data) => {
+//             res.json(data)
+//         })
+//         .catch(err => next(err))
+// })
+
+
 module.exports = router;

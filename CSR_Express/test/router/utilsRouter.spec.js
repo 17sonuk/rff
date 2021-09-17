@@ -12,36 +12,6 @@ const invoke = require('../../fabric-sdk/invoke');
 const query = require('../../fabric-sdk/query');
 const { orgModel, donorModel, projectModel } = require('../../model/models')
 
-describe('BLOCKCHAIN UTILS ROUTER - /add-corporate-email API SUCCESS', () => {
-    let mockObj = ""
-    let finalres = {
-        success: true,
-        message: "Successfully invoked AddCorporateEmail"
-    }
-
-    beforeEach(() => {
-        mockObj = sandbox.stub(invoke, 'main');
-    });
-    afterEach(() => {
-        mockObj.restore();
-    });
-    it('testing blockchain utils router API', async function () {
-        mockObj.resolves(null)
-        let payload = {
-            userName: 'ca',
-            orgName: 'creditsauthority'
-        }
-        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
-        const response = await request(app)
-            .post("/utils/add-corporate-email").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-            .send({
-                corporateName: "keanu",
-                email: "keanu@gmail.com"
-            })
-        expect(response.body.success).to.equal(true)
-    });
-})
-
 
 describe('BLOCKCHAIN UTILS ROUTER - /yearly-report API SUCCESS', () => {
     let mockObj = ""
@@ -131,6 +101,37 @@ describe('BLOCKCHAIN UTILS ROUTER - /yearly-report API', () => {
         expect(response.body.message).to.equal("'year' field is missing or Invalid in the request")
     });
 })
+
+// describe('BLOCKCHAIN UTILS ROUTER - /add-corporate-email API SUCCESS', () => {
+//     let mockObj = ""
+//     let finalres = {
+//         success: true,
+//         message: "Successfully invoked AddCorporateEmail"
+//     }
+
+//     beforeEach(() => {
+//         mockObj = sandbox.stub(invoke, 'main');
+//     });
+//     afterEach(() => {
+//         mockObj.restore();
+//     });
+//     it('testing blockchain utils router API', async function () {
+//         mockObj.resolves(null)
+//         let payload = {
+//             userName: 'ca',
+//             orgName: 'creditsauthority'
+//         }
+//         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+//         const response = await request(app)
+//             .post("/utils/add-corporate-email").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+//             .send({
+//                 corporateName: "keanu",
+//                 email: "keanu@gmail.com"
+//             })
+//         expect(response.body.success).to.equal(true)
+//     });
+// })
+
 
 // describe('BLOCKCHAIN UTILS ROUTER - /upload-excel API SUCCESS', () => {
 //     let mockObj = ""

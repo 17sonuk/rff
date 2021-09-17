@@ -18,7 +18,7 @@ let orgMap = {
     'ngo': ORG3_NAME
 }
 
-// Request Token transaction on chaincode on target peers.- done // to discuss **
+// Request Token transaction on chaincode on target peers.- done // to discuss ** 
 router.post('/request', async (req, res, next) => {
     logger.debug('==================== INVOKE REQUEST TOKEN ON CHAINCODE ==================');
 
@@ -61,67 +61,6 @@ router.post('/request', async (req, res, next) => {
             throw error
         }
     } catch (e) {
-        generateError(e, next);
-    }
-});
-
-// Assign Token transaction on chaincode on target peers. - dome
-router.post('/assign', async (req, res, next) => {
-    logger.debug('==================== INVOKE ASSIGN TOKEN ON CHAINCODE ==================');
-
-    const paymentId = req.body.paymentId;
-
-    if (!CHAINCODE_NAME) {
-        return res.json(fieldErrorMessage('\'chaincodeName\''));
-    }
-    if (!CHANNEL_NAME) {
-        return res.json(fieldErrorMessage('\'channelName\''));
-    }
-    if (!paymentId) {
-        return res.json(fieldErrorMessage('\'paymentId\''));
-    }
-
-    let args = [paymentId, Date.now().toString(), uuid().toString()]
-    //added current UTC date(in epoch milliseconds) to args
-    args = JSON.stringify(args);
-    logger.debug('args  : ' + args);
-
-    try {
-        await invoke.main(req.userName, req.orgName, "AssignTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
-        return res.json(getMessage(true, 'Successfully invoked AssignTokens'));
-    } catch (e) {
-        generateError(e, next);
-    }
-});
-
-// Assign Token transaction on chaincode on target peers. - done
-router.post('/reject', async (req, res, next) => {
-    logger.debug('==================== INVOKE rejectTokens TOKEN ON CHAINCODE ==================');
-
-    //extract parameters from request body.
-    const paymentId = req.body.paymentId;
-    const comment = req.body.comment;
-
-    if (!CHAINCODE_NAME) {
-        return res.json(fieldErrorMessage('\'chaincodeName\''));
-    } else if (!CHANNEL_NAME) {
-        return res.json(fieldErrorMessage('\'channelName\''));
-    } else if (!paymentId) {
-        return res.json(fieldErrorMessage('\'paymentId\''));
-    } else if (!comment) {
-        return res.json(fieldErrorMessage('\'comment\''));
-    }
-
-    let args = [paymentId, comment, Date.now().toString(), uuid().toString()]
-    //added current UTC date(in epoch milliseconds) to args
-    args = JSON.stringify(args);
-    logger.debug('args  : ' + args);
-
-    try {
-        await invoke.main(req.userName, req.orgName, "RejectTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
-        return res.json(getMessage(true, 'Successfully invoked RejectTokens'));
-    }
-    catch (e) {
         generateError(e, next);
     }
 });
@@ -233,79 +172,140 @@ router.post('/transfer', async (req, res, next) => {
     }
 });
 
-// get All TokenRequests - done
-router.get('/all-requests', async (req, res, next) => {
-    const userDLTName = req.userName + "." + orgMap[req.orgName.toLowerCase()] + "." + BLOCKCHAIN_DOMAIN + ".com";
-    const pageSize = req.query.pageSize;
-    let bookmark = req.query.bookmark;
-    const status = req.query.status;
+// // Assign Token transaction on chaincode on target peers. - dome : not using
+// router.post('/assign', async (req, res, next) => {
+//     logger.debug('==================== INVOKE ASSIGN TOKEN ON CHAINCODE ==================');
 
-    if (!CHAINCODE_NAME) {
-        return res.json(fieldErrorMessage('\'chaincodeName\''));
-    }
-    if (!CHANNEL_NAME) {
-        return res.json(fieldErrorMessage('\'channelName\''));
-    }
-    if (!pageSize) {
-        return res.json(fieldErrorMessage('\'pageSize\''));
-    }
-    if (!status) {
-        return res.json(fieldErrorMessage('\'status\''));
-    }
-    if (!bookmark) {
-        bookmark = '';
-    }
+//     const paymentId = req.body.paymentId;
 
-    const queryString = {
-        "selector": {
-            "docType": "TokenRequest",
-            "status": status
-        },
-        "sort": [{ "date": "asc" }]
-    }
+//     if (!CHAINCODE_NAME) {
+//         return res.json(fieldErrorMessage('\'chaincodeName\''));
+//     }
+//     if (!CHANNEL_NAME) {
+//         return res.json(fieldErrorMessage('\'channelName\''));
+//     }
+//     if (!paymentId) {
+//         return res.json(fieldErrorMessage('\'paymentId\''));
+//     }
 
-    if (req.orgName === 'creditsauthority') {
-        logger.debug('CA has requested...')
-    }
-    else if (req.orgName === 'corporate') {
-        queryString['selector']['from'] = userDLTName
-    }
-    else {
-        return res.json(getMessage(false, 'Unauthorised token tx request access...'))
-    }
+//     let args = [paymentId, Date.now().toString(), uuid().toString()]
+//     //added current UTC date(in epoch milliseconds) to args
+//     args = JSON.stringify(args);
+//     logger.debug('args  : ' + args);
 
-    let args = [JSON.stringify(queryString), String(pageSize), bookmark];
-    args = JSON.stringify(args);
-    logger.debug('args : ' + args);
+//     try {
+//         await invoke.main(req.userName, req.orgName, "AssignTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
+//         return res.json(getMessage(true, 'Successfully invoked AssignTokens'));
+//     } catch (e) {
+//         generateError(e, next);
+//     }
+// });
 
-    try {
-        let creditRequests = await query.main(req.userName, req.orgName, "CommonQueryPagination", CHAINCODE_NAME, CHANNEL_NAME, args);
-        creditRequests = JSON.parse(creditRequests.toString());
+// // Assign Token transaction on chaincode on target peers. - done : not using
+// router.post('/reject', async (req, res, next) => {
+//     logger.debug('==================== INVOKE rejectTokens TOKEN ON CHAINCODE ==================');
 
-        if (creditRequests.toString().includes("Error:")) {
-            let errorMessage = creditRequests.toString().split("Error:")[1].trim()
-            return res.json(getMessage(false, errorMessage))
-        }
-        else {
-            creditRequests['Results'] = creditRequests['Results'].map(elem => {
-                elem['Record'] = JSON.parse(elem['Record'])
-                elem['Record']['from'] = splitOrgName(elem['Record']['from'])
-                return elem['Record']
-            })
+//     //extract parameters from request body.
+//     const paymentId = req.body.paymentId;
+//     const comment = req.body.comment;
 
-            let finalResponse = {}
+//     if (!CHAINCODE_NAME) {
+//         return res.json(fieldErrorMessage('\'chaincodeName\''));
+//     } else if (!CHANNEL_NAME) {
+//         return res.json(fieldErrorMessage('\'channelName\''));
+//     } else if (!paymentId) {
+//         return res.json(fieldErrorMessage('\'paymentId\''));
+//     } else if (!comment) {
+//         return res.json(fieldErrorMessage('\'comment\''));
+//     }
 
-            //populate the MetaData
-            finalResponse["metaData"] = {}
-            finalResponse["metaData"]["recordsCount"] = creditRequests["RecordsCount"];
-            finalResponse["metaData"]["bookmark"] = creditRequests["Bookmark"];
-            finalResponse['records'] = creditRequests['Results']
-            return res.json(getMessage(true, finalResponse));
-        }
-    }
-    catch (e) {
-        generateError(e, next);
-    }
-});
+//     let args = [paymentId, comment, Date.now().toString(), uuid().toString()]
+//     //added current UTC date(in epoch milliseconds) to args
+//     args = JSON.stringify(args);
+//     logger.debug('args  : ' + args);
+
+//     try {
+//         await invoke.main(req.userName, req.orgName, "RejectTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
+//         return res.json(getMessage(true, 'Successfully invoked RejectTokens'));
+//     }
+//     catch (e) {
+//         generateError(e, next);
+//     }
+// });
+
+// // get All TokenRequests - done : not using
+// router.get('/all-requests', async (req, res, next) => {
+//     const userDLTName = req.userName + "." + orgMap[req.orgName.toLowerCase()] + "." + BLOCKCHAIN_DOMAIN + ".com";
+//     const pageSize = req.query.pageSize;
+//     let bookmark = req.query.bookmark;
+//     const status = req.query.status;
+
+//     if (!CHAINCODE_NAME) {
+//         return res.json(fieldErrorMessage('\'chaincodeName\''));
+//     }
+//     if (!CHANNEL_NAME) {
+//         return res.json(fieldErrorMessage('\'channelName\''));
+//     }
+//     if (!pageSize) {
+//         return res.json(fieldErrorMessage('\'pageSize\''));
+//     }
+//     if (!status) {
+//         return res.json(fieldErrorMessage('\'status\''));
+//     }
+//     if (!bookmark) {
+//         bookmark = '';
+//     }
+
+//     const queryString = {
+//         "selector": {
+//             "docType": "TokenRequest",
+//             "status": status
+//         },
+//         "sort": [{ "date": "asc" }]
+//     }
+
+//     if (req.orgName === 'creditsauthority') {
+//         logger.debug('CA has requested...')
+//     }
+//     else if (req.orgName === 'corporate') {
+//         queryString['selector']['from'] = userDLTName
+//     }
+//     else {
+//         return res.json(getMessage(false, 'Unauthorised token tx request access...'))
+//     }
+
+//     let args = [JSON.stringify(queryString), String(pageSize), bookmark];
+//     args = JSON.stringify(args);
+//     logger.debug('args : ' + args);
+
+//     try {
+//         let creditRequests = await query.main(req.userName, req.orgName, "CommonQueryPagination", CHAINCODE_NAME, CHANNEL_NAME, args);
+//         creditRequests = JSON.parse(creditRequests.toString());
+
+//         if (creditRequests.toString().includes("Error:")) {
+//             let errorMessage = creditRequests.toString().split("Error:")[1].trim()
+//             return res.json(getMessage(false, errorMessage))
+//         }
+//         else {
+//             creditRequests['Results'] = creditRequests['Results'].map(elem => {
+//                 elem['Record'] = JSON.parse(elem['Record'])
+//                 elem['Record']['from'] = splitOrgName(elem['Record']['from'])
+//                 return elem['Record']
+//             })
+
+//             let finalResponse = {}
+
+//             //populate the MetaData
+//             finalResponse["metaData"] = {}
+//             finalResponse["metaData"]["recordsCount"] = creditRequests["RecordsCount"];
+//             finalResponse["metaData"]["bookmark"] = creditRequests["Bookmark"];
+//             finalResponse['records'] = creditRequests['Results']
+//             return res.json(getMessage(true, finalResponse));
+//         }
+//     }
+//     catch (e) {
+//         generateError(e, next);
+//     }
+// });
 
 module.exports = router;
