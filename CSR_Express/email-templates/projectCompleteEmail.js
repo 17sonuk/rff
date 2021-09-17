@@ -1,9 +1,8 @@
-require('dotenv').config();
-const { PLATFORM_NAME, PLATFORM_HASHTAG, PLATFORM_URL } = process.env;
+const { PLATFORM_NAME, PLATFORM_HASHTAG, PLATFORM_URL, FEEDBACK_EMAIL } = require('./commonemailFields');
 
 module.exports = {
     projectCompleteEmail: (name, projectName, amount, projectId) => {
-        let url=PLATFORM_URL+"/projectDetails?projectid=" + projectId
+        let url = PLATFORM_URL + "/projectDetails?projectid=" + projectId
         return `<!DOCTYPE html>
         <html style="height:100%;">
         <head>
@@ -22,7 +21,7 @@ module.exports = {
                 <p>Please consider sharing the news on social media using #${PLATFORM_HASHTAG} and tell others why donating through this platform was important to you.</p>
                 <p>If you like these results, please consider donating to another project.</p>
                 <p><b><a href="${PLATFORM_URL}">Log in today to see how you can build on this positive climate action.</a></b></p>
-                <p>If you have any questions or feedback for us, please email blockchain@rffny.org</p>
+                <p>If you have any questions or feedback for us, please email ${FEEDBACK_EMAIL}</p>
                 <p>With gratitude,<br>
                 ${PLATFORM_NAME} Team</p>
             </div>  

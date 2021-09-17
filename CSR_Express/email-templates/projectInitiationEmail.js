@@ -1,5 +1,4 @@
-require('dotenv').config();
-const { PLATFORM_NAME, PLATFORM_HASHTAG } = process.env;
+const { PLATFORM_NAME, PLATFORM_HASHTAG, FEEDBACK_EMAIL } = require('./commonemailFields')
 
 module.exports = {
     projectInitiationEmail: (projectName, firstName, desc, date) => {
@@ -20,7 +19,7 @@ module.exports = {
             <p>What’s next?</p>
             <p>You can expect to receive periodic updates as this project hits its project milestones. The next milestone for this project is set to take place around ${date}.</p>
             <p>Please consider sharing the news on social media using #${PLATFORM_HASHTAG} and tell others why donating through this platform was important to you.</p>
-            <p>If you have any questions or feedback for us, please email blockchain@rffny.org</p>
+            <p>If you have any questions or feedback for us, please email ${FEEDBACK_EMAIL}</p>
             <p>With gratitude,<br>
             <b>${PLATFORM_NAME}</b></p>
         </div>   

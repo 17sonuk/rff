@@ -1,5 +1,4 @@
-require('dotenv').config();
-const { PLATFORM_NAME, PLATFORM_HASHTAG, PLATFORM_URL } = process.env;
+const { PLATFORM_NAME, PLATFORM_HASHTAG, PLATFORM_URL, FEEDBACK_EMAIL } = require('./commonemailFields')
 
 module.exports = {
     milestoneEmail: (name, projectName, amount, projectId, desc1) => {
@@ -26,7 +25,7 @@ module.exports = {
                 <p>Please consider sharing the news on social media using #${PLATFORM_HASHTAG} and tell others why donating through this platform was important to you.</p>
                 <p>What’s next?</p>
                 <p>Validated phase details: ${desc1}</p>
-                <p>If you have any questions or feedback for us, please email blockchain@rffny.org</p>
+                <p>If you have any questions or feedback for us, please email ${FEEDBACK_EMAIL}</p>
                 <p>With gratitude,<br>
                 ${PLATFORM_NAME} Team</p>
             </div>  

@@ -1,9 +1,7 @@
-require('dotenv').config();
-const { PLATFORM_NAME, PLATFORM_URL } = process.env;
+const { PLATFORM_NAME, PLATFORM_URL, FEEDBACK_EMAIL, } = require('./commonemailFields')
 
 module.exports = {
     institutionRegEmail: (firstName, orgName) => {
-        let url=PLATFORM_URL
         return `<!DOCTYPE html>
 <html style="height:100%;">
     <head>
@@ -21,9 +19,9 @@ module.exports = {
             <p>The communities leading projects on ${PLATFORM_NAME}  are stewards of land that is rich in carbon--a vital element to stabilize the global climate. Their lives and livelihoods are deeply connected to the forests, making them the best positioned to protect and restore them.</p>
             <p>Yet, financial incentives for extractive activities or other land uses, like agriculture, puts healthy forests at risk. Your support provides a key source of income to these communities to pursue a sustainable, climate-friendly economy. Importantly, your support also signals to the international community the importance of investing in rainforests and their peoples as a climate solution.</p>
             <p>We are in the eleventh hour of the climate crisis. If we continue with business as usual, we will most certainly witness signs of total ecosystem collapse in our lifetimes. The good news is we still have time to turn the tide, and effective action starts here, with these communities. You’ll see the results, we promise.</p>
-            <p><b><a href="${url}">Log in today, support a project, and make your contribution count.</a></b></p>
+            <p><b><a href="${PLATFORM_URL}">Log in today, support a project, and make your contribution count.</a></b></p>
             <p>And please share this journey with ${orgName}'s employees, partners and affiliates. We won’t make it alone. Let’s continue to build this community together, and bring tangible change in addressing the climate crisis before us.</p>
-            <p>If you have any questions or feedback for us, please email blockchain@rffny.org</p>
+            <p>If you have any questions or feedback for us, please email ${FEEDBACK_EMAIL}</p>
             <p>With gratitude,<br>
             <b>${PLATFORM_NAME} Team</b></p>
         </div>   
