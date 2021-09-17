@@ -4,7 +4,6 @@ const projectModelObj = {}
 //create a new project
 projectModelObj.createProject = (projectData) => {
     return projectModel.find({ projectId: projectData.projectId }).then(p => {
-
         if (p.length > 0) {
             return ({ message: 'Project ID already exist.', error: true })
         } else {
@@ -65,7 +64,6 @@ projectModelObj.addContributor = (projectId, contributor) => {
 //delete project
 projectModelObj.deleteProjectById = (projectId) => {
     return projectModel.find({ projectId: projectId }).then(p => {
-
         if (!p.length > 0) {
             return ({ message: 'Project ID does not exist.', error: true })
         } else {
@@ -87,8 +85,7 @@ projectModelObj.deleteProjectById = (projectId) => {
 //approval project update
 projectModelObj.updateProjectForApproval = async (projectId, projectObj) => {
     try {
-
-        let updateRes = await projectModel.updateOne({ projectId: projectId }, { $set: projectObj });
+        await projectModel.updateOne({ projectId: projectId }, { $set: projectObj });
         return { success: true, message: 'project successfully approved' }
     }
     catch (error) {

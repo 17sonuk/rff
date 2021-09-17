@@ -166,15 +166,15 @@ userModel.rejectUser = (userName) => {
 }
 
 //get current balancesheet amount
-userModel.getAmountFromBalanceSheet = (userName) => {
-    return orgModel.findOne({ userName: userName, role: 'Corporate' }, { _id: 0, file: 1 }).then(data => {
-        if (data) {
-            return data
-        } else {
-            return null
-        }
-    })
-}
+// userModel.getAmountFromBalanceSheet = (userName) => {
+//     return orgModel.findOne({ userName: userName, role: 'Corporate' }, { _id: 0, file: 1 }).then(data => {
+//         if (data) {
+//             return data
+//         } else {
+//             return null
+//         }
+//     })
+// }
 
 //create a new notification
 userModel.createNotification = (notificationData) => {

@@ -5,6 +5,7 @@ const userModel = require('../model/userModel');
 const mongoError = require('../model/mongoError')
 const individualRegEmailTemplate = require('../email-templates/individualRegEmail');
 const institutionRegEmailTemplate = require('../email-templates/institutionRegEmail');
+const messages = require('../loggers/messages');
 const userService = {};
 const { v4: uuid } = require('uuid');
 require('dotenv').config();
@@ -29,58 +30,58 @@ userService.registerUser = (obj) => {
     err.status = 400
     const validateEmail = /^[a-zA-Z0-9]+([._-]+[a-zA-Z0-9]+)*@[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*(?:\.[a-zA-Z]+)+$/;
     if (obj.email === '' || !validateEmail.test(obj.email)) {
-        err.message = 'Email is missing/invalid format!';
+        err.message = messages.error.INVALID_EMAIL;
         throw err;
     }
 
     // do not allow user to set this value
     if (obj.seen !== undefined) {
-        err.message = 'Seen is an invalid field';
+        err.message = messages.error.INVALID_SEEN;
         throw err;
     }
 
     if (obj.firstName === '' || (!(typeof obj.firstName == 'string'))) {
-        err.message = 'First name is missing/invalid!';
+        err.message = messages.error.INVALID_FIRST_NAME;
         throw err;
     }
 
     if (obj.firstName.length > 50) {
-        err.message = 'First name cannot exceed 50 characters';
+        err.message = messages.error.FIRST_NAME_LENGTH;
         throw err;
     }
 
     if (obj.lastName === '' || (!(typeof obj.lastName == 'string'))) {
-        err.message = 'Last name is missing/invalid!';
+        err.message = messages.error.INVALID_LAST_NAME;
         throw err;
     }
 
     if (obj.lastName.length > 50) {
-        err.message = 'Last name cannot exceed 50 characters';
+        err.message = messages.error.LAST_NAME_LENGTH;
         throw err;
     }
 
     if (!(typeof obj.orgName == 'string') && (obj.subRole == 'Institution' || obj.role == 'Ngo')) {
-        err.message = 'Organisation name is invalid!';
+        err.message = messages.error.INVALID_ORG_NAME;
         throw err;
     }
 
     if (obj.userName === '' || (!(typeof obj.userName == 'string'))) {
-        err.message = 'User name is missing/invalid!';
+        err.message = messages.error.INVALID_USER_NAME;
         throw err;
     }
 
     if (obj.userName.length > 50) {
-        err.message = 'User name cannot exceed 50 characters';
+        err.message = messages.error.USER_NAME_LENGTH;
         throw err;
     }
 
     if (obj.role === 'Corporate') {
 
         if (!obj.subRole) {
-            err.message = 'Donor type is missing/invalid!'
+            err.message = messages.error.INVALID_DONOR_TYPE
             throw err
         } else if (this.subRole === 'Institution' && !this.orgName) {
-            err.message = 'Company/Foundation/Fund Name is missing/invalid!'
+            err.message = messages.error.INVALID_COMPANY_NAME;
             throw err
         }
     }
@@ -91,26 +92,26 @@ userService.registerUser = (obj) => {
     if (obj['role'] === 'Ngo') {
         let { addressLine1, addressLine2, city, state, country, zipCode } = obj.address
         if (!addressLine1 || !addressLine2 || !city || !state || !country || !zipCode) {
-            err.message = 'some address info is missing/invalid!'
+            err.message = messages.error.INVALID_ADDRESS
             throw err
         }
 
         if (obj.paymentDetails.paymentType === 'Bank' && (!obj.paymentDetails.bankDetails.bankAddress.city || !obj.paymentDetails.bankDetails.bankAddress.country)) {
-            err.message = 'some bank address info is missing/invalid!'
+            err.message = messages.error.INVALID_BANK_ADDRESS
             throw err
         }
 
         if (!obj['paymentDetails']) {
-            errMsg = 'Payment details missing!'
+            errMsg = messages.error.MISSING_PAYMENT_DETAILS
         }
         else if (obj['paymentDetails']['paymentType'] === 'Paypal' && !obj['paymentDetails']['paypalEmailId']) {
-            errMsg = 'Paypal email id is missing!'
+            errMsg = messages.error.MISSING_PAYPAL_ID
         }
         else if (obj['paymentDetails']['paymentType'] === 'Cryptocurrency' && !obj['paymentDetails']['cryptoAddress']) {
-            errMsg = 'Crypto id is missing'
+            errMsg = messages.error.MISSING_CRYPTO_ID
         }
         else if (obj['paymentDetails']['paymentType'] === 'Bank' && !obj['paymentDetails']['bankDetails']) {
-            errMsg = 'Bank details are missing'
+            errMsg = messages.error.MISSING_BANK_DETAILS
         }
 
         if (errMsg !== undefined) {
@@ -127,11 +128,11 @@ userService.registerUser = (obj) => {
                 err.status = 500
                 throw err
             }
-            console.log('use added!!!!')
+            console.log('user added!!!!')
             return data;
         }
         console.log('user add failed!!!')
-        err.message = 'Bad Connection'
+        err.message = messages.error.BAD_CONNECTION
         err.status = 500
         throw err
     })
@@ -286,41 +287,41 @@ userService.login = (email) => {
 }
 
 // amount of corporate to convert in credits
-userService.getAmountFromBalanceSheet = (userName) => {
-    return userModel.getAmountFromBalanceSheet(userName).then(data => {
-        if (data) {
-            let d = new Date();
-            let y = d.getFullYear();
-            let m = d.getMonth();
-            let year_p1 = '';
-            let year_p2 = '';
-            let year_p3 = '';
-            if (m < 3) {
-                year_p1 = String(y - 2) + '-' + String(y - 1);
-                year_p2 = String(y - 3) + '-' + String(y - 2);
-                year_p3 = String(y - 4) + '-' + String(y - 3);
-            } else {
-                year_p1 = String(y - 1) + '-' + String(y);
-                year_p2 = String(y - 2) + '-' + String(y - 1);
-                year_p3 = String(y - 3) + '-' + String(y - 2);
-            }
-            let total = 0;
-            let j = 0;
-            for (let i = 0; i < data.file.length; i++) {
-                if (data.file[i].year == year_p1 || data.file[i].year == year_p2 || data.file[i].year == year_p3) {
-                    total += Number(data.file[i].amount); j++;
-                }
-            }
-            if (j == 3) {
-                return { success: true, amount: Math.ceil(total / 3) * 0.02 };
-            } else if (j < 3) {
-                return { success: false, message: 'balance sheets are not avilable.' };
-            }
-        } else {
-            return { success: false, message: 'not getting files from db' };
-        }
-    })
-}
+// userService.getAmountFromBalanceSheet = (userName) => {
+//     return userModel.getAmountFromBalanceSheet(userName).then(data => {
+//         if (data) {
+//             let d = new Date();
+//             let y = d.getFullYear();
+//             let m = d.getMonth();
+//             let year_p1 = '';
+//             let year_p2 = '';
+//             let year_p3 = '';
+//             if (m < 3) {
+//                 year_p1 = String(y - 2) + '-' + String(y - 1);
+//                 year_p2 = String(y - 3) + '-' + String(y - 2);
+//                 year_p3 = String(y - 4) + '-' + String(y - 3);
+//             } else {
+//                 year_p1 = String(y - 1) + '-' + String(y);
+//                 year_p2 = String(y - 2) + '-' + String(y - 1);
+//                 year_p3 = String(y - 3) + '-' + String(y - 2);
+//             }
+//             let total = 0;
+//             let j = 0;
+//             for (let i = 0; i < data.file.length; i++) {
+//                 if (data.file[i].year == year_p1 || data.file[i].year == year_p2 || data.file[i].year == year_p3) {
+//                     total += Number(data.file[i].amount); j++;
+//                 }
+//             }
+//             if (j == 3) {
+//                 return { success: true, amount: Math.ceil(total / 3) * 0.02 };
+//             } else if (j < 3) {
+//                 return { success: false, message: 'balance sheets are not available.' };
+//             }
+//         } else {
+//             return { success: false, message: 'not getting files from db' };
+//         }
+//     })
+// }
 
 //Create notification
 userService.createNotification = (project) => {
