@@ -4,7 +4,7 @@ const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised)
 const { connectionToMongo, connectToMongo, disconnectMongo } = require('../../model/connection')
 const commonModel = require('../../model/commonModel');
-
+const messages = require('../../loggers/messages')
 describe('TESTING COMMON MODEL', () => {
     before((done) => {
         connectionToMongo('_test');
@@ -61,7 +61,7 @@ describe('TESTING COMMON MODEL', () => {
             name: "Ngo"
         }
         const res = await commonModel.saveDonor(donor);
-        expect(res).to.equal('Donor already exists!')
+        expect(res).to.equal(messages.error.DONOR_EXIST)
         
     });
 

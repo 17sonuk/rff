@@ -88,16 +88,16 @@ describe('TESTING USER SERVICE - REGISTER', () => {
         })
 
         mockObj.resolves(null);
-        try{
-        userService.registerUser(registerUserData).then(res => {
-            expect(registerUserData.status).to.equal('approved')
-            expect(res).to.equal('user successfully registered...')
-            userModel.registerUser.restore();
-        
-        })
-    }catch(err){
-        expect(err.message).to.equal('Bad Connection')
-    }
+        try {
+            userService.registerUser(registerUserData).then(res => {
+                expect(registerUserData.status).to.equal('approved')
+                expect(res).to.equal('user successfully registered...')
+                userModel.registerUser.restore();
+
+            })
+        } catch (err) {
+            expect(err.message).to.equal('Bad Connection')
+        }
         done()
     })
 
@@ -307,13 +307,13 @@ describe('TESTING USER SERVICE - REGISTER', () => {
                 }
             ]
         }
-        mockObj.resolves(messages.error.InvalidDonorType); 
+        mockObj.resolves(messages.error.InvalidDonorType);
         expect(userService.registerUser.bind(userService, registerUserData)).to.throw(messages.error.InvalidDonorType)
         userModel.registerUser.restore();
         done()
     })
 
-    it('testing response for registerUser if subRole is there but org name is missing', async() => {
+    it('testing response for registerUser if subRole is there but org name is missing', async () => {
         const registerUserDataOrg = {
             firstName: 'Charles',
             lastName: 'Mack',
@@ -341,14 +341,14 @@ describe('TESTING USER SERVICE - REGISTER', () => {
             ]
         }
         mockObj.resolves('Company/Foundation/Fund Name is missing/invalid!');
-        try{
-        let res = await userService.registerUser(registerUserDataOrg)
-        expect(res).to.equal('Company/Foundation/Fund Name is missing/invalid!')
-        }catch(err){
+        try {
+            let res = await userService.registerUser(registerUserDataOrg)
+            expect(res).to.equal('Company/Foundation/Fund Name is missing/invalid!')
+        } catch (err) {
             expect(err.message).to.equal('Company/Foundation/Fund Name is missing/invalid!')
         }
         userModel.registerUser.restore();
-        
+
     })
 
 })
@@ -444,10 +444,10 @@ describe('TESTING USER SERVICE - GetUserDetails', () => {
     })
     it('testing response for getUserDetails if user is not present', async () => {
         mockObj.resolves(null);
-        try{
-        let res = await userService.getUserDetails('corp934')
-        expect(res).to.equal('Bad Connection')
-        }catch(err){
+        try {
+            let res = await userService.getUserDetails('corp934')
+            expect(res).to.equal('Bad Connection')
+        } catch (err) {
             expect(err.message).to.equal('Bad Connection')
         }
 
@@ -535,9 +535,9 @@ describe('TESTING USER SERVICE - GetUserDetails', () => {
         mockObj.resolves(registerUserData2)
         try {
             let res = await userService.getUserRedeemAccount('ngo93')
-            expect(res).to.equal("Payment details missing")
+            expect(res).to.equal(messages.error.MISSING_PAYMENT_DETAILS)
         } catch (err) {
-            expect(err.message).to.equal("Payment details missing")
+            expect(err.message).to.equal(messages.error.MISSING_PAYMENT_DETAILS)
         }
 
         mockObj.resolves(null);
@@ -555,199 +555,7 @@ describe('TESTING USER SERVICE - GetUserDetails', () => {
 
 
 })
-describe('TESTING USER SERVICE - Unapproved users', () => {
-    let mockObj = ""
-    beforeEach(() => {
-        mockObj = sandbox.stub(userModel, 'getUnapprovedUserDetails');
-    });
 
-    afterEach(() => {
-        mockObj.restore();
-    });
-    it('testing response for getUnapprovedUser', async () => {
-        const registerUserData = {
-            firstName: 'Charles',
-            lastName: 'Mack',
-            orgName: 'Corporate',
-            userName: 'corp90',
-            email: 'info90@corp.com',
-            role: 'Corporate',
-            subRole: 'Institution',
-            status: 'created',
-            description: '',
-            website: '',
-            address: {
-                addressLine1: 'address10',
-                addressLine2: 'address20',
-                city: 'city',
-                state: '',
-                zipCode: '',
-                country: 'India'
-            },
-            phone: [
-                {
-                    countryCode: '+91',
-                    phoneNumber: '97654579'
-                }
-            ]
-        }
-        mockObj.resolves(registerUserData);
-        let res = await userService.getUnapprovedUserDetails()
-        expect(res).to.equal(registerUserData)
-
-        //If there is no Unapproved users
-        mockObj.resolves(null);
-        try {
-            let res = await userService.getUnapprovedUserDetails()
-            expect(res).to.equal(registerUserData)
-        } catch (err) {
-            expect(err.message).to.equal('Bad Connection')
-        }
-
-    })
-})
-
-describe('TESTING USER SERVICE - approved users', () => {
-    let mockObj = ""
-    let mockObj1 = ""
-    beforeEach(() => {
-        mockObj = sandbox.stub(userModel, 'approveUser');
-        mockObj1 = sandbox.stub(userModel, 'getUserDetails');
-    });
-
-    afterEach(() => {
-        mockObj.restore();
-        mockObj1.restore();
-    });
-
-    it('testing response for Approve users', async () => {
-        const registerUserDataA = {
-            firstName: 'Charles',
-            lastName: 'Mack',
-            orgName: 'Corporate',
-            userName: 'corp90',
-            email: 'info90@corp.com',
-            role: 'Corporate',
-            subRole: 'Institution',
-            status: '',
-            description: 'desc',
-            website: 'test',
-            address: {
-                addressLine1: 'address10',
-                addressLine2: 'address20',
-                city: 'city',
-                state: 'state',
-                zipCode: '567',
-                country: 'India'
-            },
-            phone: [
-                {
-                    countryCode: '+91',
-                    phoneNumber: '97654579'
-                }
-            ]
-        }
-        const updateData = {
-            ok: 0, n: 0, nModified: 1
-        }
-        const updateData1 = {
-            ok: 0, n: 1, nModified: 0
-        }
-        const updateData2 = {
-            ok: 0, n: 0, nModified: 0
-        }
-
-        mockObj.resolves(updateData);
-        mockObj1.resolves(registerUserDataA);
-        let res = await userService.approveUser('corp90')
-        expect(res).to.equal(registerUserDataA.role.toLowerCase())
-
-        //If not able to find user
-        mockObj.resolves(updateData);
-        mockObj1.resolves(null);
-        try {
-            let res1 = await userService.approveUser('corp91')
-            expect(res1).to.equal('corp91 does not exist in mongo')
-        } catch (err) {
-            expect(err.message).to.equal('corp91 does not exist in mongo')
-        }
-
-        //If user is already approved
-        mockObj.resolves(updateData1);
-        mockObj1.resolves(registerUserDataA);
-        try {
-            let res = await userService.approveUser('corp90')
-            expect(res).to.equal(registerUserDataA.role.toLowerCase())
-        } catch (err) {
-            expect(err.message).to.equal('corp90 is already approved')
-        }
-
-        //If user doesnot exist
-        mockObj.resolves(updateData2);
-        mockObj1.resolves(registerUserDataA);
-        try {
-            let res = await userService.approveUser('corp92')
-            expect(res).to.equal(registerUserDataA.role.toLowerCase())
-        } catch (err) {
-            expect(err.message).to.equal('corp92 does not exist in mongo')
-        }
-
-    })
-})
-
-describe('TESTING USER SERVICE - approved users', () => {
-    let mockObj = ""
-    beforeEach(() => {
-        mockObj = sandbox.stub(userModel, 'rejectUser');
-    });
-
-    afterEach(() => {
-        mockObj.restore();
-    });
-
-    it('testing response for Reject users', async () => {
-        const registerUserData = {
-            firstName: 'Charles',
-            lastName: 'Mack',
-            orgName: 'Corporate',
-            userName: 'corp90',
-            email: 'info90@corp.com',
-            role: 'Corporate',
-            subRole: 'Institution',
-            status: '',
-            description: 'desc',
-            website: 'test',
-            address: {
-                addressLine1: 'address10',
-                addressLine2: 'address20',
-                city: 'city',
-                state: 'state',
-                zipCode: '567',
-                country: 'India'
-            },
-            phone: [
-                {
-                    countryCode: '+91',
-                    phoneNumber: '97654579'
-                }
-            ]
-        }
-
-        mockObj.resolves(registerUserData);
-        let res = await userService.rejectUser('corp90')
-        expect(res).to.equal(registerUserData)
-
-        //If data is not present
-        mockObj.resolves(null);
-        try {
-            let res = await userService.rejectUser('corp90')
-            expect(res).to.equal(registerUserData)
-        } catch (err) {
-            expect(err.message).to.equal('Bad Connection')
-        }
-
-    })
-})
 
 describe('TESTING USER SERVICE - Login', () => {
     let mockObj = ""
@@ -803,7 +611,7 @@ describe('TESTING USER SERVICE - Login', () => {
         mockObj.resolves(registerUserDataLogin);
         let res2 = await userService.login('info910@corp.com')
         expect(res2.success).to.equal(false)
-        expect(res2.message).to.equal('Pending for approval. Please try again later.')
+        expect(res2.message).to.equal(messages.error.PENDING_APPROVAL)
 
         //If data is not present
         mockObj.resolves(null);
@@ -835,7 +643,7 @@ describe('TESTING USER SERVICE - Notification', () => {
         mockObj.resolves(Notif);
         let res = await userService.createNotification('P1')
         expect(res.success).to.equal(true)
-        expect(res.message).to.equal('notification created in db')
+        expect(res.message).to.equal(messages.success.NOTIFICATION_CREATED)
 
         //If Notification is not presnt
         mockObj.resolves(null);
@@ -868,7 +676,7 @@ describe('TESTING USER SERVICE - TxDescription', () => {
         mockObj.resolves(TxDesc);
         let res = await userService.createTxDescription('P1')
         expect(res.success).to.equal(true)
-        expect(res.message).to.equal('tx description created in db')
+        expect(res.message).to.equal(messages.success.TRANSACTION_DESCRIPTION)
 
         //If Notification is not presnt
         mockObj.resolves(null);
@@ -951,7 +759,7 @@ describe('TESTING USER SERVICE - UpdateNotification', () => {
         mockObj.resolves(data1);
         let res = await userService.updateNotification('corp911', 't101')
         expect(res.success).to.equal(true)
-        expect(res.message).to.equal('notification updated')
+        expect(res.message).to.equal(messages.success.NOTIFICATION_UPDATED)
 
         data1.nModified = 0
         mockObj.resolves(data1);
@@ -967,60 +775,527 @@ describe('TESTING USER SERVICE - UpdateNotification', () => {
     })
 })
 
-describe('TESTING USER SERVICE - resetUserStatus', () => {
+
+describe('TESTING USER SERVICE - getApprovedInstitutions', () => {
     let mockObj = ""
+    beforeEach(() => {
+        mockObj = sandbox.stub(userModel, 'getApprovedInstitutions');
+    });
+
+    afterEach(() => {
+        mockObj.restore();
+    });
+    it('testing response for getApprovedInstitutions', async () => {
+        const registerUserData = {
+            firstName: 'Charles',
+            lastName: 'Mack',
+            orgName: 'Corporate',
+            userName: 'corp90',
+            email: 'info90@corp.com',
+            role: 'Corporate',
+            subRole: 'Institution',
+            status: 'created',
+            description: '',
+            website: '',
+            address: {
+                addressLine1: 'address10',
+                addressLine2: 'address20',
+                city: 'city',
+                state: '',
+                zipCode: '',
+                country: 'India'
+            },
+            phone: [
+                {
+                    countryCode: '+91',
+                    phoneNumber: '97654579'
+                }
+            ]
+        }
+        mockObj.resolves(registerUserData);
+        let res = await userService.getApprovedInstitutions()
+        expect(res).to.equal(registerUserData)
+
+        //If there is no Unapproved users
+        mockObj.resolves(null);
+        try {
+            let res = await userService.getApprovedInstitutions()
+            expect(res).to.equal(null)
+        } catch (err) {
+            expect(err.message).to.equal('Bad Connection')
+        }
+
+    })
+})
+
+describe('TESTING USER SERVICE - deleteUser', () => {
+    let mockObj = ""
+    beforeEach(() => {
+        mockObj = sandbox.stub(userModel, 'rejectUser');
+    });
+
+    afterEach(() => {
+        mockObj.restore();
+    });
+    it('testing response for deleteUser', async () => {
+        const registerUserData = {
+            firstName: 'Charles',
+            lastName: 'Mack',
+            orgName: 'Corporate',
+            userName: 'corp90',
+            email: 'info90@corp.com',
+            role: 'Corporate',
+            subRole: 'Institution',
+            status: 'created',
+            description: '',
+            website: '',
+            address: {
+                addressLine1: 'address10',
+                addressLine2: 'address20',
+                city: 'city',
+                state: '',
+                zipCode: '',
+                country: 'India'
+            },
+            phone: [
+                {
+                    countryCode: '+91',
+                    phoneNumber: '97654579'
+                }
+            ]
+        }
+        mockObj.resolves(registerUserData);
+        let res = await userService.deleteUser("corp90")
+        expect(res).to.equal(registerUserData)
+
+        //If there is no Unapproved users
+        mockObj.resolves(null);
+        try {
+            let res = await userService.deleteUser("corp90")
+            expect(res).to.equal(null)
+        } catch (err) {
+            expect(err.message).to.equal(messages.error.TRY_AGAIN)
+        }
+
+    })
+})
+
+
+describe('TESTING USER SERVICE - updateUserProfile', () => {
+    let mockObj = ""
+    let mockObj1 = ""
 
     beforeEach(() => {
-        mockObj = sandbox.stub(userModel, 'resetUserStatus');
+        mockObj = sandbox.stub(userModel, 'getUserDetails');
+        mockObj1 = sandbox.stub(userService, 'updateUserProfile');
+    });
+
+    afterEach(() => {
+        mockObj.restore();
+        mockObj1.restore();
+
+
+    });
+    it('testing response for updateUserProfile', async () => {
+        let re = { success: true, message: messages.success.UPDATE_USER }
+        let userData = {
+            firstName: 'Rihana',
+            lastName: 'John',
+            orgName: 'Ngo',
+            userName: 'ngo90',
+            email: 'info90@ngo.com',
+            role: 'Ngo',
+            status: '',
+            // subRole: 'Institution',
+
+            description: '',
+            website: '',
+            address: {
+                addressLine1: 'address10',
+                addressLine2: 'address20',
+                city: 'city',
+                state: 'state',
+                zipCode: '6789',
+                country: 'India'
+            },
+            phone: [
+                {
+                    countryCode: '+91',
+                    phoneNumber: '97654579'
+                }
+            ],
+            paymentDetails: {
+                paymentType: "Cryptocurrency",
+                Cryptocurrency:"$21"
+                // cryptoAddress: '1234',
+
+            }
+        }
+        const registerUserData1 = {
+            firstName: 'Rihana',
+            lastName: 'John',
+            // orgName: 'Ngo',
+            // userName: 'ngo90',
+            // email: 'info90@ngo.com',
+            // role: 'Ngo',
+            // status: '',
+            // subRole: 'Institution's,
+
+            description: '',
+            website: '',
+            address: {
+                addressLine1: 'address10',
+                addressLine2: 'address20',
+                city: 'city',
+                state: 'state',
+                zipCode: '6789',
+                country: 'India'
+            },
+            phone: [
+                {
+                    countryCode: '+91',
+                    phoneNumber: '97654579'
+                }
+            ],
+            paymentDetails: {
+                paymentType: "Cryptocurrency",
+                Cryptocurrency:"$21"
+                // cryptoAddress: '1234',
+
+            }
+        }
+        mockObj.resolves(userData)
+        mockObj1.resolves(re)
+
+        let res = await userService.updateUserProfile('ngo90',registerUserData1)
+        expect(res).to.equal(re)
+
+        //When data is not present
+        mockObj.resolves(null)
+        try {
+            let res1 = await userService.updateUserProfile('ngo95',registerUserData1)
+            expect(res1.status).to.equal(500)
+        } catch (err) {
+            expect(err.message).to.equal(500)
+        }
+    })
+})
+
+describe('TESTING USER SERVICE - getUserRedeemAccount', () => {
+    let mockObj = ""
+    // let mockObj1 = ""
+
+    beforeEach(() => {
+        mockObj = sandbox.stub(userModel, 'getUserDetails');
+        // mockObj1 = sandbox.stub(userModel, 'updateUserProfile');
+
 
     });
 
     afterEach(() => {
         mockObj.restore();
+        // mockObj1.restore();
+
 
     });
-    it('testing response for ResetUserStatus', async () => {
-    const registerUserData1 = {
-        firstName: 'Rihana',
-        lastName: 'John',
-        orgName: 'Ngo',
-        userName: 'ngo90',
-        email: 'info90@ngo.com',
-        role: 'Ngo',
-        status: '',
-        description: '',
-        website: '',
-        address: {
-            addressLine1: 'address10',
-            addressLine2: 'address20',
-            city: 'city',
-            state: 'state',
-            zipCode: '6789',
-            country: 'India'
-        },
-        phone: [
-            {
-                countryCode: '+91',
-                phoneNumber: '97654579'
+    it('testing response for getUserRedeemAccount', async () => {
+        // let re = { success: true, message: messages.success.UPDATE_USER }
+        const registerUserData1 = {
+            firstName: 'Rihana',
+            lastName: 'John',
+            orgName: 'Ngo',
+            userName: 'ngo90',
+            email: 'info90@ngo.com',
+            role: 'Ngo',
+            subRole: 'Institution',
+
+            status: '',
+            description: '',
+            website: '',
+            address: {
+                addressLine1: 'address10',
+                addressLine2: 'address20',
+                city: 'city',
+                state: 'state',
+                zipCode: '6789',
+                country: 'India'
+            },
+            phone: [
+                {
+                    countryCode: '+91',
+                    phoneNumber: '97654579'
+                }
+            ],
+            paymentDetails: {
+                paymentType: "Cryptocurrency",
+                cryptoAddress: '1234',
+
             }
-        ],
-        paymentDetails: {
-            paymentType: "Cryptocurrency",
-            cryptoAddress: '1234',
-
         }
-    }
-    mockObj.resolves(registerUserData1)
-    let res = await userService.resetUserStatus('ngo90')
-    expect(res).to.equal(true)
+        mockObj.resolves(registerUserData1)
+        // mockObj1.resolves(re)
 
-    //When data is not present
-    mockObj.resolves(null)
-    try{
-    let res1 = await userService.resetUserStatus('ngo95')
-    expect(res1).to.equal(false)
-    }catch(err){
-        expect(err.message).to.equal("Couldn't reset user status")
-    }
+        let res = await userService.getUserRedeemAccount('ngo90')
+        expect(res.status).to.equal(200)
+
+        //When data is not present
+        mockObj.resolves(null)
+        try {
+            let res1 = await userService.getUserRedeemAccount('ngo95')
+            expect(res1.status).to.equal(401)
+        } catch (err) {
+            expect(err.message).to.equal(messages.error.UNAUTHORIZED_USER)
+        }
+    })
 })
-})
+
+// describe('TESTING USER SERVICE - Unapproved users', () => {
+//     let mockObj = ""
+//     beforeEach(() => {
+//         mockObj = sandbox.stub(userModel, 'getUnapprovedUserDetails');
+//     });
+
+//     afterEach(() => {
+//         mockObj.restore();
+//     });
+//     it('testing response for getUnapprovedUser', async () => {
+//         const registerUserData = {
+//             firstName: 'Charles',
+//             lastName: 'Mack',
+//             orgName: 'Corporate',
+//             userName: 'corp90',
+//             email: 'info90@corp.com',
+//             role: 'Corporate',
+//             subRole: 'Institution',
+//             status: 'created',
+//             description: '',
+//             website: '',
+//             address: {
+//                 addressLine1: 'address10',
+//                 addressLine2: 'address20',
+//                 city: 'city',
+//                 state: '',
+//                 zipCode: '',
+//                 country: 'India'
+//             },
+//             phone: [
+//                 {
+//                     countryCode: '+91',
+//                     phoneNumber: '97654579'
+//                 }
+//             ]
+//         }
+//         mockObj.resolves(registerUserData);
+//         let res = await userService.getUnapprovedUserDetails()
+//         expect(res).to.equal(registerUserData)
+
+//         //If there is no Unapproved users
+//         mockObj.resolves(null);
+//         try {
+//             let res = await userService.getUnapprovedUserDetails()
+//             expect(res).to.equal(registerUserData)
+//         } catch (err) {
+//             expect(err.message).to.equal('Bad Connection')
+//         }
+
+//     })
+// })
+
+// // describe('TESTING USER SERVICE - approved users', () => {
+// //     let mockObj = ""
+// //     let mockObj1 = ""
+// //     beforeEach(() => {
+// //         mockObj = sandbox.stub(userModel, 'approveUser');
+// //         mockObj1 = sandbox.stub(userModel, 'getUserDetails');
+// //     });
+
+// //     afterEach(() => {
+// //         mockObj.restore();
+// //         mockObj1.restore();
+// //     });
+
+// //     it('testing response for Approve users', async () => {
+// //         const registerUserDataA = {
+// //             firstName: 'Charles',
+// //             lastName: 'Mack',
+// //             orgName: 'Corporate',
+// //             userName: 'corp90',
+// //             email: 'info90@corp.com',
+// //             role: 'Corporate',
+// //             subRole: 'Institution',
+// //             status: '',
+// //             description: 'desc',
+// //             website: 'test',
+// //             address: {
+// //                 addressLine1: 'address10',
+// //                 addressLine2: 'address20',
+// //                 city: 'city',
+// //                 state: 'state',
+// //                 zipCode: '567',
+// //                 country: 'India'
+// //             },
+// //             phone: [
+// //                 {
+// //                     countryCode: '+91',
+// //                     phoneNumber: '97654579'
+// //                 }
+// //             ]
+// //         }
+// //         const updateData = {
+// //             ok: 0, n: 0, nModified: 1
+// //         }
+// //         const updateData1 = {
+// //             ok: 0, n: 1, nModified: 0
+// //         }
+// //         const updateData2 = {
+// //             ok: 0, n: 0, nModified: 0
+// //         }
+
+// //         mockObj.resolves(updateData);
+// //         mockObj1.resolves(registerUserDataA);
+// //         let res = await userService.approveUser('corp90')
+// //         expect(res).to.equal(registerUserDataA.role.toLowerCase())
+
+// //         //If not able to find user
+// //         mockObj.resolves(updateData);
+// //         mockObj1.resolves(null);
+// //         try {
+// //             let res1 = await userService.approveUser('corp91')
+// //             expect(res1).to.equal('corp91 does not exist in mongo')
+// //         } catch (err) {
+// //             expect(err.message).to.equal('corp91 does not exist in mongo')
+// //         }
+
+// //         //If user is already approved
+// //         mockObj.resolves(updateData1);
+// //         mockObj1.resolves(registerUserDataA);
+// //         try {
+// //             let res = await userService.approveUser('corp90')
+// //             expect(res).to.equal(registerUserDataA.role.toLowerCase())
+// //         } catch (err) {
+// //             expect(err.message).to.equal('corp90 is already approved')
+// //         }
+
+// //         //If user doesnot exist
+// //         mockObj.resolves(updateData2);
+// //         mockObj1.resolves(registerUserDataA);
+// //         try {
+// //             let res = await userService.approveUser('corp92')
+// //             expect(res).to.equal(registerUserDataA.role.toLowerCase())
+// //         } catch (err) {
+// //             expect(err.message).to.equal('corp92 does not exist in mongo')
+// //         }
+
+// //     })
+// // })
+
+// // describe('TESTING USER SERVICE - approved users', () => {
+// //     let mockObj = ""
+// //     beforeEach(() => {
+// //         mockObj = sandbox.stub(userModel, 'rejectUser');
+// //     });
+
+// //     afterEach(() => {
+// //         mockObj.restore();
+// //     });
+
+// //     it('testing response for Reject users', async () => {
+// //         const registerUserData = {
+// //             firstName: 'Charles',
+// //             lastName: 'Mack',
+// //             orgName: 'Corporate',
+// //             userName: 'corp90',
+// //             email: 'info90@corp.com',
+// //             role: 'Corporate',
+// //             subRole: 'Institution',
+// //             status: '',
+// //             description: 'desc',
+// //             website: 'test',
+// //             address: {
+// //                 addressLine1: 'address10',
+// //                 addressLine2: 'address20',
+// //                 city: 'city',
+// //                 state: 'state',
+// //                 zipCode: '567',
+// //                 country: 'India'
+// //             },
+// //             phone: [
+// //                 {
+// //                     countryCode: '+91',
+// //                     phoneNumber: '97654579'
+// //                 }
+// //             ]
+// //         }
+
+// //         mockObj.resolves(registerUserData);
+// //         let res = await userService.rejectUser('corp90')
+// //         expect(res).to.equal(registerUserData)
+
+// //         //If data is not present
+// //         mockObj.resolves(null);
+// //         try {
+// //             let res = await userService.rejectUser('corp90')
+// //             expect(res).to.equal(registerUserData)
+// //         } catch (err) {
+// //             expect(err.message).to.equal('Bad Connection')
+// //         }
+
+// //     })
+// // })
+// describe('TESTING USER SERVICE - resetUserStatus', () => {
+//     let mockObj = ""
+
+//     beforeEach(() => {
+//         mockObj = sandbox.stub(userModel, 'resetUserStatus');
+
+//     });
+
+//     afterEach(() => {
+//         mockObj.restore();
+
+//     });
+//     it('testing response for ResetUserStatus', async () => {
+//     const registerUserData1 = {
+//         firstName: 'Rihana',
+//         lastName: 'John',
+//         orgName: 'Ngo',
+//         userName: 'ngo90',
+//         email: 'info90@ngo.com',
+//         role: 'Ngo',
+//         status: '',
+//         description: '',
+//         website: '',
+//         address: {
+//             addressLine1: 'address10',
+//             addressLine2: 'address20',
+//             city: 'city',
+//             state: 'state',
+//             zipCode: '6789',
+//             country: 'India'
+//         },
+//         phone: [
+//             {
+//                 countryCode: '+91',
+//                 phoneNumber: '97654579'
+//             }
+//         ],
+//         paymentDetails: {
+//             paymentType: "Cryptocurrency",
+//             cryptoAddress: '1234',
+
+//         }
+//     }
+//     mockObj.resolves(registerUserData1)
+//     let res = await userService.resetUserStatus('ngo90')
+//     expect(res).to.equal(true)
+
+//     //When data is not present
+//     mockObj.resolves(null)
+//     try{
+//     let res1 = await userService.resetUserStatus('ngo95')
+//     expect(res1).to.equal(false)
+//     }catch(err){
+//         expect(err.message).to.equal(messages.error.RESET_USER)
+//     }
+// })
+// })

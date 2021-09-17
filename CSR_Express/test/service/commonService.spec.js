@@ -13,6 +13,7 @@ const { orgModel } = require('../../model/models');
 
 const commonService = require('../../service/commonService');
 const commonModel = require('../../model/commonModel');
+const messages = require('../../loggers/messages')
 
 
 describe('TESTING COMMON SERVICE - SAVE COMMUNITIES', () => {
@@ -94,7 +95,7 @@ describe('TESTING COMMON SERVICE - GET COMMUNITY', () => {
             let res = await commonService.getCommunity()
             expect(res).to.equal(communities)
         } catch (err) {
-            expect(err.message).to.equal('No community')
+            expect(err.message).to.equal(messages.error.NO_COMMUNITY)
         }
     })
 })
