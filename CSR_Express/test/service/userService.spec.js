@@ -448,7 +448,7 @@ describe('TESTING USER SERVICE - GetUserDetails', () => {
             let res = await userService.getUserDetails('corp934')
             expect(res).to.equal('Bad Connection')
         } catch (err) {
-            expect(err.message).to.equal('Bad Connection')
+            expect(err.message).to.equal(messages.error.INVALID_USER_NAME)
         }
 
     })
@@ -926,8 +926,8 @@ describe('TESTING USER SERVICE - updateUserProfile', () => {
             ],
             paymentDetails: {
                 paymentType: "Cryptocurrency",
-                Cryptocurrency:"$21"
-                // cryptoAddress: '1234',
+                // Cryptocurrency:"$21"
+                cryptoAddress: '1234'
 
             }
         }
@@ -959,8 +959,8 @@ describe('TESTING USER SERVICE - updateUserProfile', () => {
             ],
             paymentDetails: {
                 paymentType: "Cryptocurrency",
-                Cryptocurrency:"$21"
-                // cryptoAddress: '1234',
+                // Cryptocurrency:"$21"
+                cryptoAddress: '1234'
 
             }
         }
@@ -972,11 +972,16 @@ describe('TESTING USER SERVICE - updateUserProfile', () => {
 
         //When data is not present
         mockObj.resolves(null)
+        mockObj1.resolves(null)
+
         try {
-            let res1 = await userService.updateUserProfile('ngo95',registerUserData1)
-            expect(res1.status).to.equal(500)
+            let res1 = await userService.updateUserProfile('n67',registerUserData1)
+            console.log("err: ",res1)
+
+            expect(res1).to.equal(null)
         } catch (err) {
-            expect(err.message).to.equal(500)
+            console.log("err: ",err)
+            expect(err.status).to.equal(401)
         }
     })
 })
@@ -1000,7 +1005,7 @@ describe('TESTING USER SERVICE - getUserRedeemAccount', () => {
     });
     it('testing response for getUserRedeemAccount', async () => {
         // let re = { success: true, message: messages.success.UPDATE_USER }
-        const registerUserData1 = {
+        let registerUserData1 = {
             firstName: 'Rihana',
             lastName: 'John',
             orgName: 'Ngo',
@@ -1023,7 +1028,7 @@ describe('TESTING USER SERVICE - getUserRedeemAccount', () => {
             phone: [
                 {
                     countryCode: '+91',
-                    phoneNumber: '97654579'
+                    phoneNumber: '9765457990'
                 }
             ],
             paymentDetails: {
@@ -1036,7 +1041,7 @@ describe('TESTING USER SERVICE - getUserRedeemAccount', () => {
         // mockObj1.resolves(re)
 
         let res = await userService.getUserRedeemAccount('ngo90')
-        expect(res.status).to.equal(200)
+        expect(res).to.equal(registerUserData1.paymentDetails)
 
         //When data is not present
         mockObj.resolves(null)
