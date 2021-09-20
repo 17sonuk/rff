@@ -142,7 +142,7 @@ userService.registerUser = (obj) => {
 userService.checkUserNameValidty = (userName) => {
     return userModel.getUserDetails(userName, 'userName').then(data => {
         if (data) {
-            let err = new Error("User already exists")
+            let err = new Error(messages.error.USER_EXISTS)
             err.status = 500
             throw err
         } else {
@@ -157,7 +157,7 @@ userService.getUserDetails = (userName) => {
         if (data) {
             return data;
         } else {
-            let err = new Error("Bad Connection")
+            let err = new Error(messages.error.BAD_CONNECTION)
             err.status = 500
             throw err
         }
@@ -171,12 +171,12 @@ userService.getUserRedeemAccount = (userName) => {
             if (data['paymentDetails']) {
                 return data['paymentDetails']
             } else {
-                let err = new Error("Payment details missing")
+                let err = new Error(messages.error.MISSING_PAYMENT_DETAILS)
                 err.status = 404
                 throw err
             }
         } else {
-            let err = new Error("Unauthorized user")
+            let err = new Error(messages.error.UNAUTHORIZED_USER)
             err.status = 401
             throw err
         }
@@ -184,17 +184,17 @@ userService.getUserRedeemAccount = (userName) => {
 }
 
 //get user unapproved users
-userService.getUnapprovedUserDetails = () => {
-    return userModel.getUnapprovedUserDetails().then(data => {
-        if (data) {
-            return data;
-        } else {
-            let err = new Error("Bad Connection")
-            err.status = 500
-            throw err
-        }
-    })
-}
+// userService.getUnapprovedUserDetails = () => {
+//     return userModel.getUnapprovedUserDetails().then(data => {
+//         if (data) {
+//             return data;
+//         } else {
+//             let err = new Error(messages.error.BAD_CONNECTION)
+//             err.status = 500
+//             throw err
+//         }
+//     })
+// }
 
 // get approved institutional donors
 userService.getApprovedInstitutions = async () => {
@@ -206,57 +206,57 @@ userService.getApprovedInstitutions = async () => {
 }
 
 //approve user
-userService.approveUser = (userName) => {
-    return userModel.approveUser(userName).then(approveResp => {
-        if (approveResp && approveResp['nModified'] == 1) {
-            return userModel.getUserDetails(userName, 'userName').then(userData => {
-                if (userData) {
-                    return userData['role'].toLowerCase();
-                } else {
-                    let err = new Error(`${userName} does not exist in mongo`)
-                    err.status = 500
-                    throw err
-                }
-            })
-        } else if (approveResp && approveResp['n'] == 1) {
-            let err = new Error(`${userName} is already approved`)
-            err.status = 500
-            throw err
-        } else {
-            let err = new Error(`${userName} does not exist in mongo`)
-            err.status = 500
-            throw err
-        }
-    })
-}
+// userService.approveUser = (userName) => {
+//     return userModel.approveUser(userName).then(approveResp => {
+//         if (approveResp && approveResp['nModified'] == 1) {
+//             return userModel.getUserDetails(userName, 'userName').then(userData => {
+//                 if (userData) {
+//                     return userData['role'].toLowerCase();
+//                 } else {
+//                     let err = new Error(`${userName} does not exist in mongo`)
+//                     err.status = 500
+//                     throw err
+//                 }
+//             })
+//         } else if (approveResp && approveResp['n'] == 1) {
+//             let err = new Error(`${userName} is already approved`)
+//             err.status = 500
+//             throw err
+//         } else {
+//             let err = new Error(`${userName} does not exist in mongo`)
+//             err.status = 500
+//             throw err
+//         }
+//     })
+// }
 
 //reset user status bcoz register user failed in blockchain, but succeeded in mongo.
-userService.resetUserStatus = (userName) => {
-    return userModel.resetUserStatus(userName)
-        .then(data => {
-            if (data) {
-                return true;
-            } else {
-                let err = new Error("Couldn't reset user status")
-                err.status = 500
-                throw err
-            }
-        })
-        .catch(err => { throw err });
-}
+// userService.resetUserStatus = (userName) => {
+//     return userModel.resetUserStatus(userName)
+//         .then(data => {
+//             if (data) {
+//                 return true;
+//             } else {
+//                 let err = new Error(messages.error.RESET_USER)
+//                 err.status = 500
+//                 throw err
+//             }
+//         })
+//         .catch(err => { throw err });
+// }
 
 //reject user
-userService.rejectUser = (userName) => {
-    return userModel.rejectUser(userName).then(data => {
-        if (data) {
-            return data;
-        } else {
-            let err = new Error("Bad Connection")
-            err.status = 500
-            throw err
-        }
-    })
-}
+// userService.rejectUser = (userName) => {
+//     return userModel.rejectUser(userName).then(data => {
+//         if (data) {
+//             return data;
+//         } else {
+//             let err = new Error(messages.error.BAD_CONNECTION)
+//             err.status = 500
+//             throw err
+//         }
+//     })
+// }
 
 //login user
 userService.login = (email) => {
@@ -278,10 +278,10 @@ userService.login = (email) => {
                 }
                 return finalResponse;
             } else {
-                return { success: false, message: 'Pending for approval. Please try again later.' }
+                return { success: false, message: messages.error.PENDING_APPROVAL }
             }
         } else {
-            return { success: false, message: 'User does not exist' }
+            return { success: false, message: messages.error.INVALID_USER }
         }
     });
 }
@@ -327,9 +327,9 @@ userService.login = (email) => {
 userService.createNotification = (project) => {
     return userModel.createNotification(project).then(notificationData => {
         if (notificationData) {
-            return { success: true, message: 'notification created in db' };
+            return { success: true, message: messages.success.NOTIFICATION_CREATED };
         } else {
-            let err = new Error("Bad Connection")
+            let err = new Error(messages.error.BAD_CONNECTION)
             err.status = 500
             throw err
         }
@@ -340,9 +340,9 @@ userService.createNotification = (project) => {
 userService.createTxDescription = (project) => {
     return userModel.createTxDescription(project).then(txDescriptionData => {
         if (txDescriptionData) {
-            return { success: true, message: 'tx description created in db' };
+            return { success: true, message: messages.success.TRANSACTION_DESCRIPTION };
         } else {
-            let err = new Error("Bad Connection")
+            let err = new Error(messages.error.BAD_CONNECTION)
             err.status = 500
             throw err
         }
@@ -363,7 +363,7 @@ userService.getNotifications = (username, seen) => {
             return notification
         }
         else {
-            let err = new Error("Bad Connection")
+            let err = new Error(messages.error.BAD_CONNECTION)
             err.status = 500
             throw err
         }
@@ -374,9 +374,9 @@ userService.getNotifications = (username, seen) => {
 userService.updateNotification = (username, txId) => {
     return userModel.updateNotification(username, txId).then(status => {
         if (status['nModified'] > 0) {
-            return { success: true, message: 'notification updated' };
+            return { success: true, message: messages.success.NOTIFICATION_UPDATED };
         } else {
-            let err = new Error("Bad Connection")
+            let err = new Error(messages.error.BAD_CONNECTION)
             err.status = 500
             throw err
         }
@@ -405,38 +405,38 @@ userService.updateUserProfile = async (userName, profileData) => {
     let user = await userModel.getUserDetails(userName, 'userName')
 
     if (!user) {
-        let err = new Error("User does not exist")
+        let err = new Error(messages.error.INVALID_USER)
         err.status = 401
         throw err
     }
 
     if (profileData.role || profileData.subRole || profileData.email || profileData.userName || profileData.orgName || profileData.seen !== undefined) {
-        let err = new Error("These fields cannot be updated: Email, User Name, Organisation Name, Status, Seen")
+        let err = new Error(messages.error.INVALID_UPDATE_FIELDS)
         err.status = 401
         throw err
     }
 
     if (user.subRole == "Individual" && (profileData.website || profileData.paymentDetails)) {
-        let err = new Error("Individual Donor can not have Website, Payment Details")
+        let err = new Error(messages.error.INVALID_INDIVIDUAL_DATA)
         err.status = 401
         throw err
     }
 
     if (user.subRole == "Institution" && profileData.paymentDetails) {
-        let err = new Error("Institution Donor can not have Payment Details")
+        let err = new Error(messages.error.INVALID_INSTITUTIONAL_DATA)
         err.status = 401
         throw err
     }
 
     if (user.role == "Ngo" && profileData.website) {
-        let err = new Error("Beneficiary can not have Website")
+        let err = new Error(messages.error.INVALID_NGO_DATA)
         err.status = 401
         throw err
     }
 
     if (user.role == 'Ngo' && profileData.address) {
         if (!isAddressValid(profileData.address)) {
-            let err = new Error("Some address fields are empty")
+            let err = new Error(messages.error.INVALID_ADDRESS)
             err.status = 401
             throw err
         }
@@ -445,7 +445,7 @@ userService.updateUserProfile = async (userName, profileData) => {
     if (user.role == 'Ngo' && profileData.phone) {
         for (let phone of profileData.phone) {
             if (!isPhoneValid(phone)) {
-                let err = new Error("Some phone fields are empty")
+                let err = new Error(messages.error.INVALID_PHONE_DETAILS)
                 err.status = 401
                 throw err
             }
@@ -453,52 +453,52 @@ userService.updateUserProfile = async (userName, profileData) => {
     }
 
     if (user.role == 'Ngo' && !profileData.paymentDetails) {
-        let err = new Error("Please select a payment mode")
+        let err = new Error(messages.error.MISSING_PAYMENT_MODE)
         err.status = 401
         throw err
     }
 
     if (user.role == 'Ngo') {
         if (!['Paypal', 'Cryptocurrency', 'Bank'].includes(profileData.paymentDetails.paymentType)) {
-            let err = new Error("Invalid payment mode")
+            let err = new Error(messages.error.INVALID_PAYMENT_MODE)
             err.status = 401
             throw err
         }
 
         if (profileData.paymentDetails.paymentType === 'Paypal' && !profileData.paymentDetails.paypalEmailId) {
-            let err = new Error("PayPal email is empty")
+            let err = new Error(messages.error.MISSING_PAYPAL_ID)
             err.status = 401
             throw err
         }
 
         if (profileData.paymentDetails.paymentType === 'Cryptocurrency' && !profileData.paymentDetails.Cryptocurrency) {
-            let err = new Error("Cryto address is empty")
+            let err = new Error(messages.error.MISSING_CRYPTO_ID)
             err.status = 401
             throw err
         }
 
         if (profileData.paymentDetails.paymentType === 'Bank' && !profileData.paymentDetails.bankDetails) {
-            let err = new Error("Bank details is empty")
+            let err = new Error(messages.error.MISSING_BANK_DETAILS)
             err.status = 401
             throw err
         }
 
         if (profileData.paymentDetails.paymentType === 'Bank' && profileData.paymentDetails.bankDetails.bankAddress) {
             if (!isAddressValid(profileData.paymentDetails.bankDetails.bankAddress)) {
-                let err = new Error("Some bank address details are empty")
+                let err = new Error(messages.error.INVALID_BANK_ADDRESS)
                 err.status = 401
                 throw err
             }
         }
 
         if (profileData.paymentDetails.paymentType === 'Bank' && !profileData.paymentDetails.bankDetails.bankPhone) {
-            let err = new Error("Some phone details are empty")
+            let err = new Error(messages.error.INVALID_PHONE_DETAILS)
             err.status = 401
             throw err
         }
 
         if (profileData.paymentDetails.paymentType === 'Bank' && !([true, false].includes(profileData.paymentDetails.bankDetails.isUSBank) && profileData.paymentDetails.bankDetails.taxId && profileData.paymentDetails.bankDetails.beneficiaryName && profileData.paymentDetails.bankDetails.beneficiaryAddress && profileData.paymentDetails.bankDetails.bankName && profileData.paymentDetails.bankDetails.currencyType && profileData.paymentDetails.bankDetails.bankAccountNo)) {
-            let err = new Error("Some bank details are empty")
+            let err = new Error(messages.error.MISSING_BANK_DETAILS)
             err.status = 401
             throw err
         }
@@ -506,14 +506,14 @@ userService.updateUserProfile = async (userName, profileData) => {
 
     return userModel.updateUserProfile(userName, profileData).then(data => {
         if (data['nModified'] > 0) {
-            return { success: true, message: 'User Profile Updated Successfully' };
+            return { success: true, message: messages.success.UPDATE_USER };
         } else {
-            let err = new Error("Failed to update Profile Please Try again")
+            let err = new Error(messages.error.FAILED_UPDATE_USER)
             err.status = 500
             throw err
         }
     }).catch(error => {
-        let err = new Error("Something went wrong please try again")
+        let err = new Error(messages.error.TRY_AGAIN)
         err.status = 500
         throw err
     })
@@ -555,7 +555,7 @@ userService.deleteUser = (userName) => {
     return userModel.rejectUser(userName).then(data => {
         if (data) return data;
 
-        let err = new Error("Something went wrong")
+        let err = new Error(messages.error.TRY_AGAIN)
         err.status = 500
         throw err
     })

@@ -9,6 +9,8 @@ const mongoProjectService = require('../../service/projectService');
 const registerUser = require('../../fabric-sdk/registerUser');
 const { orgModel } = require('../../model/models')
 const nodemailer = require('nodemailer');
+const messages = require('../../loggers/messages');
+
 
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
@@ -33,12 +35,12 @@ router.post('/onboard', (req, res, next) => {
                 .then((response) => {
                     userService.sendEmailForDonorRegistration(req);
                     //send registration success message
-                    return res.json(getMessage(true, "User onboarded successfully!"));
+                    return res.json(getMessage(true, messages.success.REGISTER_USER));
                 })
                 .catch((err) => {
                     //call delete service to delete user in mongo
-                    userSerive.deleteUser(req.body.userName)
-                    return generateError(registerError, next, 500, 'Couldn\'t register user in blockchain! Please report');
+                    userService.deleteUser(req.body.userName)
+                    return generateError(err, next, 500, messages.error.FAILED_REGISTER_USER);
                 });
         })
         .catch(err => {

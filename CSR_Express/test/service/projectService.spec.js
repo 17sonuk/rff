@@ -6,6 +6,7 @@ chai.use(chaiAsPromised)
 const projectService = require('../../service/projectService');
 const projectModel = require('../../model/projectModel');
 const userModel = require('../../model/userModel');
+const messages = require('../../loggers/messages')
 
 describe('TESTING PROJECT SERVICE - CREATE PROJECT', () => {
     let mockObj = ""
@@ -49,7 +50,7 @@ describe('TESTING PROJECT SERVICE - CREATE PROJECT', () => {
         mockObj.resolves(testProject);
         let res = await projectService.createProject("ngo501",testProject)
         expect(res.success).to.equal(true)
-        expect(res.message).to.equal('project created in db')
+        expect(res.message).to.equal(messages.success.PROJECT_CREATED)
 
         //If there is any error in project
         mockObj1.resolves("ngo")

@@ -9,6 +9,7 @@ const XLSX = require('xlsx');
 const { orgModel } = require('../../model/models');
 
 const logger = require('../../loggers/logger');
+const messages = require('../../loggers/messages')
 const { fieldErrorMessage, generateError, getMessage, splitOrgName } = require('../../utils/functions');
 
 const query = require('../../fabric-sdk/query');
@@ -141,7 +142,7 @@ router.get('/getRecord/:recordKey', async function (req, res, next) {
                 return res.json(getMessage(true, message[0]));
             }
         } else {
-            let e = new Error('Project Not Found');
+            let e = new Error(messages.error.NO_PROJECT);
             e.status = 404;
             generateError(e, next);
         }

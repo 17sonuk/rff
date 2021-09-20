@@ -1,4 +1,5 @@
-const logger = require('../loggers/logger');
+const logger = require('../../loggers/logger');
+const messages = require('../../loggers/messages')
 const { orgModel, communityModel, donorModel } = require('./models');
 
 const commonModel = {}
@@ -43,7 +44,7 @@ commonModel.getCommunity = (communityId) => {
             return data;
         })
         .catch(err => {
-            let error = new Error('Failed to connect to mongo');
+            let error = new Error(messages.error.MONGO_ERROR);
             error.status = 500;
             throw error;
         })
@@ -55,7 +56,7 @@ commonModel.getCommunityByNameAndPlace = (name, place) => {
             return data;
         })
         .catch(err => {
-            let error = new Error('Failed to connect to mongo');
+            let error = new Error(messages.error.MONGO_ERROR);
             error.status = 500;
             throw error;
         })
@@ -75,7 +76,7 @@ commonModel.saveDonor = async (donor) => {
     try {
         let existingDonor = await donorModel.findOne({ email: donor.email })
         if (existingDonor) {
-            return "Donor already exists!"
+            return messages.error.DONOR_EXIST
         }
         return donorModel.create(donor).then(data => {
             return data ? data : null

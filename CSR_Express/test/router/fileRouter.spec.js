@@ -9,6 +9,7 @@ var sandbox = require("sinon").createSandbox();
 require('dotenv').config();
 const { JWT_EXPIRY, TOKEN_SECRET, CA_EMAIL, IT_EMAIL, GUEST_EMAIL } = process.env;
 var jwt = require('jsonwebtoken');
+const messages = require('../../loggers/messages')
 
 describe('FILE ROUTER - getfile API', () => {
     let mockObj = ""
@@ -89,7 +90,7 @@ describe('FILE ROUTER - UploadFile API', () => {
 
             })
         expect(response.body.success).to.equal(false);
-        expect(response.body.message).to.equal("Please Upload a File");
+        expect(response.body.message).to.equal(messages.error.UPLOAD_FILE);
     })
 
     it('testing uploadFiles api when file data is present', async function () {
@@ -140,7 +141,7 @@ describe('FILE ROUTER - UploadFile API', () => {
             .set('connection', 'keep-alive')
             .field("fileHash","4b41a3475132bd861b30a878e30aa56a")
             .attach('uploadedFile', 'test/sample.pdf')
-        expect(response.body.message).to.equal("File size limit exceed or Invalid file type or Corrupted File");
+        expect(response.body.message).to.equal(messages.error.INVALID_FILE);
         expect(response.body.success).to.equal(false)
     })
 

@@ -2,7 +2,7 @@ const chai = require('chai');
 const { expect } = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised)
-
+const messages = require('../../loggers/messages');
 const { connectionToMongo, connectToMongo, disconnectMongo } = require('../../model/connection')
 
 const userModel = require('../../model/userModel');
@@ -58,7 +58,7 @@ describe('testing user model - approve user', () => {
         //here to request
         expect(res).to.be.a('object');
         expect(res.success).to.equal(true);
-        expect(res.message).to.equal('user successfully registered...');
+        expect(res.message).to.equal( messages.success.REGISTER_USER);
     });
 
     it('testing if user is already registered in mongo', async () => {

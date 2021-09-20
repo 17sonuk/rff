@@ -65,20 +65,27 @@ describe('USER ROUTER - ONBOARD API', () => {
 describe('USER ROUTER - ONBOARD API when there is bearer token', () => {
     let mockObj = ""
     let mockObj1 = ""
+
+    let mockObj2 = ""
+   
     beforeEach(() => {
         mockObj = sandbox.stub(userService, 'registerUser');
         mockObj1 = sandbox.stub(abc, 'registerUser');
+        mockObj2 = sandbox.stub(userService, 'sendEmailForDonorRegistration');
+
     });
     afterEach(() => {
         mockObj.restore();
         mockObj1.restore();
+        mockObj2.restore();
+
     });
     it('testing onboard API for Ngo when there is Bearer Token', async function () {
         const Data = {
             firstName: "ngo2",
             lastName: " xyz",
             orgName: "ngo",
-            userName: "ngo2",
+            userName: "ngo25674599007",
             email: "ngo2@gmail.com",
             role: "Ngo",
             description: "some desc",
@@ -104,15 +111,21 @@ describe('USER ROUTER - ONBOARD API when there is bearer token', () => {
             orgName: 'creditsauthority',
             userName: 'ca'
         }
+        let resp = {
+            "success": true,
+            "message": "User registered successfully"
+        }
         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
         mockObj.resolves(Data)
+        mockObj1.resolves(resp)
         mockObj1.resolves(null)
+
 
         const response = await request(app)
             .post("/mongo/user/onboard").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-            .send({
+            .send(
                 Data
-            });
+            );
         expect(response.status).to.equal(200);
     });
 })
