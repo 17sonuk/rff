@@ -42,6 +42,8 @@ const projectSchema = new Schema({
     orgName: { type: String, maxLength: 50 }
 }, { collection: "Project" })
 
+projectSchema.index({ projectId: 1, ngo: 1 }, { unique: true });
+
 function imageLimit(val) {
     return val.length <= 3;
 }
@@ -103,6 +105,8 @@ const communitySchema = new Schema({
     paymentDetails: paymentSchema
 })
 
+communitySchema.index({ name: 1, place: 1 }, { unique: true });
+
 //to store user data
 const orgSchema = new Schema({
     firstName: { type: String, required: [true, 'First name field is required'], maxLength: [50, 'First name cannot exceed 50 characters'] },
@@ -121,6 +125,8 @@ const orgSchema = new Schema({
     seen: { type: Boolean, default: false }
 }, { collection: "OrganisationProfile" })
 
+orgSchema.index({ username: 1, email: 1 }, { unique: true });
+
 const notificationSchema = new Schema({
     username: { type: String, required: true, maxLength: 50 },
     txId: String,
@@ -128,7 +134,7 @@ const notificationSchema = new Schema({
     seen: Boolean
 }, { collection: "Notification", timestamps: true })
 
-notificationSchema.index({ username: 1, txId: 1 }, { unique: true })
+notificationSchema.index({ username: 1, txId: 1 }, { unique: true });
 
 const txDescriptionSchema = new Schema({
     txId: { type: String, required: true, unique: true },

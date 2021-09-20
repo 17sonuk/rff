@@ -174,7 +174,7 @@ router.post('/transfer', async (req, res, next) => {
         // }
         //call a service that sends email to donor
         if (req.userName === 'guest' && donorDetails.email != "") {
-            commonService.sendEmail(donorDetails.email, 'Guest', amount, projectId, '')
+            commonService.sendEmail(donorDetails.email, donorDetails.name || 'Guest', amount, projectId, '')
         }
         else if (req.userName !== 'guest') {
             let orgDetails = await commonService.getOrgDetails(req.userName);

@@ -72,6 +72,7 @@
         "/mongo/user/reject-user",
         "/mongo/user/unapproved-users",
         "/mongo/user/getApprovedInstitutions",
+        "/mongo/user/markInstitutionalDonorAsSeen",
         "/mongo/project/all",
         "/token/all-requests",
         "/token/assign",

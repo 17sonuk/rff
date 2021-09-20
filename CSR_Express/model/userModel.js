@@ -126,6 +126,19 @@ userModel.getApprovedInstitutions = async () => {
     }
 }
 
+// mark institutional donor as seen
+userModel.markInstitutionalDonorAsSeen = async (id) => {
+    try {
+        let data = await orgModel.updateOne({ _id: id }, { $set: { seen: true } });
+        return data;
+    }
+    catch (error) {
+        let err = new Error(messages.error.BAD_CONNECTION);
+        err.status = 500;
+        throw err;
+    }
+}
+
 // approve users
 userModel.approveUser = (userName) => {
     return orgModel.updateOne({ userName: userName }, { $set: { "status": 'approved' } }).then(data => {

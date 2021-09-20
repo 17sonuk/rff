@@ -157,7 +157,7 @@ userService.getUserDetails = (userName) => {
         if (data) {
             return data;
         } else {
-            let err = new Error(messages.error.BAD_CONNECTION)
+            let err = new Error(messages.error.INVALID_USER_NAME)
             err.status = 500
             throw err
         }
@@ -201,6 +201,23 @@ userService.getApprovedInstitutions = async () => {
     try {
         return await userModel.getApprovedInstitutions();
     } catch (error) {
+        throw error;
+    }
+}
+
+// mark institutional donor as seen
+userService.markInstitutionalDonorAsSeen = async (id) => {
+    try {
+        let data = await userModel.markInstitutionalDonorAsSeen(id);
+        if (data['nModified'] > 0) {
+            return { success: true, message: messages.success.UPDATE_USER }
+        } else {
+            let err = new Error(messages.error.FAILED_UPDATE_USER);
+            err.status = 500;
+            throw err;
+        }
+    }
+    catch (error) {
         throw error;
     }
 }
@@ -471,7 +488,7 @@ userService.updateUserProfile = async (userName, profileData) => {
             throw err
         }
 
-        if (profileData.paymentDetails.paymentType === 'Cryptocurrency' && !profileData.paymentDetails.Cryptocurrency) {
+        if (profileData.paymentDetails.paymentType === 'Cryptocurrency' && !profileData.paymentDetails.cryptoAddress) {
             let err = new Error(messages.error.MISSING_CRYPTO_ID)
             err.status = 401
             throw err

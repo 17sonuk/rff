@@ -63,7 +63,7 @@ router.get('/yearly-report', async function (req, res, next) {
         args = JSON.stringify(queryTransaction)
         let messageTransaction = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
         let transactionList = JSON.parse(messageTransaction.toString())
-        console.log("transactionList : ",transactionList)
+        console.log("transactionList : ", transactionList)
         let regDonors = []
         let projectIds = []
         let guestEmails = []
@@ -134,6 +134,7 @@ router.get('/yearly-report', async function (req, res, next) {
                 }
             }
             txnObj["Gift Amount"] = txn.qty
+            txnObj["Payment ID"] = txn.paymentId
 
             //total amount
             if (projectMemory[txn.objRef]) {

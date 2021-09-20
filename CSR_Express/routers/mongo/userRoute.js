@@ -99,6 +99,16 @@ router.get('/getApprovedInstitutions', async (req, res, next) => {
     }
 })
 
+// mark institutional donor as seen
+router.put('/markInstitutionalDonorAsSeen', async (req, res, next) => {
+    try {
+        let result = await userService.markInstitutionalDonorAsSeen(req.query.id);
+        res.json(result);
+    }
+    catch (error) {
+        next(error);
+    }
+})
 
 //get notification - true for unseen and false for seen
 router.get('/notification/:seen', (req, res, next) => {
