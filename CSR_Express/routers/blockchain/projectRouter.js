@@ -490,7 +490,10 @@ router.get('/filtered-projects', async (req, res, next) => {
         if (!approvalStatus && !projectStatus && req.orgName === "corporate") {
             queryString["selector"]['approvalState'] = { "$ne": "UnApproved" }
         }
-        if (projectStatus === "Project Active") {
+        if (projectStatus === "Active") {
+            delete queryString['selector']['projectState'];
+
+            let time = new Date().getTime()
             queryString['selector']['approvalState'] = "Approved"
             queryString['selector']['$and'] = [
                 {
@@ -499,18 +502,27 @@ router.get('/filtered-projects', async (req, res, next) => {
                     }
                 },
                 {
-                    "actualStartDate": {
-                        "$ne": 0
-                    }
+                    "$or": [
+                        {
+                            "actualStartDate": {
+                                "$ne": 0
+                            }
+                        },
+                        {
+                            "phases.0.startDate": { "$lte": time }
+                        }
+                    ]
                 }
             ]
         }
         if (projectStatus === "Open For Funding") {
+            delete queryString['selector']['projectState'];
+            
             queryString['selector']['approvalState'] = "Approved"
             queryString['selector']['$and'] = [
                 {
                     "projectState": {
-                        "$ne": "FullyFunded"
+                        "$ne": "Fully Funded"
                     }
                 },
                 {
