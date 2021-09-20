@@ -1,5 +1,6 @@
 const Axios = require('axios').default
 var mmm = require('mmmagic')
+const messages = require('../loggers/messages')
 Magic = mmm.Magic;
 
 require('dotenv').config();
@@ -73,41 +74,41 @@ fileService.getFiles = (fileHash) => {
     });
 }
 
-fileService.virusScan = (req, res, next) => {
-    if (!req.files || !req.files.uploadedFile) {
-        let e = new Error('Please Upload a File');
-        e.status = 400;
-        return generateError(e, next)
-    }
+// fileService.virusScan = (req, res, next) => {
+//     if (!req.files || !req.files.uploadedFile) {
+//         let e = new Error('Please Upload a File');
+//         e.status = 400;
+//         return generateError(e, next)
+//     }
 
-    const inputFile = req.files.uploadedFile
-    var bodyFormData = new FormData();
-    bodyFormData.append('inputFile', inputFile.data, inputFile.name);
-    bodyFormData.append('async', 'false');
+//     const inputFile = req.files.uploadedFile
+//     var bodyFormData = new FormData();
+//     bodyFormData.append('inputFile', inputFile.data, inputFile.name);
+//     bodyFormData.append('async', 'false');
 
-    Axios({
-        url: `https://api.virusscannerapi.com/virusscan`,
-        method: 'post',
-        headers: {
-            'X-ApplicationID': '6285c3b1-39de-4cc7-b0b0-e80b83c6ac1e',
-            'X-SecretKey': 'c9767ee1-dc90-48f0-92fe-60203eb4656d',
-            "Content-Type": `multipart/form-data; boundary=${bodyFormData._boundary}`
-        },
-        data: bodyFormData
-    }).then(response => {
-        if (response.data.status === "File is clean") {
-            next()
-        } else {
-            let e = new Error('Infected file');
-            e.status = 400;
-            return generateError(e, next)
-        }
-    }).catch(error => {
-        let e = new Error('File scan failed. Please try again!');
-        e.status = 500;
-        return generateError(e, next)
-    })
-}
+//     Axios({
+//         url: `https://api.virusscannerapi.com/virusscan`,
+//         method: 'post',
+//         headers: {
+//             'X-ApplicationID': '6285c3b1-39de-4cc7-b0b0-e80b83c6ac1e',
+//             'X-SecretKey': 'c9767ee1-dc90-48f0-92fe-60203eb4656d',
+//             "Content-Type": `multipart/form-data; boundary=${bodyFormData._boundary}`
+//         },
+//         data: bodyFormData
+//     }).then(response => {
+//         if (response.data.status === "File is clean") {
+//             next()
+//         } else {
+//             let e = new Error('Infected file');
+//             e.status = 400;
+//             return generateError(e, next)
+//         }
+//     }).catch(error => {
+//         let e = new Error('File scan failed. Please try again!');
+//         e.status = 500;
+//         return generateError(e, next)
+//     })
+// }
 
 fileService.checkFormat = async (fileName, fileData, fileSize, mimeType) => {
     const validMimeTypes = [
@@ -127,22 +128,22 @@ fileService.checkFormat = async (fileName, fileData, fileSize, mimeType) => {
             if (err) reject(err);
 
             if (fileSize > 1048576) {
-                reject(new Error("file size limit exceeded!!!"));
+                reject(new Error(messages.error.INVALID_FILE));
             }
             if (!validMimeTypes.includes(mimeType)) {
-                reject(new Error("Invalid file type!!!"));
+                reject(new Error(messages.error.INVALID_FILE));
             }
 
             const regEx = /^[\w-]+\.(pdf|xls|xlsx|xlsb|xlsm)$/gi
             const pattern = regEx.test(fileName);
             if (!pattern) {
-                reject(new Error("Invalid file format!!!"));
+                reject(new Error(messages.error.INVALID_FILE));
             }
 
             if (mimeType == result) {
                 resolve(true)
             } else {
-                reject(new Error("Invalid file type!!!"))
+                reject(new Error(messages.error.INVALID_FILE))
             }
         })
     })

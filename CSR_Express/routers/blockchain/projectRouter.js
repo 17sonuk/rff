@@ -4,6 +4,7 @@ const express = require('express');
 const router = express.Router();
 const { v4: uuid } = require('uuid');
 const logger = require('../../loggers/logger');
+const messages = require('../../loggers/messages')
 const { fieldErrorMessage, generateError, getMessage, splitOrgName } = require('../../utils/functions');
 const invoke = require('../../fabric-sdk/invoke');
 const query = require('../../fabric-sdk/query');
@@ -54,7 +55,7 @@ router.post('/create', async (req, res, next) => {
 
     try {
         await invoke.main(req.userName, req.orgName, "CreateProject", CHAINCODE_NAME, CHANNEL_NAME, args);
-        return res.json({ ...getMessage(true, 'Successfully invoked CreateProject'), 'projectId': projectId });
+        return res.json({ ...getMessage(true, messages.success.INVOKE_CREATE_PROJECT), 'projectId': projectId });
     }
     catch (e) {
         generateError(e, next)
@@ -80,11 +81,11 @@ router.put('/approve', async (req, res, next) => {
         successBlockchain = true
         let result = await projectService.updateProjectForApproval(projectId, req.body.mongo)
         console.log(result)
-        return res.json(getMessage(true, "Project Approved succesfully"))
+        return res.json(getMessage(true, messages.success.PROJECT_APPROVAL))
     }
     catch (e) {
         if (successBlockchain) {
-            generateError(e, next, 500, 'Failed to add contributor in mongo');
+            generateError(e, next, 500, messages.error.ADD_CONTRIBUTOR_FAILURE);
         }
         else {
             generateError(e, next)
@@ -117,7 +118,7 @@ router.put('/update', async (req, res, next) => {
 
     try {
         await invoke.main(req.userName, req.orgName, "UpdateProject", CHAINCODE_NAME, CHANNEL_NAME, args);
-        return res.json(getMessage(true, 'Successfully invoked UpdateProject'));
+        return res.json(getMessage(true, messages.success.INVOKE_UPDATE_PROJECT));
     }
     catch (e) {
         generateError(e, next)
@@ -161,7 +162,7 @@ router.post('/validate-phase', async (req, res, next) => {
             commonService.MilestoneEmail(projectId, phaseNumber, req.userName, req.orgName)
         }
         commonService.ProjectCompletionEmail(projectId, req.userName, req.orgName)
-        return res.json(getMessage(true, "Successfully validated the phase"))
+        return res.json(getMessage(true, messages.success.VALIDATE_PHASE))
     }
     catch (e) {
         generateError(e, next);
@@ -171,7 +172,6 @@ router.post('/validate-phase', async (req, res, next) => {
 //****************************** add a document hash against a criterion
 router.post('/add-document-hash', async (req, res, next) => {
     logger.debug('==================== INVOKE ADD DOCUMENT HASH TOKEN ON CHAINCODE ==================');
-
     //extract parameters from request body.
     const projectId = req.body.projectId;
     const phaseNumber = req.body.phaseNumber;
@@ -201,7 +201,7 @@ router.post('/add-document-hash', async (req, res, next) => {
 
     try {
         await invoke.main(req.userName, req.orgName, "AddDocumentHash", CHAINCODE_NAME, CHANNEL_NAME, args);
-        return res.json(getMessage(true, 'Successfully invoked AddDocumentHash'));
+        return res.json(getMessage(true, messages.success.INVOKE_DOCUMENT_HASH));
     }
     catch (e) {
         generateError(e, next);
@@ -269,15 +269,12 @@ router.get('/corporate-project-transactions', async (req, res, next) => {
             message[i]['Record']['from'] = splitOrgName(message[i]['Record']['from']);
             message[i]['Record']['to'] = splitOrgName(message[i]['Record']['to']);
         }
-
         return res.json({ ...getMessage(true, 'CommonQuery successful'), "records": message });
     }
     catch (e) {
         generateError(e, next);
     }
 });
-
-
 
 router.get('/ngo-project-transactions', async (req, res, next) => {
     logger.debug('==================== QUERY BY CHAINCODE: getNgoProjectTx ==================')
@@ -308,10 +305,8 @@ router.get('/ngo-project-transactions', async (req, res, next) => {
     }
     if (projectId) {
         let regex = projectId + "$";
-
         queryString['selector']['objRef'] = { '$regex': regex }
     }
-
     let args = JSON.stringify(queryString)
     logger.debug('args : ' + args);
 
@@ -322,13 +317,10 @@ router.get('/ngo-project-transactions', async (req, res, next) => {
         let projectMemory = {}
         if (!projectId) {
             var mongoProject = await projectModel.find({ ngo: req.userName }, { _id: 0, projectId: 1, projectName: 1, projectType: 1 })
-
             for (let d = 0; d < mongoProject.length; d++) {
                 let p = mongoProject[d]
                 projectMemory[p.projectId] = p
             }
-
-
         }
         message.forEach(elem => {
             elem['Record'] = JSON.parse(elem['Record'])
@@ -342,7 +334,6 @@ router.get('/ngo-project-transactions', async (req, res, next) => {
         })
 
         logger.debug(`response :  ${JSON.stringify(message, null, 2)}`)
-
         return res.json({ ...getMessage(true, 'CommonQuery successful'), "records": message });
     }
     catch (e) {
@@ -384,7 +375,6 @@ router.get('/transactions', async (req, res, next) => {
     try {
         let message = await query.main(req.userName, req.orgName, "CommonQuery", CHAINCODE_NAME, CHANNEL_NAME, args);
         message = JSON.parse(message.toString());
-
         message.forEach(elem => {
             elem['Record'] = JSON.parse(elem['Record'])
             elem['Record']["from"] = splitOrgName(elem["Record"]["from"])
@@ -392,7 +382,6 @@ router.get('/transactions', async (req, res, next) => {
         })
 
         logger.debug(`response :  ${JSON.stringify(message, null, 2)}`)
-
         return res.json({ ...getMessage(true, 'CommonQuery successful'), "records": message });
     }
     catch (e) {
@@ -400,12 +389,8 @@ router.get('/transactions', async (req, res, next) => {
     }
 });
 
-
-
-
 //delete a project by id
 router.post('/delete', async (req, res, next) => {
-
     //extract parameters from request body.
     const projectId = req.body.projectId;
     const comments = req.body.comments;
@@ -419,14 +404,11 @@ router.post('/delete', async (req, res, next) => {
     } else if (!comments) {
         return res.json(fieldErrorMessage('\'comments\''));
     }
-
-
     let args = [projectId, comments, Date.now().toString(), uuid().toString()];
     args = JSON.stringify(args);
     logger.debug('args  : ' + args);
 
     try {
-
         await invoke.main(req.userName, req.orgName, "DeleteProject", CHAINCODE_NAME, CHANNEL_NAME, args);
         logger.debug('Successfully invoked DeleteProject')
 
@@ -434,17 +416,16 @@ router.post('/delete', async (req, res, next) => {
             .then((data) => {
                 console.log(data)
                 logger.debug('Mongo delete project success')
-                return res.json(getMessage(true, "Deleted project successfully"))
+                return res.json(getMessage(true, messages.success.PROJECT_DELETE))
             })
             .catch(err => {
-                generateError(err, next, 500, 'Failed to delete project in mongo');
+                generateError(err, next, 500, messages.error.FAILED_PROJECT_DELETE);
             });
     }
     catch (e) {
         generateError(e, next)
     }
 });
-
 
 // get all filtered projects by status,place, projectType, approvalState, projectState,
 router.get('/filtered-projects', async (req, res, next) => {
@@ -558,12 +539,10 @@ router.get('/filtered-projects', async (req, res, next) => {
     }
     console.log("query :", queryString)
     console.log("place", place)
-
     logger.debug('queryString: ' + JSON.stringify(queryString));
 
     let args = [JSON.stringify(queryString), pageSize, bookmark];
     args = JSON.stringify(args);
-
 
     try {
         let message = await query.main(req.userName, req.orgName, "CommonQueryPagination", CHAINCODE_NAME, CHANNEL_NAME, args);
@@ -574,7 +553,6 @@ router.get('/filtered-projects', async (req, res, next) => {
         }
         else {
             let newObject = message['Results'];
-
             let finalResponse = {}
             let allRecords = []
 
@@ -611,7 +589,6 @@ router.get('/filtered-projects', async (req, res, next) => {
                 response['currentPhaseStatus'] = response.phases[currentPhase]['phaseState'];
                 response['currentPhaseTarget'] = response.phases[currentPhase]['qty'];
                 response['currentPhaseOutstandingAmount'] = response.phases[currentPhase]['outstandingQty'];
-
                 response['projectId'] = newObject[i]['Key']
                 response['contributors'] = Object.keys(response['contributors']).map(splitOrgName)
                 response['ngo'] = splitOrgName(response['ngo'])
@@ -627,22 +604,18 @@ router.get('/filtered-projects', async (req, res, next) => {
 
                 let actualStartDate = response.actualStartDate
                 let startDate = response.phases[0]['startDate']
-
                 let timeDiff = startDate - Date.now()
                 if (actualStartDate !== 0) {
                     timeDiff = actualStartDate - Date.now()
                 }
-
                 if (timeDiff < 0) {
                     timeDiff = 0
                 }
                 response['daysLeftToStart'] = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-
                 timeDiff = Date.now() - startDate
                 if (actualStartDate !== 0) {
                     timeDiff = Date.now() - actualStartDate
                 }
-
                 if (timeDiff < 0) {
                     timeDiff = 0
                 }
@@ -663,7 +636,6 @@ router.get('/filtered-projects', async (req, res, next) => {
 
 //abandon a project by id
 router.put('/abandon', async (req, res, next) => {
-
     //extract parameters from request body.
     const projectId = req.body.projectId;
     const comments = req.body.comments;
@@ -678,16 +650,14 @@ router.put('/abandon', async (req, res, next) => {
         return res.json(fieldErrorMessage('\'comments\''));
     }
 
-
     let args = [projectId, comments, Date.now().toString(), uuid().toString()];
     args = JSON.stringify(args);
     logger.debug('args  : ' + args);
 
     try {
-
         await invoke.main(req.userName, req.orgName, "AbandonProject", CHAINCODE_NAME, CHANNEL_NAME, args);
         logger.debug('Successfully invoked AbandonProject')
-        return res.json(getMessage(true, "Abandoned project successfully"))
+        return res.json(getMessage(true, messages.success.ABANDON_PROJECT))
     }
     catch (e) {
         generateError(e, next)
@@ -736,34 +706,28 @@ router.put('/edit', async (req, res, next) => {
             if (message[0]['Record']['docType'] === 'Project') {
                 message = message[0]
                 if (message['Record']['approvalState'] === "Approved") {
-
                     for (let f = 0; f < message['Record'].phases.length; f++) {
-
                         if (message["Record"].phases[f]["phaseState"] !== "Validated") {
-
                             currentPhaseNum = f;
                             break;
                         }
-
                     }
-
                 } else {
-                    return res.json(getMessage(true, "Only Approved project allowed to edit"))
+                    return res.json(getMessage(true, messages.error.APPROVED_PROJECT_EDIT))
                 }
             }
         }
         console.log('currentPhaseNum: ', currentPhaseNum)
         if (currentPhaseNum === -1) {
-            return res.json(getMessage(true, "failed to find current phaseNumber"))
+            return res.json(getMessage(true, messages.error.INVALID_PHASE_NUMBER))
         }
         projectService.editProject(projectId, projectdetails, currentPhaseNum)
             .then((data) => {
-                return res.json(getMessage(true, "Edit project successfully"))
+                return res.json(getMessage(true, messages.success.PROJECT_EDIT))
             })
             .catch(err => {
-                generateError(err, next, 500, 'Failed to edit project in mongo');
+                generateError(err, next, 500, messages.error.FAILED_EDIT_PROJECT);
             });
-
     }
     catch (e) {
         generateError(e, next)
@@ -797,20 +761,18 @@ router.post('/initiate', async (req, res, next) => {
                 logger.error('email sending failed')
                 console.log(err)
             })
-        return res.json(getMessage(true, "Project has been initiated and donors have been notified!"));
+        return res.json(getMessage(true, messages.success.PROJECT_INITIATED));
     }
     catch (e) {
         generateError(e, next);
     }
 })
 
-
 router.get('/userProfile/transactions', async (req, res, next) => {
     logger.debug('==================== QUERY BY CHAINCODE: projectIdTransaction ==================');
     const projectId = req.query.projectId
     const ngo = req.query.ngo
     const corporate = req.query.corporate
-
 
     logger.debug('projectId : ' + projectId);
 
@@ -821,8 +783,6 @@ router.get('/userProfile/transactions', async (req, res, next) => {
     if (!CHANNEL_NAME) {
         return res.json(fieldErrorMessage('\'channelName\''));
     }
-
-
 
     let queryString = {
         "selector": {

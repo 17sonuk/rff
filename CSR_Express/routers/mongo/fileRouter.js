@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const fileService = require('../../service/fileService');
+const messages = require('../../loggers/messages')
 const { fieldErrorMessage, generateError } = require('../../utils/functions');
 
 router.get("/getfile", (req, res, next) => {
@@ -18,7 +19,7 @@ router.post("/upload", async (req, res, next) => {
 
     let e = new Error('');
     if (!req.files || !req.files.uploadedFile) {
-        e.message = 'Please Upload a File';
+        e.message = messages.error.UPLOAD_FILE;
         e.status = 400;
         return generateError(e, next)
     }
@@ -45,7 +46,7 @@ router.post("/upload", async (req, res, next) => {
             }
         }
 
-        e.message = "File size limit exceed or Invalid file type or Corrupted File"
+        e.message = messages.error.INVALID_FILE
         e.status = 400
         return generateError(e, next)
     } catch (err) {

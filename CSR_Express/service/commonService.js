@@ -12,7 +12,7 @@ const moment = require('moment');
 const { SMTP_EMAIL, APP_PASSWORD, CHAINCODE_NAME, CHANNEL_NAME, PLATFORM_NAME } = process.env;
 const query = require('../fabric-sdk/query');
 const { splitOrgName } = require('../utils/functions');
-
+const messages = require('../loggers/messages');
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,
@@ -25,17 +25,17 @@ const transporter = nodemailer.createTransport({
 const commonService = {};
 
 // upload Balance sheet:
-commonService.uploadBalanceSheet = (file) => {
-    return commonModel.uploadBalanceSheet(file).then(data => {
-        if (data) return { success: true, message: 'balance Sheet uploaded successfully' }
-        return { success: false, message: 'Error in uploading the balance sheet' }
-    })
-}
+// commonService.uploadBalanceSheet = (file) => {
+//     return commonModel.uploadBalanceSheet(file).then(data => {
+//         if (data) return { success: true, message: 'balance Sheet uploaded successfully' }
+//         return { success: false, message: 'Error in uploading the balance sheet' }
+//     })
+// }
 
 commonService.saveCommunities = (communityArr) => {
     return commonModel.saveCommunities(communityArr).then(data => {
         if (data) return data;
-        let err = new Error("Bad Connection")
+        let err = new Error(messages.error.BAD_CONNECTION)
         err.status = 500
         throw err
     })
@@ -44,7 +44,7 @@ commonService.saveCommunities = (communityArr) => {
 commonService.getCommunities = () => {
     return commonModel.getCommunities().then(data => {
         if (data) return data;
-        let err = new Error("Bad Connection")
+        let err = new Error(messages.error.BAD_CONNECTION)
         err.status = 500
         throw err
     })
@@ -55,7 +55,7 @@ commonService.getCommunity = async (communityId) => {
         if (data) {
             return data;
         } else {
-            let err = new Error("No community")
+            let err = new Error(messages.error.NO_COMMUNITY)
             err.status = 500
             throw err
         }
@@ -67,7 +67,7 @@ commonService.getCommunity = async (communityId) => {
 commonService.deleteCommunities = (communityIds) => {
     return commonModel.deleteCommunities(communityIds).then(data => {
         if (data) return data;
-        let err = new Error("Bad Connection")
+        let err = new Error(messages.error.BAD_CONNECTION)
         err.status = 500
         throw err
     })
@@ -76,7 +76,7 @@ commonService.deleteCommunities = (communityIds) => {
 commonService.saveDonor = (donor) => {
     return commonModel.saveDonor(donor).then(data => {
         if (data) return data;
-        let err = new Error("Bad Connection")
+        let err = new Error(messages.error.BAD_CONNECTION)
         err.status = 500
         throw err
     })
@@ -85,7 +85,7 @@ commonService.saveDonor = (donor) => {
 commonService.getDonors = () => {
     return commonModel.getDonors().then(data => {
         if (data) return data;
-        let err = new Error("Bad Connection")
+        let err = new Error(messages.error.BAD_CONNECTION)
         err.status = 500
         throw err
     })
@@ -94,7 +94,7 @@ commonService.getDonors = () => {
 commonService.updateCommunity = (communityId, name, place, paymentDetails) => {
     return commonModel.updateCommunity(communityId, name, place, paymentDetails).then(data => {
         if (data) return data;
-        let err = new Error("Bad Connection")
+        let err = new Error(messages.error.BAD_CONNECTION)
         err.status = 500
         throw err
     })
@@ -104,12 +104,12 @@ commonService.updateCommunity = (communityId, name, place, paymentDetails) => {
 commonService.getListedCommunity = (communityIds, orgName) => {
     return commonModel.getListedCommunity(communityIds, orgName).then(data => {
         if (data) return data;
-        let err = new Error("No data found")
+        let err = new Error(messages.error.NO_DATA)
         err.status = 500
         throw err
 
     }).catch(er => {
-        let err = new Error("Bad Connection")
+        let err = new Error(messages.error.BAD_CONNECTION)
         err.status = 500
         throw err
     })
@@ -119,7 +119,7 @@ commonService.getListedCommunity = (communityIds, orgName) => {
 commonService.getOrgDetails = (userName) => {
     return commonModel.getOrgDetails(userName).then(data => {
         if (data) return data;
-        let err = new Error("No data found")
+        let err = new Error(messages.error.NO_DATA)
         err.status = 500
         throw err
     })
@@ -128,7 +128,7 @@ commonService.getOrgDetails = (userName) => {
 commonService.sendEmailToDonor = async (email, name, amount, projectId, address) => {
     let projectDetails = await commonModel.getProjectById(projectId);
     if (!projectDetails) {
-        let err = new Error("No project found")
+        let err = new Error(messages.error.NO_PROJECT)
         err.status = 500
         throw err;
     }
@@ -188,7 +188,7 @@ commonService.projectInitiation = async (projectId, username, orgname) => {
 commonService.getDonorEmailList = (contributors) => {
     return commonModel.getDonorEmailList(contributors).then(data => {
         if (data) return data;
-        let err = new Error("No data found")
+        let err = new Error(messages.error.NO_DATA)
         err.status = 500
         throw err
     })

@@ -1,3 +1,4 @@
+const messages = require('../loggers/messages')
 module.exports = (error) => {
 
     let response = {
@@ -7,7 +8,7 @@ module.exports = (error) => {
     let msg = ''
 
     if (error.message.includes('connect ECONNREFUSED')) {
-        msg = 'Database connection issue! Please report';
+        msg = messages.error.DB_CONNECT;
     }
     else if (error.errors) {
         msg = error.errors[Object.keys(error.errors)[0]].message

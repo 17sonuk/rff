@@ -1,11 +1,12 @@
 const { projectModel } = require('./models');
+const messages = require('../loggers/messages');
 const projectModelObj = {}
 
 //create a new project
 projectModelObj.createProject = (projectData) => {
     return projectModel.find({ projectId: projectData.projectId }).then(p => {
         if (p.length > 0) {
-            return ({ message: 'Project ID already exist.', error: true })
+            return ({ message: messages.error.PROJECT_ID, error: true })
         } else {
             return projectModel.create(projectData).then(data => {
                 if (data) {
@@ -56,8 +57,8 @@ projectModelObj.updateProjectById = (project) => {
 // add contributors
 projectModelObj.addContributor = (projectId, contributor) => {
     return projectModel.updateOne({ projectId: projectId }, { $addToSet: { contributorsList: contributor } }).then(data => {
-        if (data.nModified > 0) return { message: 'Contributor added successfully' }
-        else return { message: 'Contributor already exists' }
+        if (data.nModified > 0) return { message: messages.success.ADD_CONTRIBUTOR }
+        else return { message: messages.error.INVALID_CONTRIBUTOR }
     })
 }
 
@@ -65,18 +66,18 @@ projectModelObj.addContributor = (projectId, contributor) => {
 projectModelObj.deleteProjectById = (projectId) => {
     return projectModel.find({ projectId: projectId }).then(p => {
         if (!p.length > 0) {
-            return ({ message: 'Project ID does not exist.', error: true })
+            return ({ message: messages.error.INVALID_PROJECT_ID, error: true })
         } else {
             return projectModel.deleteOne({ projectId: projectId }).then((data) => {
                 console.log("data: ", data)
-                return ({ message: 'Project deleted Successfully.' })
+                return ({ message: messages.success.PROJECT_DELETE })
             }).catch((error) => {
                 return ({ message: error, error: true })
             });
         }
     }).catch(err => {
         console.log(err)
-        err = new Error("Received error from database")
+        err = new Error(messages.error.DB_ERROR)
         err.status = 500
         throw err
     });
@@ -86,7 +87,7 @@ projectModelObj.deleteProjectById = (projectId) => {
 projectModelObj.updateProjectForApproval = async (projectId, projectObj) => {
     try {
         await projectModel.updateOne({ projectId: projectId }, { $set: projectObj });
-        return { success: true, message: 'project successfully approved' }
+        return { success: true, message: messages.success.PROJECT_APPROVAL}
     }
     catch (error) {
         throw error;
@@ -99,7 +100,7 @@ projectModelObj.editProject = async (projectId, projectObj, currentPhaseNum) => 
         let p = await projectModel.findOne({ projectId: projectId })
 
         if (!p) {
-            return ({ message: 'Project ID does not exist.', error: true })
+            return ({ message: messages.error.INVALID_PROJECT_ID, error: true })
         }
         p.question1 = projectObj.question1
         p.question2 = projectObj.question2
@@ -118,12 +119,12 @@ projectModelObj.editProject = async (projectId, projectObj, currentPhaseNum) => 
 
         let data = await projectModel.updateOne({ projectId: projectId }, { $set: p })
         console.log("data: ", data)
-        return ({ message: 'Project edited Successfully.', success: true })
+        return ({ message: messages.success.PROJECT_EDIT, success: true })
     }
 
     catch (err) {
         console.log(err)
-        err = new Error("Received error from database")
+        err = new Error(messages.error.DB_ERROR)
         err.status = 500
         throw err
     }

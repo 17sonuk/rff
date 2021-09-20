@@ -5,6 +5,7 @@ const router = express.Router();
 const { v4: uuid } = require('uuid');
 
 const logger = require('../../loggers/logger');
+const messages = require('../../loggers/messages')
 const projectService = require('../../service/projectService');
 const commonService = require('../../service/commonService');
 const { fieldErrorMessage, generateError, getMessage, splitOrgName } = require('../../utils/functions');
@@ -52,11 +53,11 @@ router.post('/request', async (req, res, next) => {
     try {
         await invoke.main(req.userName, req.orgName, "RequestTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
         if (paymentStatus === 'COMPLETED') {
-            return res.json(getMessage(true, 'Successfully credited funds'));
+            return res.json(getMessage(true, messages.success.CREDIT_FUNDS));
         } else if (paymentStatus === 'PENDING') {
-            return res.json(getMessage(true, 'Request is pending with Rainforest US. Please wait to receive funds in your wallet.'));
+            return res.json(getMessage(true, messages.error.PENDING_FUNDS_APPROVAL));
         } else {
-            let error = new Error('Some error occured!');
+            let error = new Error(messages.error.ERROR);
             error.status = 500;
             throw error
         }
@@ -117,10 +118,10 @@ router.post('/transfer', async (req, res, next) => {
         // assumption: mongo service won't fail.
         projectService.addContributor(projectId, req.userName)
             .then((data) => {
-                return res.json(getMessage(true, "Transferred succesfully"))
+                return res.json(getMessage(true, messages.success.TRANSFER_SUCCESS))
             })
             .catch(err => {
-                generateError(err, next, 500, 'Failed to add contributor in mongo');
+                generateError(err, next, 500, messages.error.ADD_CONTRIBUTOR_FAILURE);
             });
 
         if (donorDetails.email) {
@@ -129,7 +130,7 @@ router.post('/transfer', async (req, res, next) => {
                     logger.debug('saved donor details')
                 })
                 .catch(err => {
-                    generateError(err, next, 500, 'Failed to save donor details');
+                    generateError(err, next, 500, messages.error.SAVE_DONOR_ERROR);
                 })
         }
 
@@ -141,7 +142,7 @@ router.post('/transfer', async (req, res, next) => {
                         logger.debug('email sent to donor')
                     })
                     .catch(err => {
-                        generateError(err, next, 500, 'Failed to send email to donor');
+                        generateError(err, next, 500, messages.error.SEND_EMAIL_ERROR);
                     })
             }
             else if (req.userName !== 'guest') {
@@ -156,10 +157,10 @@ router.post('/transfer', async (req, res, next) => {
 
                     commonService.sendEmailToDonor(orgDetails.email, donorName, amount, projectId, orgDetails.address)
                         .then((data) => {
-                            logger.debug('email send to donor')
+                            logger.debug('email sent to donor')
                         })
                         .catch(err => {
-                            generateError(err, next, 500, 'Failed to send email to donor');
+                            generateError(err, next, 500, messages.error.SEND_EMAIL_ERROR);
                         })
                 }
             } else {

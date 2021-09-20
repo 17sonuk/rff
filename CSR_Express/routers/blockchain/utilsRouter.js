@@ -7,6 +7,7 @@ const { v4: uuid } = require('uuid');
 const XLSX = require('xlsx')
 
 const logger = require('../../loggers/logger');
+const messages = require('../../loggers/messages')
 const { generateError, getMessage, fieldErrorMessage, splitOrgName } = require('../../utils/functions');
 
 const invoke = require('../../fabric-sdk/invoke');
@@ -154,7 +155,7 @@ router.get('/yearly-report', async function (req, res, next) {
             return res.json(getMessage(true, excelResponse));
         }
         else {
-            generateError(e, next, 400, 'Type should be json or excel');
+            generateError(e, next, 400, messages.error.REPORT_TYPE);
         }
     }
     catch (e) {

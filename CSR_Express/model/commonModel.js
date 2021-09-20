@@ -1,4 +1,5 @@
 const logger = require('../loggers/logger');
+const messages = require('../loggers/messages')
 const { orgModel, communityModel, donorModel, projectModel } = require('./models');
 
 const commonModel = {}
@@ -46,13 +47,13 @@ commonModel.getCommunity = async (communityId) => {
         console.log("data: ", data)
         if (data) return data
 
-        let err = new Error("Community does not exist")
+        let err = new Error(messages.error.NO_COMMUNITY)
         err.status = 500
         throw err
 
     }).catch(error => {
         console.log(error)
-        let err = new Error("Bad Connection")
+        let err = new Error(messages.error.BAD_CONNECTION)
         err.status = 500
         throw err
     })
@@ -88,7 +89,7 @@ commonModel.saveDonor = async (donor) => {
     try {
         let existingDonor = await donorModel.findOne({ email: donor.email })
         if (existingDonor) {
-            return "Donor already exists!"
+            return messages.error.DONOR_EXIST
         }
         return donorModel.create(donor).then(data => {
             return data ? data : null

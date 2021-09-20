@@ -1,7 +1,8 @@
 const CryptoJS = require('crypto-js');
 const mongoError = require('./mongoError')
 const logger = require('../loggers/logger');
-const { notificationModel, orgModel, txDescriptionModel } = require('./models')
+const { notificationModel, orgModel, txDescriptionModel } = require('./models');
+const messages = require('../loggers/messages');
 const userModel = {}
 
 // create
@@ -75,7 +76,7 @@ userModel.registerUser = async (obj) => {
                 console.log('mongo user')
                 let result = await orgModel.create(obj)
                 if (result) {
-                    return { success: true, message: 'user successfully registered...' };
+                    return { success: true, message: messages.success.REGISTER_USER };
                 } else {
                     return null
                 }
@@ -119,7 +120,7 @@ userModel.getApprovedInstitutions = async () => {
         return await orgModel.find({ status: 'approved', role: 'Corporate', subRole: 'Institution', seen: false }, { _id: 1, orgName: 1, firstName: 1, lastName: 1, email: 1, website: 1 }).sort({ _id: -1 });
     }
     catch (error) {
-        let err = new Error("Connection Issue")
+        let err = new Error(messages.error.BAD_CONNECTION)
         err.status = 500
         throw err
     }
@@ -148,7 +149,7 @@ userModel.resetUserStatus = (userName) => {
         })
         .catch(err => {
             logger.error(err);
-            err = new Error("Connection Issue")
+            err = new Error(messages.error.BAD_CONNECTION)
             err.status = 500
             throw err;
         })
@@ -252,7 +253,7 @@ userModel.updateUserProfile = (userN, profileData) => {
     return orgModel.update({ userName: userN }, { $set: profileData }).then((data) => {
         return data;
     }).catch((error) => {
-        let err = new Error("Connection Issue")
+        let err = new Error(messages.error.BAD_CONNECTION)
         err.status = 500
         throw err
     })

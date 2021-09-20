@@ -5,6 +5,7 @@ const router = express.Router();
 const { v4: uuid } = require('uuid');
 
 const logger = require('../../loggers/logger');
+const messages = require('../../loggers/messages')
 const { fieldErrorMessage, generateError, getMessage, splitOrgName } = require('../../utils/functions');
 
 const invoke = require('../../fabric-sdk/invoke');
@@ -72,7 +73,7 @@ router.post('/request', async (req, res, next) => {
 
     try {
         await invoke.main(req.userName, req.orgName, "RedeemRequest", CHAINCODE_NAME, CHANNEL_NAME, args);
-        return res.json(getMessage(true, 'Successfully invoked RedeemRequest'));
+        return res.json(getMessage(true, messages.success.INVOKE_REDEEM));
     } catch (e) {
         generateError(e, next);
     }
@@ -99,7 +100,7 @@ router.post('/approve', async (req, res, next) => {
 
     try {
         await invoke.main(req.userName, req.orgName, "ApproveRedeemRequest", CHAINCODE_NAME, CHANNEL_NAME, args);
-        return res.json(getMessage(true, 'Successfully invoked ApproveRedeemRequest'));
+        return res.json(getMessage(true, messages.success.INVOKE_APPROVE_REDEEM));
     } catch (e) {
         generateError(e, next);
     }
@@ -125,7 +126,7 @@ router.post('/reject', async (req, res, next) => {
 
     try {
         await invoke.main(req.userName, req.orgName, "RejectRedeemRequest", CHAINCODE_NAME, CHANNEL_NAME, args);
-        return res.json(getMessage(true, 'Successfully invoked RejectRedeemRequest'));
+        return res.json(getMessage(true, messages.success.INVOKE_REJECT_REDEEM));
     }
     catch (e) {
         generateError(e, next);
@@ -163,7 +164,7 @@ router.get('/request/all', async (req, res, next) => {
         queryString['selector']['from'] = userDLTName
     }
     else if(req.orgName !== 'creditsauthority') {
-        return res.json({ success: false, message: 'Unauthorised redeem request access...' })
+        return res.json({ success: false, message: messages.error.UNAUTHORISED_REDEEM_ACCESS })
     }
 
     let args = [JSON.stringify(queryString), pageSize, bookmark];
@@ -215,11 +216,11 @@ router.get('/request/forUserprofile', async (req, res, next) => {
     }
 
     if (!ngo && (!communityName && !communityPlace)) {
-        return res.json({ success: false, message: 'Select either ngo or community' });
+        return res.json({ success: false, message: messages.error.NGO_OR_COMMUNITY });
     }
 
     if (ngo && (communityName || communityPlace)) {
-        return res.json({ success: false, message: 'Both ngo and community can not be selected' });
+        return res.json({ success: false, message: messages.error.NGO_AND_COMMUNITY });
     }
 
     if (!ngo && (!communityName || !communityPlace)) {
@@ -244,7 +245,7 @@ router.get('/request/forUserprofile', async (req, res, next) => {
         queryString['selector']['communityName'] = communityName
         queryString['selector']['communityPlace'] = communityPlace
     } else {
-        return res.json({ success: false, message: 'Unauthorised redeem request access...' })
+        return res.json({ success: false, message: messages.error.UNAUTHORISED_REDEEM_ACCESS })
     }
 
     let args = [JSON.stringify(queryString), pageSize, bookmark];

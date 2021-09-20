@@ -1,5 +1,6 @@
 const projectModel = require('../model/projectModel');
 const userModel = require('../model/userModel');
+const messages = require('../loggers/messages');
 const projectService = {};
 
 //Create project
@@ -12,12 +13,12 @@ projectService.createProject = (userName, project) => {
                     return { success: false, message: projectData.message };
                 }
                 else if (!projectData) {
-                    let err = new Error("Bad Connection")
+                    let err = new Error(messages.error.BAD_CONNECTION)
                     err.status = 500
                     throw err
                 }
                 else {
-                    return { success: true, message: 'project created in db' };
+                    return { success: true, message: messages.success.PROJECT_CREATED };
                 }
             })
         })
@@ -29,7 +30,7 @@ projectService.getProjectsNGO = (ngoName) => {
         if (projectData) {
             return projectData;
         } else {
-            let err = new Error("Bad Connection")
+            let err = new Error(messages.error.BAD_CONNECTION)
             err.status = 500
             throw err
         }
@@ -42,7 +43,7 @@ projectService.getProjectsCorporate = (corporateName) => {
         if (projectData) {
             return projectData;
         } else {
-            let err = new Error("Bad Connection")
+            let err = new Error(messages.error.BAD_CONNECTION)
             err.status = 500
             throw err
         }
@@ -55,7 +56,7 @@ projectService.getAllProjects = () => {
         if (projectData) {
             return projectData;
         } else {
-            let err = new Error("Bad Connection")
+            let err = new Error(messages.error.BAD_CONNECTION)
             err.status = 500
             throw err
         }
@@ -68,7 +69,7 @@ projectService.getProjectById = (projectId) => {
         if (projectData) {
             return projectData;
         } else {
-            let err = new Error("Bad Connection")
+            let err = new Error(messages.error.BAD_CONNECTION)
             err.status = 500
             throw err
         }
@@ -81,7 +82,7 @@ projectService.updateProjectById = (project) => {
         if (projectData) {
             return projectData;
         } else {
-            let err = new Error("Bad Connection")
+            let err = new Error(messages.error.BAD_CONNECTION)
             err.status = 500
             throw err
         }
@@ -94,7 +95,7 @@ projectService.addContributor = (projectId, contributor) => {
         if (projectData) {
             return projectData;
         } else {
-            let err = new Error("Bad Connection")
+            let err = new Error(messages.error.BAD_CONNECTION)
             err.status = 500
             throw err
         }
@@ -107,7 +108,7 @@ projectService.deleteProjectById = (projectId) => {
         if (data) {
             return data;
         } else {
-            let err = new Error("Bad Connection")
+            let err = new Error(messages.error.BAD_CONNECTION)
             err.status = 500
             throw err
         }
@@ -120,7 +121,7 @@ projectService.updateProjectForApproval = async (projectId, projectObj) => {
         return await projectModel.updateProjectForApproval(projectId, projectObj)
     }
     catch (error) {
-        let err = new Error("Approval failed!")
+        let err = new Error(messages.error.FAILED_PROJECT_APPROVAL)
         err.status = 500
         throw err
     }
@@ -132,7 +133,7 @@ projectService.editProject = async (projectId, projectObj, currentPhaseNum) => {
         return await projectModel.editProject(projectId, projectObj, currentPhaseNum)
     }
     catch (error) {
-        let err = new Error("Edit failed!")
+        let err = new Error(messages.error.FAILED_EDIT_PROJECT)
         err.status = 500
         throw err
     }
@@ -144,7 +145,7 @@ projectService.getFilters = (userName, orgName) => {
         if (data) {
             return data;
         } else {
-            let err = new Error("No records found")
+            let err = new Error(messages.error.NO_RECORDS)
             err.status = 500
             throw err
         }
@@ -156,7 +157,7 @@ projectService.getProjectsByCommunity = (communityId) => {
         if (data) {
             return data;
         } else {
-            let err = new Error("No records found")
+            let err = new Error(messages.error.NO_RECORDS)
             err.status = 500
             throw err
         }
