@@ -97,19 +97,19 @@ router.post('/community/listed', (req, res, next) => {
 })
 
 //to get all donor details
-router.get('/donor', (req, res, next) => {
-    // return project data object from service
-    commonService.getDonors()
-        .then((data) => {
-            res.json(data)
-        })
-        .catch(err => {
-            if (err['_message']) {
-                err.status = 400
-                err.message = err['_message'];
-            }
-            next(err)
-        })
-})
+// router.get('/donor', (req, res, next) => {
+//     // return project data object from service
+//     commonService.getDonors()
+//         .then((data) => {
+//             res.json(data)
+//         })
+//         .catch(err => {
+//             if (err['_message']) {
+//                 err.status = 400
+//                 err.message = err['_message'];
+//             }
+//             next(err)
+//         })
+// })
 
 module.exports = router;

@@ -82,6 +82,44 @@ describe('COMMON ROUTER - All community API', () => {
     })
 })
 
+describe('COMMON ROUTER - getCommunity API', () => {
+    let mockObj = ""
+    beforeEach(() => {
+        mockObj = sandbox.stub(commonService, 'getCommunity');
+    });
+    afterEach(() => {
+        mockObj.restore();
+    });
+    it('testing getCommunity api', async function () {
+
+        const communities = {
+            name: "TestUser12",
+            place: "Test12"
+        }
+        let communityId='4567'
+
+        let payload = {
+            orgName: 'creditsauthority',
+            userName: 'ca'
+        }
+        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+        mockObj.resolves(communities)
+        const response = await request(app)
+            .get("/mongo/common/community").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+            .query({
+                communityId:communityId
+            })
+        expect(response.body).to.be.eql(communities);
+
+        //If No community is presnt
+        mockObj.rejects('Bad Connection')
+        const response1 = await request(app)
+            .get("/mongo/common/community").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+        expect(response1.status).to.equal(500);
+    })
+})
+
+
 describe('COMMON ROUTER - update-community API', () => {
     let mockObj = ""
     beforeEach(() => {
@@ -126,7 +164,47 @@ describe('COMMON ROUTER - update-community API', () => {
     })
 })
 
+describe('COMMON ROUTER - deleteCommunities API', () => {
+    let mockObj = ""
+    beforeEach(() => {
+        mockObj = sandbox.stub(commonService, 'deleteCommunities');
+    });
+    afterEach(() => {
+        mockObj.restore();
+    });
+    it('testing deleteCommunities api', async function () {
 
+        const communities = {
+            name: "TestUser12",
+            place: "Test12"
+        }
+        let communityIds=['4567']
+
+        let payload = {
+            orgName: 'creditsauthority',
+            userName: 'ca'
+        }
+        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+        mockObj.resolves(null)
+        const response = await request(app)
+            .put("/mongo/common/community").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+            .send({
+                communityIds
+            });
+        expect(response.status).to.equal(200);
+
+        // expect(response.body).to.be.eql(communities);
+
+        //If communities fields are empty
+        mockObj.rejects('Bad Connection')
+        const response1 = await request(app)
+            .put("/mongo/common/community").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+            .send({
+
+            });
+        expect(response1.status).to.equal(500);
+    })
+})
 
 describe('COMMON ROUTER - listed API', () => {
     let mockObj = ""
@@ -167,3 +245,35 @@ describe('COMMON ROUTER - listed API', () => {
     })
 })
 
+// describe('COMMON ROUTER - getDonors API', () => {
+//     let mockObj = ""
+//     beforeEach(() => {
+//         mockObj = sandbox.stub(commonService, 'getDonors');
+//     });
+//     afterEach(() => {
+//         mockObj.restore();
+//     });
+//     it('testing getDonors api', async function () {
+
+//         const donors = {
+//             name: "TestUser12",
+//             email: "Test12@gmail.com"
+//         }
+
+//         let payload = {
+//             orgName: 'creditsauthority',
+//             userName: 'ca'
+//         }
+//         const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+//         mockObj.resolves(donors)
+//         const response = await request(app)
+//             .get("/mongo/common/donor").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+//         expect(response.body).to.be.eql(donors);
+
+//         //If No community is presnt
+//         mockObj.rejects('Bad Connection')
+//         const response1 = await request(app)
+//             .get("/mongo/common/donor").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+//         expect(response1.status).to.equal(500);
+//     })
+// })

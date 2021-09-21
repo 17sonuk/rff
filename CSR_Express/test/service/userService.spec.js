@@ -6,6 +6,8 @@ chai.use(chaiAsPromised)
 const userService = require('../../service/userService');
 const userModel = require('../../model/userModel');
 const messages = require('../../loggers/messages');
+const individualRegEmailTemplate = require('../../email-templates/individualRegEmail');
+const institutionRegEmailTemplate = require('../../email-templates/institutionRegEmail');
 
 describe('TESTING USER SERVICE - REGISTER', () => {
     let mockObj = ""
@@ -967,7 +969,7 @@ describe('TESTING USER SERVICE - updateUserProfile', () => {
         mockObj.resolves(userData)
         mockObj1.resolves(re)
 
-        let res = await userService.updateUserProfile('ngo90',registerUserData1)
+        let res = await userService.updateUserProfile('ngo90', registerUserData1)
         expect(res).to.equal(re)
 
         //When data is not present
@@ -975,12 +977,12 @@ describe('TESTING USER SERVICE - updateUserProfile', () => {
         mockObj1.resolves(null)
 
         try {
-            let res1 = await userService.updateUserProfile('n67',registerUserData1)
-            console.log("err: ",res1)
+            let res1 = await userService.updateUserProfile('n67', registerUserData1)
+            console.log("err: ", res1)
 
             expect(res1).to.equal(null)
         } catch (err) {
-            console.log("err: ",err)
+            console.log("err: ", err)
             expect(err.status).to.equal(401)
         }
     })
@@ -1053,6 +1055,120 @@ describe('TESTING USER SERVICE - getUserRedeemAccount', () => {
         }
     })
 })
+
+describe('TESTING USER SERVICE - markInstitutionalDonorAsSeen', () => {
+    let mockObj = ""
+
+    beforeEach(() => {
+        mockObj = sandbox.stub(userModel, 'markInstitutionalDonorAsSeen');
+
+    });
+
+    afterEach(() => {
+        mockObj.restore();
+
+    });
+
+    it('testing response for markInstitutionalDonorAsSeen', async () => {
+        const data1 = {
+            n: '1',
+            nModified: '1',
+            ok: '1'
+        }
+
+        mockObj.resolves(data1);
+        let res = await userService.markInstitutionalDonorAsSeen('t101')
+        expect(res.success).to.equal(true)
+        expect(res.message).to.equal(messages.success.UPDATE_USER)
+
+        data1.nModified = 0
+        mockObj.resolves(data1);
+        try {
+            let res = await userService.markInstitutionalDonorAsSeen('t10')
+            expect(res.success).to.equal(true)
+            expect(res.message).to.equal(messages.error.FAILED_UPDATE_USER)
+        } catch (err) {
+            expect(err.message).to.equal(messages.error.FAILED_UPDATE_USER)
+        }
+
+
+    })
+})
+
+describe('TESTING USER SERVICE - sendEmailForDonorRegistration', () => {
+    let mockObj = ""
+    let mockObj1 = ""
+    beforeEach(() => {
+        mockObj = sandbox.stub(individualRegEmailTemplate, 'individualRegEmail');
+        mockObj1 = sandbox.stub(institutionRegEmailTemplate, 'institutionRegEmail');
+    });
+    afterEach(() => {
+        mockObj.restore();
+        mockObj1.restore();
+
+    });
+    it('testing response for sendEmailForDonorRegistration', async () => {
+        // let emails=[]
+        const req = {
+            body: {
+                'email': [],
+                'role': 'Corporate',
+                'subRole': 'Individual'
+            }
+
+        }
+        mockObj.resolves(`<html>hi</html>`);
+        
+        await userService.sendEmailForDonorRegistration(req)
+        // expect(res.status).to.equal(200)
+
+        // expect(res).to.equal(donor)
+
+        //If not able to save donor
+        mockObj.resolves(null);
+        // mockObj1.resolves(null);
+
+        try {
+           await userService.sendEmailForDonorRegistration(req)
+            // expect(res.status).to.equal(200)
+
+        } catch (err) {
+            // expect(err.message).to.equal('No project found')
+        }
+    })
+
+    it('testing response for sendEmailForDonorRegistration', async () => {
+        // let emails=[]
+        let req = {
+            body: {
+                'email': [],
+                'role': 'Corporate',
+                'subRole': 'Institution'
+            }
+
+        }
+        mockObj1.resolves(`<html>hi</html>`);
+        
+        await userService.sendEmailForDonorRegistration(req)
+        // expect(res.status).to.equal(200)
+
+        // expect(res).to.equal(donor)
+
+        //If not able to save donor
+        mockObj1.resolves(null);
+        // mockObj1.resolves(null);
+
+        try {
+           await userService.sendEmailForDonorRegistration(req)
+            // expect(res.status).to.equal(200)
+
+        } catch (err) {
+            // expect(err.message).to.equal('No project found')
+        }
+    })
+})
+
+
 
 // describe('TESTING USER SERVICE - Unapproved users', () => {
 //     let mockObj = ""
