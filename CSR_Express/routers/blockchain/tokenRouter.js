@@ -75,6 +75,7 @@ router.post('/transfer', async (req, res, next) => {
     const projectId = req.body.projectId;
     let notes = req.body.notes ? req.body.notes : "";
     const donorDetails = req.body.donorDetails;
+    let paymentMode = req.body.paymentMode;
 
     if (!CHAINCODE_NAME) {
         return res.json(fieldErrorMessage('\'chaincodeName\''));
@@ -90,6 +91,9 @@ router.post('/transfer', async (req, res, next) => {
     }
     if (!donorDetails) {
         return res.json(fieldErrorMessage('\'donorDetails\''));
+    }
+    if (!paymentMode) {
+        return res.json(fieldErrorMessage('\'paymentMode\''));
     }
     // if (req.userName === 'guest' && !donorDetails.paymentId) {
     //     return res.json(fieldErrorMessage('\'paymentId\''));
@@ -112,7 +116,7 @@ router.post('/transfer', async (req, res, next) => {
     // if (req.userName === 'guest') {
     //     args[4] = donorDetails.paymentId;
     // }
-    let args = [amount, projectId, notes, Date.now().toString(), donorDetails.paymentId]
+    let args = [amount, projectId, notes, Date.now().toString(), donorDetails.paymentId, paymentMode]
     args = JSON.stringify(args);
 
     try {

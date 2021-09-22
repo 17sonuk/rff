@@ -18,6 +18,7 @@ type Transaction struct {
 	ObjRef      string  `json:"objRef"`
 	PhaseNumber int     `json:"phaseNumber"`
 	Notes       string  `json:"notes"`
+	PaymentMode string  `json:"paymentMode"`
 }
 
 type Notification struct {

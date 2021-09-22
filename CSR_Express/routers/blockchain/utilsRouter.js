@@ -57,7 +57,7 @@ router.get('/yearly-report', async function (req, res, next) {
                     }
                 ]
             },
-            "fields": ["from", "qty", "to", "objRef", "date", "notes"]
+            "fields": ["from", "qty", "to", "objRef", "date", "notes", "paymentMode"]
         }
 
         args = JSON.stringify(queryTransaction)
@@ -135,6 +135,7 @@ router.get('/yearly-report', async function (req, res, next) {
             }
             txnObj["Gift Amount"] = txn.qty
             txnObj["Payment ID"] = txn.paymentId
+            txnObj["Payment Mode"] = txn.paymentMode
 
             //total amount
             if (projectMemory[txn.objRef]) {

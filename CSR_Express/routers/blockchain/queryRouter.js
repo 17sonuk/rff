@@ -85,6 +85,7 @@ router.get('/getRecord/:recordKey', async function (req, res, next) {
     try {
         let message = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
         message = JSON.parse(message.toString());
+        console.log('message response: ',message)
 
         message.forEach(elem => {
             elem['Record'] = JSON.parse(elem['Record'])
