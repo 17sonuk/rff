@@ -8,25 +8,30 @@ var sandbox = require("sinon").createSandbox();
 require('dotenv').config();
 const { JWT_EXPIRY, TOKEN_SECRET } = process.env;
 var jwt = require('jsonwebtoken');
+const { projectModel } = require('../../model/models')
 const query = require('../../fabric-sdk/query');
-
-
 
 
 describe('BLOCKCHAIN TRANSACTION ROUTER - /parked-by-corporate API SUCCESS', () => {
     let mockObj = ""
+    let mockObj1 = ""
     let msg=[]
+    let projectids=[]
     let buffer=Buffer.from(JSON.stringify(msg));
     
     
     beforeEach(() => {
         mockObj = sandbox.stub(query,'main');
+        mockObj1 = sandbox.stub(projectModel,'find');
     });
     afterEach(() => {
         mockObj.restore();
+        mockObj1.restore();
     });
     it('testing blockchain transaction parked-by-corporate API', async function () {
         mockObj.resolves(buffer)
+        mockObj1.resolves(projectids)
+
         let payload = {
             userName: 'corp1',
             orgName: 'corporate'

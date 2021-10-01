@@ -244,9 +244,10 @@ router.get('/request/forUserprofile', async (req, res, next) => {
     } else if (communityName && communityPlace) {
         queryString['selector']['communityName'] = communityName
         queryString['selector']['communityPlace'] = communityPlace
-    } else {
-        return res.json({ success: false, message: messages.error.UNAUTHORISED_REDEEM_ACCESS })
-    }
+    } 
+    // else {
+    //     return res.json({ success: false, message: messages.error.UNAUTHORISED_REDEEM_ACCESS })
+    // }
 
     let args = [JSON.stringify(queryString), pageSize, bookmark];
     args = JSON.stringify(args);

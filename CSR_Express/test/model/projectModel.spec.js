@@ -85,7 +85,10 @@ describe('TESTING PROJECT MODEL - CREATE', () => {
     });
 
     it('testing get project by id in mongo', async () => {
-        const res = await projectModel.getProjectById('p01');
+        let proj = await projectModel.getAllProjects()
+        const projectId = proj[0].projectId;
+
+        const res = await projectModel.getProjectById(projectId);
         expect(res).to.be.a('object');
     });
 
@@ -107,35 +110,42 @@ describe('TESTING PROJECT MODEL - CREATE', () => {
     it('testing response for updateProjectForApproval', async () => {
         const projectDetails = testProject;
         const projectId = "p01";
-        const res = await projectModel.updateProjectForApproval(projectId,projectDetails);
-        expect(res).to.be.a('object');
-    });
-
-    it('testing response for deleteProjectById', async () => {
-        const projectId = "p01";
-        const res = await projectModel.deleteProjectById(projectId);
+        const res = await projectModel.updateProjectForApproval(projectId, projectDetails);
         expect(res).to.be.a('object');
     });
 
     it('testing response for editProject', async () => {
         const projectDetails = testProject;
         const projectId = "p01";
-        const res = await projectModel.editProject(projectId,projectDetails,0);
+        const res = await projectModel.editProject(projectId, projectDetails, 2);
         expect(res).to.be.a('object');
     });
 
     it('testing response for getFilters', async () => {
         const userName = "ngo";
         const orgName = "ngo";
-        const res = await projectModel.getFilters(userName,orgName);
+        const res = await projectModel.getFilters(userName, orgName);
+        expect(res).to.be.a('object');
+    });
+
+    it('testing response for getFilters', async () => {
+        const userName = "corp";
+        const orgName = "corporate";
+        const res = await projectModel.getFilters(userName, orgName);
         expect(res).to.be.a('object');
     });
 
     it('testing response for getProjectsByCommunity', async () => {
         const communityId = "";
-        let response=[]
+        let response = []
         const res = await projectModel.getProjectsByCommunity(communityId);
         expect(res).to.be.a('array');
         // expect(res.success).to.equal(true);
+    });
+
+    it('testing response for deleteProjectById', async () => {
+        const projectId = "p01";
+        const res = await projectModel.deleteProjectById(projectId);
+        expect(res).to.be.a('object');
     });
 })

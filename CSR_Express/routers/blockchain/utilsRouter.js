@@ -57,7 +57,7 @@ router.get('/yearly-report', async function (req, res, next) {
                     }
                 ]
             },
-            "fields": ["from", "qty", "to", "objRef", "date", "notes", "paymentMode"]
+            "fields": ["from", "qty", "to", "objRef", "date", "notes", "paymentId", "paymentMode"]
         }
 
         args = JSON.stringify(queryTransaction)
@@ -69,9 +69,9 @@ router.get('/yearly-report', async function (req, res, next) {
         let guestEmails = []
         for (let t = 0; t < transactionList.length; t++) {
 
-            let paymentId = transactionList[t]['Key']
+            // let paymentId = transactionList[t]['Key']
             transactionList[t] = JSON.parse(transactionList[t]['Record'])
-            transactionList[t]["paymentId"] = paymentId
+            // transactionList[t]["paymentId"] = paymentId
             let username = splitOrgName(transactionList[t].from)
             regDonors.push(username)
             projectIds.push(transactionList[t].objRef)

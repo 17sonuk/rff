@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
@@ -19,6 +20,7 @@ type Transaction struct {
 	PhaseNumber int     `json:"phaseNumber"`
 	Notes       string  `json:"notes"`
 	PaymentMode string  `json:"paymentMode"`
+	PaymentId   string  `json:"paymentId"`
 }
 
 type Notification struct {

@@ -326,7 +326,7 @@ func (s *SmartContract) TransferTokens(ctx contractapi.TransactionContextInterfa
 		return false, fmt.Errorf(err.Error())
 	}
 
-	if len(args) != 6 {
+	if len(args) != 7 {
 		return false, fmt.Errorf("Incorrect number of arguments. Expecting 5")
 	} else if len(args[0]) <= 0 {
 		return false, fmt.Errorf("amount must be a non-empty string")
@@ -337,6 +337,8 @@ func (s *SmartContract) TransferTokens(ctx contractapi.TransactionContextInterfa
 	} else if len(args[4]) <= 0 {
 		return false, fmt.Errorf("tx id must be a non-empty string")
 	} else if len(args[5]) <= 0 {
+		return false, fmt.Errorf("payment id id must be a non-empty string")
+	} else if len(args[6]) <= 0 {
 		return false, fmt.Errorf("payment Mode id must be a non-empty string")
 	}
 
@@ -357,7 +359,8 @@ func (s *SmartContract) TransferTokens(ctx contractapi.TransactionContextInterfa
 		return false, fmt.Errorf("date is not an integer! " + err.Error())
 	}
 	txId1 := args[4]
-	paymentMode := args[5]
+	paymentId := args[5]
+	paymentMode := args[6]
 
 	//fetch the project
 	projectAsBytes, _ := ctx.GetStub().GetState(pId)
@@ -458,6 +461,7 @@ func (s *SmartContract) TransferTokens(ctx contractapi.TransactionContextInterfa
 		Date:        date,
 		ObjRef:      pId,
 		PhaseNumber: -1,
+		PaymentId:   paymentId,
 		PaymentMode: paymentMode,
 	}
 

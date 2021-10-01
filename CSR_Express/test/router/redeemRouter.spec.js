@@ -10,6 +10,8 @@ const { JWT_EXPIRY, TOKEN_SECRET, CA_EMAIL, IT_EMAIL, GUEST_EMAIL } = process.en
 var jwt = require('jsonwebtoken');
 const invoke = require('../../fabric-sdk/invoke');
 const query = require('../../fabric-sdk/query');
+const messages = require('../../loggers/messages')
+
 
 describe('REDEEM ROUTER - /request API', () => {
     it('testing redeem router API when quantity field is empty', async function () {
@@ -555,6 +557,199 @@ describe('REDEEM ROUTER - /request/all API SUCCESS', () => {
             pageSize:10,
             status:"Requested",
             bookmark:""
+        })
+        expect(response.body.success).to.equal(true)
+    })
+    
+})
+
+describe('REDEEM ROUTER - /request/forUserprofile API', () => {
+    it('testing redeem router API when pageSize field is empty', async function () {
+        let qstring={
+            "pageSize":"",
+            "status":"Requested",
+            "bookmark":""
+        }
+        let payload = {
+            orgName: 'creditsauthority',
+            userName: 'ca'
+        }
+        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+        const response = await request(app)
+        .get("/redeem/request/forUserprofile").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+        .query({
+            status:"Requested",
+            bookmark:""
+        })
+        expect(response.body.success).to.equal(false)
+        expect(response.body.message).to.equal("'pageSize' field is missing or Invalid in the request")
+    });
+
+    it('testing redeem router API when status field is empty', async function () {
+        let payload = {
+            orgName: 'creditsauthority',
+            userName: 'ca'
+        }
+        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+        const response = await request(app)
+        .get("/redeem/request/forUserprofile").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+        .query({
+            pageSize:10,
+            status:"",
+            bookmark:""
+        })
+        expect(response.body.success).to.equal(false)
+        expect(response.body.message).to.equal("'status' field is missing or Invalid in the request")
+    });
+    let ms={ success: false, message: messages.error.NGO_OR_COMMUNITY }
+    let msg={ success: false, message: messages.error.NGO_AND_COMMUNITY}
+
+    it('testing redeem router API when no NGO no COMMUNITY ', async function () {
+        let payload = {
+            orgName: 'creditsauthority',
+            userName: 'ca'
+        }
+        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+        const response = await request(app)
+        .get("/redeem/request/forUserprofile").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+        .query({
+            pageSize:10,
+            status:"Requested",
+            bookmark:"0"
+        })
+        expect(response.body.success).to.equal(false)
+        expect(response.body.message).to.equal(ms.message)
+    });
+
+    it('testing redeem router API when  NGO and COMMUNITY ', async function () {
+        let payload = {
+            orgName: 'creditsauthority',
+            userName: 'ca'
+        }
+        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+        const response = await request(app)
+        .get("/redeem/request/forUserprofile").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+        .query({
+            pageSize:10,
+            status:"Requested",
+            bookmark:"0",
+            ngo:"ngo",
+            communityName:"comname",
+            communityPlace:"com"
+
+        })
+        expect(response.body.success).to.equal(false)
+        expect(response.body.message).to.equal(msg.message)
+    });
+
+    it('testing redeem router API when no communityName ', async function () {
+        let payload = {
+            orgName: 'creditsauthority',
+            userName: 'ca'
+        }
+        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+        const response = await request(app)
+        .get("/redeem/request/forUserprofile").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+        .query({
+            pageSize:10,
+            status:"Requested",
+            bookmark:"0",
+            communityName:"",
+            communityPlace:"com"
+
+        })
+        expect(response.body.success).to.equal(false)
+        expect(response.body.message).to.equal("'communityName' field is missing or Invalid in the request")
+    });
+
+    it('testing redeem router API when no communityPlace ', async function () {
+        let payload = {
+            orgName: 'creditsauthority',
+            userName: 'ca'
+        }
+        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+        const response = await request(app)
+        .get("/redeem/request/forUserprofile").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+        .query({
+            pageSize:10,
+            status:"Requested",
+            bookmark:"0",
+            communityName:"comname",
+            communityPlace:""
+
+        })
+        expect(response.body.success).to.equal(false)
+        expect(response.body.message).to.equal("'communityPlace' field is missing or Invalid in the request")
+    });
+
+});
+
+describe('REDEEM ROUTER - /request/forUserprofile API for ngo SUCCESS', () => {
+    let mockObj = ""
+    let msg={
+        Results:[],
+        RecordsCount:'0',
+        Bookmark:'nil'
+    }
+    var buffer = Buffer.from(JSON.stringify(msg));
+    
+    beforeEach(() => {
+        mockObj = sandbox.stub(query,'main');
+    });
+    afterEach(() => {
+        mockObj.restore();
+    });
+    it('testing redeem request API', async function () {
+        mockObj.resolves(buffer)
+        let payload = {
+            orgName: 'creditsauthority',
+            userName: 'ca'
+        }
+        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+        const response = await request(app)
+        .get("/redeem/request/forUserprofile").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+        .query({
+            pageSize:10,
+            status:"Requested",
+            bookmark:"",
+            ngo:"ngo"
+        })
+        expect(response.body.success).to.equal(true)
+    })
+    
+})
+
+describe('REDEEM ROUTER - /request/forUserprofile API for community SUCCESS', () => {
+    let mockObj = ""
+    let msg={
+        Results:[],
+        RecordsCount:'0',
+        Bookmark:'nil'
+    }
+    var buffer = Buffer.from(JSON.stringify(msg));
+    
+    beforeEach(() => {
+        mockObj = sandbox.stub(query,'main');
+    });
+    afterEach(() => {
+        mockObj.restore();
+    });
+    it('testing redeem request API', async function () {
+        mockObj.resolves(buffer)
+        let payload = {
+            orgName: 'creditsauthority',
+            userName: 'ca'
+        }
+        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+        const response = await request(app)
+        .get("/redeem/request/forUserprofile").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+        .query({
+            pageSize:10,
+            status:"Requested",
+            bookmark:"",
+            communityName:"comname",
+            communityPlace:"com"
+            
         })
         expect(response.body.success).to.equal(true)
     })

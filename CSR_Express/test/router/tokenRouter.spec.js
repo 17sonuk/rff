@@ -199,25 +199,26 @@ describe('TOKEN ROUTER - /transfer API', () => {
     //     expect(response.body.message).to.equal("'donor email id' field is missing or Invalid in the request")
     // });
 
-    // it('testing token router API when donor name field is empty', async function () {
-    //     let payload = {
-    //         orgName: 'corporate',
-    //         userName: 'corp1'
-    //     }
-    //     const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
-    //     const response = await request(app)
-    //     .post("/token/transfer").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
-    //     .send({
-    //         amount: "200",
-    //         projectId:"p01",
-    //         phaseNumber:"0",
-    //         notes:"Requested",
-    //         donorDetails:{email:"aji@gmail.com",name:""}
+    it('testing token router API when paymentMode field is empty', async function () {
+        let payload = {
+            orgName: 'corporate',
+            userName: 'corp1'
+        }
+        const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: JWT_EXPIRY });
+        const response = await request(app)
+            .post("/token/transfer").set("csrtoken", "Bearer " + token).set("testmode", "Testing")
+            .send({
+                amount: "200",
+                projectId: "p01",
+                notes: "Requested",
+                donorDetails: { email: "guest@gmail.com", name: "guest", paymentId: "2345" },
+                paymentMode: ""
 
-    //     })
-    //     expect(response.body.success).to.equal(false)
-    //     expect(response.body.message).to.equal("'donor name' field is missing or Invalid in the request")
-    // });
+
+            })
+        expect(response.body.success).to.equal(false)
+        expect(response.body.message).to.equal("'paymentMode' field is missing or Invalid in the request")
+    });
 
     it('testing token router API when paymentId field is empty', async function () {
         let payload = {
@@ -232,7 +233,9 @@ describe('TOKEN ROUTER - /transfer API', () => {
                 amount: "200",
                 projectId: "p01",
                 notes: "Requested",
-                donorDetails: { email: "guest@gmail.com", name: "guest", paymentId: "" }
+                donorDetails: { email: "guest@gmail.com", name: "guest", paymentId: "" },
+                paymentMode: "Paypal"
+
 
             })
         expect(response.body.success).to.equal(false)
@@ -275,7 +278,9 @@ describe('TOKEN ROUTER - /transfer API SUCCESS', () => {
                 amount: "200",
                 projectId: "p01",
                 notes: "Requested",
-                donorDetails: { email: "aji@gmail.com", name: "aji", paymentId: "2345678" }
+                donorDetails: { email: "aji@gmail.com", name: "aji", paymentId: "2345678" },
+                paymentMode: "Paypal"
+
 
             })
         console.log("Resp23:", response.body)

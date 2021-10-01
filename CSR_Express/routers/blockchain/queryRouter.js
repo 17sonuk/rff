@@ -85,7 +85,7 @@ router.get('/getRecord/:recordKey', async function (req, res, next) {
     try {
         let message = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
         message = JSON.parse(message.toString());
-        console.log('message response: ',message)
+        console.log('message response: ', message)
 
         message.forEach(elem => {
             elem['Record'] = JSON.parse(elem['Record'])
@@ -225,6 +225,7 @@ router.get('/corporateReport-userProfile', async function (req, res, next) {
         let result = []
 
         let donorList = await orgModel.find({ role: "Corporate" }, { _id: 0, subRole: 1, userName: 1, firstName: 1, lastName: 1, orgName: 1, email: 1 })
+        console.log("donorList : ",donorList )
         let donorMap = {}
         let queryCorporate = []
 
@@ -245,8 +246,18 @@ router.get('/corporateReport-userProfile', async function (req, res, next) {
                 //data not coming from mongo
                 donorMap[donor.userName] = donor
             } else {
-                //data coming from mongo
-                donorMap[donor.userName] = donor.toJSON()
+
+                // data coming from mongo i.e. why toJSON is used
+                // donorMap[donor.userName] = donor.toJSON()
+
+                donorMap[donor.userName] = {}
+                
+                donorMap[donor.userName]['firstName'] = donor.firstName
+                donorMap[donor.userName]['lastName'] = donor.lastName
+                donorMap[donor.userName]['orgName'] = donor.orgName
+                donorMap[donor.userName]['userName'] = donor.userName
+                donorMap[donor.userName]['email'] = donor.email
+                donorMap[donor.userName]['subRole'] = donor.subRole
             }
 
             donorMap[donor.userName]["fundsDonated"] = 0
@@ -301,14 +312,24 @@ router.get('/ngoReport-userProfile', async function (req, res, next) {
         let result = []
 
         let ngoList = await orgModel.find({ role: "Ngo" }, { _id: 0, userName: 1, firstName: 1, lastName: 1, orgName: 1, email: 1 })
+        console.log("ngoList: ", ngoList)
         let ngoMap = {}
         let queryNgo = []
 
         for (i = 0; i < ngoList.length; i++) {
             let ngo = ngoList[i]
-            //data coming from mongo
-            ngoMap[ngo.userName] = ngo.toJSON()
-           
+
+            // data coming from mongo i.e. why toJSON is used
+            // ngoMap[ngo.userName] = ngo.toJSON()
+
+            ngoMap[ngo.userName] = {}
+
+            ngoMap[ngo.userName]['firstName'] = ngo.firstName
+            ngoMap[ngo.userName]['lastName'] = ngo.lastName
+            ngoMap[ngo.userName]['orgName'] = ngo.orgName
+            ngoMap[ngo.userName]['userName'] = ngo.userName
+            ngoMap[ngo.userName]['email'] = ngo.email
+
             ngoMap[ngo.userName]["totalReceived"] = 0
             ngoMap[ngo.userName]["totalRedeemed"] = 0
             ngoMap[ngo.userName]["contributors"] = []
@@ -317,12 +338,12 @@ router.get('/ngoReport-userProfile', async function (req, res, next) {
             let ngoAdd = ngo.userName + "." + ORG3_NAME + "." + BLOCKCHAIN_DOMAIN + ".com"
             queryNgo.push(ngoAdd)
         }
-       
+
         let queryString = {
             "selector": {
-                "docType": "Transaction",        
-                "txType":{"$in":["TransferToken","ApproveRedeemRequest"]},
-                 "to": { "$in": queryNgo }
+                "docType": "Transaction",
+                "txType": { "$in": ["TransferToken", "ApproveRedeemRequest"] },
+                "to": { "$in": queryNgo }
             },
             "fields": ["qty", "objRef", "to", "txType", "from"]
         }
@@ -332,6 +353,7 @@ router.get('/ngoReport-userProfile', async function (req, res, next) {
 
         let txnList = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
         txnList = JSON.parse(txnList.toString());
+        console.log('txnList : ', txnList)
         logger.debug(`response2 :  ${JSON.stringify(txnList, null, 2)}`)
 
         txnList.forEach(elem => {

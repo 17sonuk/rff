@@ -7,6 +7,20 @@
     "start": "node ./index.js",
     "test": "nyc mocha test/**/*.js --timeout 30000 --exit"
   },
+  "nyc": {
+    "exclude": [
+      "fabric-sdk/*",
+      "email-templates/*",
+      "routers/payment-gateway/*",
+      "utils/*",
+      "loggers/*",
+      "app.js",
+      "model/mongoError.js",
+      "model/connection.js",
+      "test/*",
+      "routers/mainRouter.js"
+    ]
+  },
   "author": "",
   "license": "ISC",
   "dependencies": {

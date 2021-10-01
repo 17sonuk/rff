@@ -28,7 +28,7 @@ userService.registerUser = (obj) => {
 
     let err = new Error()
     err.status = 400
-    const validateEmail = /^[a-zA-Z0-9]+([._-]+[a-zA-Z0-9]+)*@[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*(?:\.[a-zA-Z]+)+$/;
+    const validateEmail = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     if (obj.email === '' || !validateEmail.test(obj.email)) {
         err.message = messages.error.INVALID_EMAIL;
         throw err;
@@ -60,10 +60,10 @@ userService.registerUser = (obj) => {
         throw err;
     }
 
-    if (!(typeof obj.orgName == 'string') && (obj.subRole == 'Institution' || obj.role == 'Ngo')) {
-        err.message = messages.error.INVALID_ORG_NAME;
-        throw err;
-    }
+    // if (!(typeof obj.orgName == 'string') && (obj.subRole == 'Institution' || obj.role == 'Ngo')) {
+    //     err.message = messages.error.INVALID_ORG_NAME;
+    //     throw err;
+    // }
 
     if (obj.userName === '' || (!(typeof obj.userName == 'string'))) {
         err.message = messages.error.INVALID_USER_NAME;
@@ -75,15 +75,23 @@ userService.registerUser = (obj) => {
         throw err;
     }
 
-    if (obj.role === 'Corporate') {
+    if (obj.role === 'Corporate' && (typeof obj.subRole !== 'string' || obj.subRole === "")) {
 
-        if (!obj.subRole) {
-            err.message = messages.error.INVALID_DONOR_TYPE
-            throw err
-        } else if (this.subRole === 'Institution' && !this.orgName) {
-            err.message = messages.error.INVALID_COMPANY_NAME;
-            throw err
-        }
+        err.message = messages.error.INVALID_DONOR_TYPE
+        throw err
+        //  else if (this.subRole === 'Institution' && !this.orgName) {
+        //     err.message = messages.error.INVALID_COMPANY_NAME;
+        //     throw err
+        // }
+    }
+
+
+    if (obj.subRole == 'Institution' && (typeof obj.orgName !== 'string' || obj.orgName === "")) {
+        err.message = messages.error.INVALID_COMPANY_NAME;
+        throw err
+    } else if (obj.role == 'Ngo' && (typeof obj.orgName !== 'string' || obj.orgName === "")) {
+        err.message = messages.error.INVALID_COMPANY_NAME;
+        throw err
     }
 
     //ngo validations
@@ -96,15 +104,12 @@ userService.registerUser = (obj) => {
             throw err
         }
 
-        if (obj.paymentDetails.paymentType === 'Bank' && (!obj.paymentDetails.bankDetails.bankAddress.city || !obj.paymentDetails.bankDetails.bankAddress.country)) {
-            err.message = messages.error.INVALID_BANK_ADDRESS
+        if (!obj['paymentDetails']) {
+            err.message = messages.error.MISSING_PAYMENT_DETAILS
             throw err
         }
 
-        if (!obj['paymentDetails']) {
-            errMsg = messages.error.MISSING_PAYMENT_DETAILS
-        }
-        else if (obj['paymentDetails']['paymentType'] === 'Paypal' && !obj['paymentDetails']['paypalEmailId']) {
+        if (obj['paymentDetails']['paymentType'] === 'Paypal' && !obj['paymentDetails']['paypalEmailId']) {
             errMsg = messages.error.MISSING_PAYPAL_ID
         }
         else if (obj['paymentDetails']['paymentType'] === 'Cryptocurrency' && !obj['paymentDetails']['cryptoAddress']) {
@@ -116,6 +121,11 @@ userService.registerUser = (obj) => {
 
         if (errMsg !== undefined) {
             err.message = errMsg
+            throw err
+        }
+
+        if (obj.paymentDetails.paymentType === 'Bank' && (!obj.paymentDetails.bankDetails.bankAddress.city || !obj.paymentDetails.bankDetails.bankAddress.state || !obj.paymentDetails.bankDetails.bankAddress.country)) {
+            err.message = messages.error.INVALID_BANK_ADDRESS
             throw err
         }
     }

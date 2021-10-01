@@ -7,6 +7,7 @@ const router = express.Router();
 const logger = require('../../loggers/logger');
 const query = require('../../fabric-sdk/query');
 const { fieldErrorMessage, generateError, getMessage, splitOrgName } = require('../../utils/functions');
+const { projectModel } = require('../../model/models')
 
 let orgMap = {
     'creditsauthority': ORG1_NAME,
@@ -32,32 +33,25 @@ router.get('/parked-by-corporate', async (req, res, next) => {
     try {
         let message = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
         message = JSON.parse(message.toString());
-
-        message.forEach(elem => {
-            elem['Record'] = JSON.parse(elem['Record'])
-        })
-
         logger.debug(`response :  ${JSON.stringify(message, null, 2)}`)
 
+        let projectIds = []
         for (let i = 0; i < message.length; i++) {
+            message[i]["Record"] = JSON.parse(message[i]['Record'])
             let objRef = message[i]["Record"]["objRef"]
-            let projectQueryString = {
-                "selector": {
-                    "_id": objRef
-                },
-                "fields": ["projectName"]
-            }
+            projectIds.push(objRef)
+        }
 
-            args = [JSON.stringify(projectQueryString)]
+        let projectKeyRecord = await projectModel.find({ projectId: { $in: projectIds } }, { _id: 0, projectName: 1, projectId: 1 })
+        let projectMemory = {}
+        for (let p = 0; p < projectKeyRecord.length; p++) {
+            let project = projectKeyRecord[p]
+            projectMemory[project.projectId] = project.projectName
+        }
 
-            let projectResponse = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
-            projectResponse = JSON.parse(projectResponse.toString());
+        for (let i = 0; i < message.length; i++) {
 
-            projectResponse.forEach(elem => {
-                elem['Record'] = JSON.parse(elem['Record'])
-            })
-
-            message[i]["Record"]["projectName"] = projectResponse[0]["Record"]["projectName"]
+            message[i]["Record"]["projectName"] = projectMemory[message[i]["Record"]["objRef"]]
             message[i]["Record"]["from"] = splitOrgName(message[i]["Record"]["from"])
             message[i]["Record"]["to"] = splitOrgName(message[i]["Record"]["to"])
         }

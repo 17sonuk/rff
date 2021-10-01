@@ -134,10 +134,10 @@ describe('TESTING USER SERVICE - REGISTER', () => {
 
         }
 
-        mockObj.resolves('Payment details missing!');
+        mockObj.resolves(messages.error.MISSING_PAYMENT_DETAILS);
         userService.registerUser(registerUserData).then(res => {
             expect(registerUserData.status).to.equal('approved')
-            expect(res.message).to.equal('Payment details missing!')
+            expect(res.message).to.equal(messages.error.MISSING_PAYMENT_DETAILS)
             userModel.registerUser.restore();
         })
         done()
@@ -190,7 +190,54 @@ describe('TESTING USER SERVICE - REGISTER', () => {
         done()
     })
 
-    it('testing response for If payment option is Paypal but paypal Id is missing', function (done) {
+    it('testing response for If role is Ngo and address details are missing', function (done) {
+        const registerUserData1 = {
+            firstName: 'Rihana',
+            lastName: 'John',
+            orgName: 'Ngo',
+            userName: 'ngo90',
+            email: 'info90@ngo.com',
+            role: 'Ngo',
+            status: '',
+            description: '',
+            website: '',
+            address: {
+                addressLine1: 'lin1',
+                addressLine2: '',
+                city: 'city',
+                state: 'state',
+                zipCode: '6789',
+                country: 'India'
+            },
+            phone: [
+                {
+                    countryCode: '+91',
+                    phoneNumber: '97654579'
+                }
+            ],
+            paymentDetails: {
+                paymentType: "Paypal",
+                paypalEmailId: "info@paypal.com"
+
+            }
+
+        }
+
+        mockObj.resolves(messages.error.INVALID_ADDRESS);
+        try {
+            userService.registerUser(registerUserData1).then(res => {
+                expect(registerUserData.status).to.equal('approved')
+                expect(res.message).to.equal(messages.error.INVALID_ADDRESS)
+                userModel.registerUser.restore()
+            })
+        }
+        catch (err) {
+            expect(err.message).to.equal(messages.error.INVALID_ADDRESS)
+        }
+        done()
+    })
+
+    it('testing response for If payment option is Paypal but paypalEmailId is missing', function (done) {
         const registerUserData1 = {
             firstName: 'Rihana',
             lastName: 'John',
@@ -342,17 +389,535 @@ describe('TESTING USER SERVICE - REGISTER', () => {
                 }
             ]
         }
-        mockObj.resolves('Company/Foundation/Fund Name is missing/invalid!');
+        mockObj.resolves(messages.error.INVALID_COMPANY_NAME);
         try {
             let res = await userService.registerUser(registerUserDataOrg)
-            expect(res).to.equal('Company/Foundation/Fund Name is missing/invalid!')
+            expect(res).to.equal(messages.error.INVALID_COMPANY_NAME)
         } catch (err) {
-            expect(err.message).to.equal('Company/Foundation/Fund Name is missing/invalid!')
+            expect(err.message).to.equal(messages.error.INVALID_COMPANY_NAME)
         }
         userModel.registerUser.restore();
 
     })
 
+    it('testing response for registerUser invalid emailid', function () {
+        const registerUserData = {
+            firstName: 'Charles',
+            lastName: 'Mack',
+            orgName: 'Corporate',
+            userName: 'corp90',
+            email: 'info90corp.com',
+            role: 'Corporate',
+            subRole: 'Institution',
+            status: '',
+            description: '',
+            website: '',
+            address: {
+                addressLine1: 'address10',
+                addressLine2: 'address20',
+                city: 'city',
+                state: '',
+                zipCode: '',
+                country: 'India'
+            },
+            phone: [
+                {
+                    countryCode: '+91',
+                    phoneNumber: '97654579'
+                }
+            ]
+        }
+
+        mockObj.resolves(messages.error.INVALID_EMAIL);
+        try {
+            let res = userService.registerUser(registerUserData)
+            expect(res).to.equal(messages.error.INVALID_EMAIL)
+        } catch (err) {
+            expect(err.message).to.equal(messages.error.INVALID_EMAIL)
+        }
+        userModel.registerUser.restore();
+
+    })
+
+    it('testing response for registerUser invalid seen', function () {
+        const registerUserData = {
+            seen:"true",
+            firstName: 'Charles',
+            lastName: 'Mack',
+            orgName: 'Corporate',
+            userName: 'corp90',
+            email: 'info90@corp.com',
+            role: 'Corporate',
+            subRole: 'Institution',
+            status: '',
+            description: '',
+            website: '',
+            address: {
+                addressLine1: 'address10',
+                addressLine2: 'address20',
+                city: 'city',
+                state: '',
+                zipCode: '',
+                country: 'India'
+            },
+            phone: [
+                {
+                    countryCode: '+91',
+                    phoneNumber: '97654579'
+                }
+            ]
+        }
+
+        mockObj.resolves(messages.error.INVALID_SEEN);
+        try {
+            let res = userService.registerUser(registerUserData)
+            expect(res).to.equal(messages.error.INVALID_SEEN)
+        } catch (err) {
+            expect(err.message).to.equal(messages.error.INVALID_SEEN)
+        }
+        userModel.registerUser.restore();
+
+    })
+
+    it('testing response for registerUser invalid firstName', function () {
+        const registerUserData = {
+            firstName: '',
+            lastName: 'Mack',
+            orgName: 'Corporate',
+            userName: 'corp90',
+            email: 'info90@corp.com',
+            role: 'Corporate',
+            subRole: 'Institution',
+            status: '',
+            description: '',
+            website: '',
+            address: {
+                addressLine1: 'address10',
+                addressLine2: 'address20',
+                city: 'city',
+                state: '',
+                zipCode: '',
+                country: 'India'
+            },
+            phone: [
+                {
+                    countryCode: '+91',
+                    phoneNumber: '97654579'
+                }
+            ]
+        }
+
+        mockObj.resolves(messages.error.INVALID_FIRST_NAME);
+        try {
+            let res = userService.registerUser(registerUserData)
+            expect(res).to.equal(messages.error.INVALID_FIRST_NAME)
+        } catch (err) {
+            expect(err.message).to.equal(messages.error.INVALID_FIRST_NAME)
+        }
+        userModel.registerUser.restore();
+
+    })
+
+    it('testing response for registerUser invalid firstName', function () {
+        const registerUserData = {
+            firstName: 'CharlesdfghnlrtyuixcvbnasdtyuxcvbnmsdfgxcvbhnwertyuiasdfgjxcvbnmsdfghCharlesdfghnlrtyuixcvbnasdtyuxcvbnmsdfgxcvbhnwertyuiasdfgjxcvbnmsdfghCharlesdfghnlrtyuixcvbnasdtyuxcvbnmsdfgxcvbhnwertyuiasdfgjxcvbnmsdfgh',
+            lastName: 'Mack',
+            orgName: 'Corporate',
+            userName: 'corp90',
+            email: 'info90@corp.com',
+            role: 'Corporate',
+            subRole: 'Institution',
+            status: '',
+            description: '',
+            website: '',
+            address: {
+                addressLine1: 'address10',
+                addressLine2: 'address20',
+                city: 'city',
+                state: '',
+                zipCode: '',
+                country: 'India'
+            },
+            phone: [
+                {
+                    countryCode: '+91',
+                    phoneNumber: '97654579'
+                }
+            ]
+        }
+
+        mockObj.resolves(messages.error.FIRST_NAME_LENGTH);
+        try {
+            let res = userService.registerUser(registerUserData)
+            expect(res).to.equal(messages.error.FIRST_NAME_LENGTH)
+        } catch (err) {
+            expect(err.message).to.equal(messages.error.FIRST_NAME_LENGTH)
+        }
+        userModel.registerUser.restore();
+
+    })
+
+    it('testing response for registerUser invalid lastName', function () {
+        const registerUserData = {
+            firstName: 'Charles',
+            lastName: '',
+            orgName: 'Corporate',
+            userName: 'corp90',
+            email: 'info90@corp.com',
+            role: 'Corporate',
+            subRole: 'Institution',
+            status: '',
+            description: '',
+            website: '',
+            address: {
+                addressLine1: 'address10',
+                addressLine2: 'address20',
+                city: 'city',
+                state: '',
+                zipCode: '',
+                country: 'India'
+            },
+            phone: [
+                {
+                    countryCode: '+91',
+                    phoneNumber: '97654579'
+                }
+            ]
+        }
+
+        mockObj.resolves(messages.error.INVALID_LAST_NAME);
+        try {
+            let res = userService.registerUser(registerUserData)
+            expect(res).to.equal(messages.error.INVALID_LAST_NAME)
+        } catch (err) {
+            expect(err.message).to.equal(messages.error.INVALID_LAST_NAME)
+        }
+        userModel.registerUser.restore();
+
+    })
+
+    it('testing response for registerUser invalid lastName', function () {
+        const registerUserData = {
+            firstName: 'Charles',
+            lastName: 'CharlesdfghnlrtyuixcvbnasdtyuxcvbnmsdfgxcvbhnwertyuiasdfgjxcvbnmsdfghCharlesdfghnlrtyuixcvbnasdtyuxcvbnmsdfgxcvbhnwertyuiasdfgjxcvbnmsdfghCharlesdfghnlrtyuixcvbnasdtyuxcvbnmsdfgxcvbhnwertyuiasdfgjxcvbnmsdfgh',
+            orgName: 'Corporate',
+            userName: 'corp90',
+            email: 'info90@corp.com',
+            role: 'Corporate',
+            subRole: 'Institution',
+            status: '',
+            description: '',
+            website: '',
+            address: {
+                addressLine1: 'address10',
+                addressLine2: 'address20',
+                city: 'city',
+                state: '',
+                zipCode: '',
+                country: 'India'
+            },
+            phone: [
+                {
+                    countryCode: '+91',
+                    phoneNumber: '97654579'
+                }
+            ]
+        }
+
+        mockObj.resolves(messages.error.LAST_NAME_LENGTH);
+        try {
+            let res = userService.registerUser(registerUserData)
+            expect(res).to.equal(messages.error.LAST_NAME_LENGTH)
+        } catch (err) {
+            expect(err.message).to.equal(messages.error.LAST_NAME_LENGTH)
+        }
+        userModel.registerUser.restore();
+
+    })
+
+    it('testing response for registerUser invalid orgName', function () {
+        const registerUserData = {
+            firstName: 'Charles',
+            lastName: 'Mack',
+            orgName: true,
+            userName: 'corp90',
+            email: 'info90@corp.com',
+            role: 'Corporate',
+            subRole: 'Institution',
+            status: '',
+            description: '',
+            website: '',
+            address: {
+                addressLine1: 'address10',
+                addressLine2: 'address20',
+                city: 'city',
+                state: '',
+                zipCode: '',
+                country: 'India'
+            },
+            phone: [
+                {
+                    countryCode: '+91',
+                    phoneNumber: '97654579'
+                }
+            ]
+        }
+
+        mockObj.resolves(messages.error.INVALID_COMPANY_NAME);
+        try {
+            let res = userService.registerUser(registerUserData)
+            expect(res).to.equal(messages.error.INVALID_COMPANY_NAME)
+        } catch (err) {
+            expect(err.message).to.equal(messages.error.INVALID_COMPANY_NAME)
+        }
+        userModel.registerUser.restore();
+
+    })
+
+    it('testing response for registerUser invalid userName', function () {
+        const registerUserData = {
+            firstName: 'Charles',
+            lastName: 'Mack',
+            orgName: 'Corporate',
+            userName: '',
+            email: 'info90@corp.com',
+            role: 'Corporate',
+            subRole: 'Institution',
+            status: '',
+            description: '',
+            website: '',
+            address: {
+                addressLine1: 'address10',
+                addressLine2: 'address20',
+                city: 'city',
+                state: '',
+                zipCode: '',
+                country: 'India'
+            },
+            phone: [
+                {
+                    countryCode: '+91',
+                    phoneNumber: '97654579'
+                }
+            ]
+        }
+
+        mockObj.resolves(messages.error.INVALID_USER_NAME);
+        try {
+            let res = userService.registerUser(registerUserData)
+            expect(res).to.equal(messages.error.INVALID_USER_NAME)
+        } catch (err) {
+            expect(err.message).to.equal(messages.error.INVALID_USER_NAME)
+        }
+        userModel.registerUser.restore();
+
+    })
+
+    it('testing response for registerUser invalid userName', function () {
+        const registerUserData = {
+            firstName: 'Charles',
+            lastName: 'Mack',
+            orgName: 'Corporate',
+            userName: 'CharlesdfghnlrtyuixcvbnasdtyuxcvbnmsdfgxcvbhnwertyuiasdfgjxcvbnmsdfghCharlesdfghnlrtyuixcvbnasdtyuxcvbnmsdfgxcvbhnwertyuiasdfgjxcvbnmsdfghCharlesdfghnlrtyuixcvbnasdtyuxcvbnmsdfgxcvbhnwertyuiasdfgjxcvbnmsdfgh',
+            email: 'info90@corp.com',
+            role: 'Corporate',
+            subRole: 'Institution',
+            status: '',
+            description: '',
+            website: '',
+            address: {
+                addressLine1: 'address10',
+                addressLine2: 'address20',
+                city: 'city',
+                state: '',
+                zipCode: '',
+                country: 'India'
+            },
+            phone: [
+                {
+                    countryCode: '+91',
+                    phoneNumber: '97654579'
+                }
+            ]
+        }
+
+        mockObj.resolves(messages.error.USER_NAME_LENGTH);
+        try {
+            let res = userService.registerUser(registerUserData)
+            expect(res).to.equal(messages.error.USER_NAME_LENGTH)
+        } catch (err) {
+            expect(err.message).to.equal(messages.error.USER_NAME_LENGTH)
+        }
+        userModel.registerUser.restore();
+
+    })
+
+    it('testing response for registerUser role: Corporate and no subrole', function () {
+        const registerUserData = {
+            firstName: 'Charles',
+            lastName: 'Mack',
+            orgName: 'Corporate',
+            userName: 'Corp99',
+            email: 'info90@corp.com',
+            role: 'Corporate',
+            subRole: '',
+            status: '',
+            description: '',
+            website: '',
+            address: {
+                addressLine1: 'address10',
+                addressLine2: 'address20',
+                city: 'city',
+                state: '',
+                zipCode: '',
+                country: 'India'
+            },
+            phone: [
+                {
+                    countryCode: '+91',
+                    phoneNumber: '97654579'
+                }
+            ]
+        }
+
+        mockObj.resolves(messages.error.INVALID_DONOR_TYPE);
+        try {
+            let res = userService.registerUser(registerUserData)
+            expect(res).to.equal(messages.error.INVALID_DONOR_TYPE)
+        } catch (err) {
+            expect(err.message).to.equal(messages.error.INVALID_DONOR_TYPE)
+        }
+        userModel.registerUser.restore();
+
+    })
+
+    it('testing response for registerUser role: Corporate and subrole is Institution and no orgname', function () {
+        const registerUserData = {
+            firstName: 'Charles',
+            lastName: 'Mack',
+            orgName: '',
+            userName: 'Corp99',
+            email: 'info90@corp.com',
+            role: 'Corporate',
+            subRole: 'Institution',
+            status: '',
+            description: '',
+            website: '',
+            address: {
+                addressLine1: 'address10',
+                addressLine2: 'address20',
+                city: 'city',
+                state: '',
+                zipCode: '',
+                country: 'India'
+            },
+            phone: [
+                {
+                    countryCode: '+91',
+                    phoneNumber: '97654579'
+                }
+            ]
+        }
+
+        mockObj.resolves(messages.error.INVALID_COMPANY_NAME);
+        try {
+            let res = userService.registerUser(registerUserData)
+            expect(res).to.equal(messages.error.INVALID_COMPANY_NAME)
+        } catch (err) {
+            expect(err.message).to.equal(messages.error.INVALID_COMPANY_NAME)
+        }
+        userModel.registerUser.restore();
+
+    })
+
+    it('testing response for If role is Ngo and Payment type is Bank and bankDetails is missing', function () {
+        const registerUserData = {
+            firstName: 'Rihana',
+            lastName: 'John',
+            orgName: 'Ngo',
+            userName: 'ngo90',
+            email: 'info90@ngo.com',
+            role: 'Ngo',
+            status: '',
+            description: '',
+            website: '',
+            address: {
+                addressLine1: 'address10',
+                addressLine2: 'address20',
+                city: 'city',
+                state: 'state',
+                zipCode: '6789',
+                country: 'India'
+            },
+            phone: [
+                {
+                    countryCode: '+91',
+                    phoneNumber: '97654579'
+                }
+            ],
+            paymentDetails: {
+                paymentType: "Bank"
+            }
+
+        }
+
+        mockObj.resolves(messages.error.MISSING_BANK_DETAILS);
+        try {
+            let res = userService.registerUser(registerUserData)
+            expect(res.message).to.equal(messages.error.MISSING_BANK_DETAILS)
+        } catch (err) {
+            expect(err.message).to.equal(messages.error.MISSING_BANK_DETAILS)
+        }
+        userModel.registerUser.restore();
+        
+    })
+
+    it('testing response for If role is Ngo and Payment type is Bank and bankDetails is missing', function () {
+        const registerUserData = {
+            firstName: 'Rihana',
+            lastName: 'John',
+            orgName: 'Ngo',
+            userName: 'ngo90',
+            email: 'info90@ngo.com',
+            role: 'Ngo',
+            status: '',
+            description: '',
+            website: '',
+            address: {
+                addressLine1: 'address10',
+                addressLine2: 'address20',
+                city: 'city',
+                state: 'state',
+                zipCode: '6789',
+                country: 'India'
+            },
+            phone: [
+                {
+                    countryCode: '+91',
+                    phoneNumber: '97654579'
+                }
+            ],
+            paymentDetails: {
+                paymentType: "Bank",
+                bankDetails:{
+                    bankAddress:{
+                        city:''
+                    }
+                }
+            }
+
+        }
+
+        mockObj.resolves(messages.error.INVALID_BANK_ADDRESS);
+        try {
+            let res = userService.registerUser(registerUserData)
+            expect(res.message).to.equal(messages.error.INVALID_BANK_ADDRESS)
+        } catch (err) {
+            expect(err.message).to.equal(messages.error.INVALID_BANK_ADDRESS)
+        }
+        userModel.registerUser.restore();
+        
+    })
 })
 
 
@@ -405,8 +970,10 @@ describe('TESTING USER SERVICE - GetUserDetails', () => {
         mockObj.resolves(registerUserData);
         try {
             let res = await userService.checkUserNameValidty('corp90')
+            expect(res.message).to.equal(messages.error.USER_EXISTS)
+
         } catch (err) {
-            expect(err.message).to.equal("User already exists")
+            expect(err.message).to.equal(messages.error.USER_EXISTS)
         }
         userModel.getUserDetails.restore();
     })
@@ -546,9 +1113,9 @@ describe('TESTING USER SERVICE - GetUserDetails', () => {
         //If user doesnt exist
         try {
             let res = await userService.getUserRedeemAccount('ngo92', 'Bank')
-            expect(res).to.equal("Unauthorized user")
+            expect(res).to.equal(messages.error.UNAUTHORIZED_USER)
         } catch (err) {
-            expect(err.message).to.equal("Unauthorized user")
+            expect(err.message).to.equal(messages.error.UNAUTHORIZED_USER)
         }
         userModel.getUserDetails.restore();
 
@@ -619,7 +1186,7 @@ describe('TESTING USER SERVICE - Login', () => {
         mockObj.resolves(null);
         let res3 = await userService.login('info911@corp.com')
         expect(res3.success).to.equal(false)
-        expect(res3.message).to.equal('User does not exist')
+        expect(res3.message).to.equal(messages.error.INVALID_USER)
 
     })
 })
@@ -652,9 +1219,9 @@ describe('TESTING USER SERVICE - Notification', () => {
         try {
             let res = await userService.createNotification('P1')
             expect(res.success).to.equal(true)
-            expect(res.message).to.equal('Bad Connection')
+            expect(res.message).to.equal(messages.error.BAD_CONNECTION)
         } catch (err) {
-            expect(err.message).to.equal('Bad Connection')
+            expect(err.message).to.equal(messages.error.BAD_CONNECTION)
         }
     })
 
@@ -1118,7 +1685,7 @@ describe('TESTING USER SERVICE - sendEmailForDonorRegistration', () => {
 
         }
         mockObj.resolves(`<html>hi</html>`);
-        
+
         await userService.sendEmailForDonorRegistration(req)
         // expect(res.status).to.equal(200)
 
@@ -1129,7 +1696,7 @@ describe('TESTING USER SERVICE - sendEmailForDonorRegistration', () => {
         // mockObj1.resolves(null);
 
         try {
-           await userService.sendEmailForDonorRegistration(req)
+            await userService.sendEmailForDonorRegistration(req)
             // expect(res.status).to.equal(200)
 
         } catch (err) {
@@ -1148,7 +1715,7 @@ describe('TESTING USER SERVICE - sendEmailForDonorRegistration', () => {
 
         }
         mockObj1.resolves(`<html>hi</html>`);
-        
+
         await userService.sendEmailForDonorRegistration(req)
         // expect(res.status).to.equal(200)
 
@@ -1159,7 +1726,7 @@ describe('TESTING USER SERVICE - sendEmailForDonorRegistration', () => {
         // mockObj1.resolves(null);
 
         try {
-           await userService.sendEmailForDonorRegistration(req)
+            await userService.sendEmailForDonorRegistration(req)
             // expect(res.status).to.equal(200)
 
         } catch (err) {

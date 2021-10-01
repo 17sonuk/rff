@@ -116,7 +116,7 @@ router.post('/transfer', async (req, res, next) => {
     // if (req.userName === 'guest') {
     //     args[4] = donorDetails.paymentId;
     // }
-    let args = [amount, projectId, notes, Date.now().toString(), donorDetails.paymentId, paymentMode]
+    let args = [amount, projectId, notes, Date.now().toString(), uuid().toString(), donorDetails.paymentId, paymentMode]
     args = JSON.stringify(args);
 
     try {

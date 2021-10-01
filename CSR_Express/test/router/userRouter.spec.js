@@ -85,7 +85,7 @@ describe('USER ROUTER - ONBOARD API when there is bearer token', () => {
             firstName: "ngo2",
             lastName: " xyz",
             orgName: "ngo",
-            userName: "ngo2567",
+            userName: "ngo56027",
             email: "ngo2@gmail.com",
             role: "Ngo",
             description: "some desc",

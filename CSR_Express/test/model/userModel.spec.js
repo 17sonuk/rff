@@ -26,16 +26,120 @@ const testUser = {
         zipCode: '',
         country: 'India'
     },
-    phone:[
+    phone: [
         {
             countryCode: '+91',
             phoneNumber: '9765457'
         }
     ]
-   
+
 }
 
-describe('testing user model - approve user', () => {
+describe('testing user model - create user', () => {
+
+    before((done) => {
+        connectionToMongo('_test');
+        done();
+    })
+
+    after((done) => {
+        disconnectMongo()
+            .then(() => {
+                console.log('Mongo connection closed.');
+                done()
+            })
+            .catch((err) => done(err))
+    })
+
+    it('testing response for create User', async () => {
+        const userDetails = testUser
+        const res = await userModel.create(userDetails);
+        console.log("Response", res);
+        //here to request
+        expect(res).to.be.a('object');
+        // expect(res.success).to.equal(true);
+        // expect(res.message).to.equal(messages.success.REGISTER_USER);
+    });
+})
+
+describe('testing user model - find user', () => {
+
+    before((done) => {
+        connectionToMongo('_test');
+        done();
+    })
+
+    after((done) => {
+        disconnectMongo()
+            .then(() => {
+                console.log('Mongo connection closed.');
+                done()
+            })
+            .catch((err) => done(err))
+    })
+
+    it('testing response for find User', async () => {
+        const userDetails = testUser
+        const res = await userModel.find({}, {});
+        console.log("Response", res);
+        //here to request
+        expect(res).to.be.a('array');
+        // expect(res.success).to.equal(true);
+        // expect(res.message).to.equal(messages.success.REGISTER_USER);
+    });
+})
+
+describe('testing user model - findOne, updateOne, deleteOne user', () => {
+
+    before((done) => {
+        connectionToMongo('_test');
+        done();
+    })
+
+    after((done) => {
+        disconnectMongo()
+            .then(() => {
+                console.log('Mongo connection closed.');
+                done()
+            })
+            .catch((err) => done(err))
+    })
+
+    it('testing response for findOne User', async () => {
+        const userDetails = testUser
+        await userModel.create(userDetails);
+        const res = await userModel.findOne({ userName: userDetails.userName }, {});
+        console.log("Response", res);
+        //here to request
+        expect(res).to.be.a('object');
+        // expect(res.success).to.equal(true);
+        // expect(res.message).to.equal(messages.success.REGISTER_USER);
+    });
+
+    it('testing response for updateOne User', async () => {
+        const userDetails = testUser
+        await userModel.create(userDetails);
+        const res = await userModel.updateOne({ userName: userDetails.userName }, { $set: userDetails });
+        console.log("Response", res);
+        //here to request
+        expect(res).to.be.a('object');
+        // expect(res.success).to.equal(true);
+        // expect(res.message).to.equal(messages.success.REGISTER_USER);
+    });
+
+    it('testing response for deleteOne User', async () => {
+        const userDetails = testUser
+        await userModel.create(userDetails);
+        const res = await userModel.deleteOne({ userName: userDetails.userName });
+        console.log("Response", res);
+        //here to request
+        expect(res).to.be.a('object');
+        // expect(res.success).to.equal(true);
+        // expect(res.message).to.equal(messages.success.REGISTER_USER);
+    });
+})
+
+describe('testing user model -  user', () => {
 
     before((done) => {
         connectionToMongo('_test');
@@ -54,11 +158,11 @@ describe('testing user model - approve user', () => {
     it('testing response for registerUser', async () => {
         const userDetails = testUser
         const res = await userModel.registerUser(userDetails);
-        console.log("Response",res);
+        console.log("Response", res);
         //here to request
         expect(res).to.be.a('object');
         expect(res.success).to.equal(true);
-        expect(res.message).to.equal( messages.success.REGISTER_USER);
+        expect(res.message).to.equal(messages.success.REGISTER_USER);
     });
 
     it('testing if user is already registered in mongo', async () => {
@@ -124,7 +228,42 @@ describe('testing user model - approve user', () => {
         expect(res.nModified).to.equal(1);
         expect(res.ok).to.equal(1);
     });
+
+    it('testing getApprovedInstitutions', async () => {
+        const res = await userModel.getApprovedInstitutions();
+        expect(res).to.be.a('array');
+        expect(res).to.have.lengthOf(1);
+    });
+
+    it('testing response for markInstitutionalDonorAsSeen User', async () => {
+
+        const ruser = await userModel.findOne({ userName: 'corp1' }, {_id:1});
+        const res = await userModel.markInstitutionalDonorAsSeen(ruser._id);
+        console.log("Response", res);
+        expect(res).to.be.a('object');
+        
+    });
+
+    it('testing response for resetUserStatus User', async () => {
+
+        const res = await userModel.resetUserStatus('corp1');
+        console.log("Response", res);
+        expect(res).to.equal(true);
+        
+    });
+    it('testing response for updateUserProfile User', async () => {
+
+        const ruser = await userModel.findOne({ userName: 'corp1' }, {});
+        ruser.status='approved'
+        const res = await userModel.updateUserProfile('corp1',ruser);
+        console.log("Response", res);
+        expect(res).to.be.a('object');
+
+        // expect(res).to.equal(true);
+        
+    });
 })
+
 
 describe('testing user model - reject user', () => {
 
@@ -146,7 +285,7 @@ describe('testing user model - reject user', () => {
         let userDetails = testUser;
         userDetails.userName = 'newCorp';
         userDetails.email = 'newCorp@gmail.com';
-	    userDetails.regId = undefined;
+        userDetails.regId = undefined;
         await userModel.registerUser(userDetails);
         const unapprovedUsers = await userModel.getUnapprovedUserDetails();
         const res = await userModel.rejectUser(unapprovedUsers[0].userName);
