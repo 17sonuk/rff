@@ -11,17 +11,20 @@ const { fieldErrorMessage, generateError, getMessage } = require('../../utils/fu
 // create coinbase charge
 router.post('/coinbase/charge', async (req, res, next) => {
 
-    //types: GuestTransfer | FundRequest
+    //types: GuestTransfer | Transfer
     if (!req.body.requestType) {
         return res.json(fieldErrorMessage('\'request type\''));
     }
     if (!req.body.payload) {
         return res.json(fieldErrorMessage('\'payload\''));
     }
+    if (!req.body.paymentMode) {
+        return res.json(fieldErrorMessage('\'paymentMode\''));
+    }
     if (!req.body.payload.amount) {
         return res.json(fieldErrorMessage('\'amount\''));
     }
-    if (req.body.requestType === 'FundRequest') {
+    if (req.body.requestType === 'Transfer') {
         if (!req.body.userName)
             return res.json(fieldErrorMessage('\'userName\''));
         if (!req.body.payload.projectId)
@@ -45,7 +48,8 @@ router.post('/coinbase/charge', async (req, res, next) => {
         metadata: {
             userName: req.body.userName,
             requestType: req.body.requestType,
-            payload: req.body.payload
+            payload: req.body.payload,
+            paymentMode: req.body.paymentMode
         }
     }
 
