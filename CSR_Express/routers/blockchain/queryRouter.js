@@ -65,9 +65,9 @@ router.get('/funds-raised-by-ngo', async function (req, res, next) {
 });
 
 // get a specific record by key 
-router.get('/getRecord/:recordKey', async function (req, res, next) {
+router.get('/getRecord', async function (req, res, next) {
 
-    const recordKey = req.params.recordKey;
+    const recordKey = req.query.id;
 
     if (!recordKey) {
         return res.json(fieldErrorMessage('\'recordKey\''));

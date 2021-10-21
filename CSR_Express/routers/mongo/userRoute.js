@@ -111,9 +111,9 @@ router.put('/markInstitutionalDonorAsSeen', async (req, res, next) => {
 })
 
 //get notification - true for unseen and false for seen
-router.get('/notification/:seen', (req, res, next) => {
+router.get('/notification', (req, res, next) => {
     let name = req.userName + "." + orgMap[req.orgName.toLowerCase()] + "." + BLOCKCHAIN_DOMAIN + ".com";
-    userService.getNotifications(name, req.params.seen)
+    userService.getNotifications(name, req.query.seen)
         .then((data) => {
             res.json(data)
         })

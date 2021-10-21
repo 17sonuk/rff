@@ -1,7 +1,7 @@
 {
     "common": [
         "/mongo/common/community/listed",
-        "/mongo/project",
+        "/mongo/project/byId",
         "/mongo/user/notification",
         "/mongo/user/checkUserNameValidity",
         "/query/getRecord",

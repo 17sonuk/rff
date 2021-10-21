@@ -69,8 +69,8 @@ router.get('/projectsByCommunity', (req, res, next) => {
 })
 
 //this should be the last router
-router.get('/:projectId', (req, res, next) => {
-    projectService.getProjectById(req.params.projectId)
+router.get('/byId', (req, res, next) => {
+    projectService.getProjectById(req.query.projectId)
         .then((data) => {
             res.json(data)
         })
