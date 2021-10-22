@@ -51,7 +51,7 @@ const limiter = rateLimit({
 app.use(cors({
     origin: ['https://3.7.60.222:4200', 'http://localhost:4200'],
     methods: ['GET', 'POST', 'DELETE', 'UPDATE', 'PUT', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'device-remember-token', 'Access-Control-Allow-Origin', 'Origin', 'Accept', 'csrtoken']
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'device-remember-token', 'Access-Control-Allow-Origin', 'Origin', 'Accept', 'csrtoken', 'responseType', 'x-cc-webhook-signature']
 }));
 
 app.use(express.json({ limit: '20mb' }));
