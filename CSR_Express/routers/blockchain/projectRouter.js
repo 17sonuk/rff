@@ -455,6 +455,14 @@ router.get('/filtered-projects', async (req, res, next) => {
         return res.json(fieldErrorMessage('\'pageSize\''));
     }
 
+    if (typeof pageSize === 'string' && typeof parseInt(pageSize) !== 'number') {
+        return res.json(fieldErrorMessage('\'pageSize\''));
+    }
+    let alpha = /^[0-9a-zA-Z]*$/;
+    if (typeof bookmark === 'string' && !bookmark.match(alpha)) {
+        return res.json(fieldErrorMessage('\'bookmark\''));
+    }
+
     if (req.orgName === 'creditsauthority' && self === "true") {
         return res.json(fieldErrorMessage('\'self\''));
     }
@@ -517,7 +525,7 @@ router.get('/filtered-projects', async (req, res, next) => {
         }
         if (projectStatus === "Open For Funding") {
             delete queryString['selector']['projectState'];
-            
+
             queryString['selector']['approvalState'] = "Approved"
             queryString['selector']['$and'] = [
                 {
@@ -559,90 +567,94 @@ router.get('/filtered-projects', async (req, res, next) => {
     try {
         let message = await query.main(req.userName, req.orgName, "CommonQueryPagination", CHAINCODE_NAME, CHANNEL_NAME, args);
         message = JSON.parse(message.toString());
-        if (message.toString().includes("Error:")) {
-            let errorMessage = message.toString().split("Error:")[1].trim()
-            return res.json(getMessage(false, errorMessage))
-        }
-        else {
-            let newObject = message['Results'];
-            let finalResponse = {}
-            let allRecords = []
 
-            //populate the MetaData
-            finalResponse["metaData"] = {}
-            finalResponse["metaData"]["recordsCount"] = message["RecordsCount"];
-            finalResponse["metaData"]["bookmark"] = message["Bookmark"];
+        let newObject = message['Results'];
+        let finalResponse = {}
+        let allRecords = []
 
-            //loop over the projects
-            for (let i = 0; i < newObject.length; i++) {
+        //populate the MetaData
+        finalResponse["metaData"] = {}
+        finalResponse["metaData"]["recordsCount"] = message["RecordsCount"];
+        finalResponse["metaData"]["bookmark"] = message["Bookmark"];
 
-                let record = JSON.parse(newObject[i]["Record"]);
-                logger.debug(`Project ${i} : ${JSON.stringify(record, null, 2)}`);
+        //loop over the projects
+        for (let i = 0; i < newObject.length; i++) {
 
-                let response = {}
-                response = record
-                console.log("record: ", record)
-                console.log("response: ", response)
-                // response["totalReceived"] = 0;
-                response["ourContribution"] = 0;
+            let record = JSON.parse(newObject[i]["Record"]);
+            logger.debug(`Project ${i} : ${JSON.stringify(record, null, 2)}`);
 
-                if (response["contributions"][orgDLTName] !== undefined) {
-                    response["ourContribution"] += response["contributions"][orgDLTName]["contributionQty"];
-                }
+            let response = {}
+            response = record
+            console.log("record: ", record)
+            console.log("response: ", response)
+            // response["totalReceived"] = 0;
+            response["ourContribution"] = 0;
 
-                let currentPhase = 0;
-                for (let f = 0; f < response.phases.length; f++) {
-                    if (response.phases[f]["phaseState"] !== "Created") {
-                        currentPhase = f
-                    }
-                }
-
-                response['currentPhase'] = currentPhase + 1;
-                response['currentPhaseStatus'] = response.phases[currentPhase]['phaseState'];
-                response['currentPhaseTarget'] = response.phases[currentPhase]['qty'];
-                response['currentPhaseOutstandingAmount'] = response.phases[currentPhase]['outstandingQty'];
-                response['projectId'] = newObject[i]['Key']
-                response['contributors'] = Object.keys(response['contributors']).map(splitOrgName)
-                response['ngo'] = splitOrgName(response['ngo'])
-                response['totalPhases'] = response.phases.length
-                response["percentageFundReceived"] = (response["totalReceived"] / response['totalProjectCost']) * 100;
-
-                let endDate = response.phases[response.phases.length - 1]['endDate']
-                let timeDifference = endDate - Date.now()
-                if (timeDifference < 0) {
-                    timeDifference = 0
-                }
-                response['daysLeft'] = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
-
-                let actualStartDate = response.actualStartDate
-                let startDate = response.phases[0]['startDate']
-                let timeDiff = startDate - Date.now()
-                if (actualStartDate !== 0) {
-                    timeDiff = actualStartDate - Date.now()
-                }
-                if (timeDiff < 0) {
-                    timeDiff = 0
-                }
-                response['daysLeftToStart'] = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-                timeDiff = Date.now() - startDate
-                if (actualStartDate !== 0) {
-                    timeDiff = Date.now() - actualStartDate
-                }
-                if (timeDiff < 0) {
-                    timeDiff = 0
-                }
-                response['daysPassed'] = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-
-                allRecords.push(response);
+            if (response["contributions"][orgDLTName] !== undefined) {
+                response["ourContribution"] += response["contributions"][orgDLTName]["contributionQty"];
             }
 
-            logger.debug(`All : ${JSON.stringify(allRecords, null, 2)}`);
-            finalResponse["records"] = allRecords
-            return res.json(getMessage(true, finalResponse))
+            let currentPhase = 0;
+            for (let f = 0; f < response.phases.length; f++) {
+                if (response.phases[f]["phaseState"] !== "Created") {
+                    currentPhase = f
+                }
+            }
+
+            response['currentPhase'] = currentPhase + 1;
+            response['currentPhaseStatus'] = response.phases[currentPhase]['phaseState'];
+            response['currentPhaseTarget'] = response.phases[currentPhase]['qty'];
+            response['currentPhaseOutstandingAmount'] = response.phases[currentPhase]['outstandingQty'];
+            response['projectId'] = newObject[i]['Key']
+            response['contributors'] = Object.keys(response['contributors']).map(splitOrgName)
+            response['ngo'] = splitOrgName(response['ngo'])
+            response['totalPhases'] = response.phases.length
+            response["percentageFundReceived"] = (response["totalReceived"] / response['totalProjectCost']) * 100;
+
+            let endDate = response.phases[response.phases.length - 1]['endDate']
+            let timeDifference = endDate - Date.now()
+            if (timeDifference < 0) {
+                timeDifference = 0
+            }
+            response['daysLeft'] = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+
+            let actualStartDate = response.actualStartDate
+            let startDate = response.phases[0]['startDate']
+            let timeDiff = startDate - Date.now()
+            if (actualStartDate !== 0) {
+                timeDiff = actualStartDate - Date.now()
+            }
+            if (timeDiff < 0) {
+                timeDiff = 0
+            }
+            response['daysLeftToStart'] = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+            timeDiff = Date.now() - startDate
+            if (actualStartDate !== 0) {
+                timeDiff = Date.now() - actualStartDate
+            }
+            if (timeDiff < 0) {
+                timeDiff = 0
+            }
+            response['daysPassed'] = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+
+            allRecords.push(response);
         }
+
+        logger.debug(`All : ${JSON.stringify(allRecords, null, 2)}`);
+        finalResponse["records"] = allRecords
+        return res.json(getMessage(true, finalResponse))
+
     }
     catch (e) {
-        generateError(e, next);
+        if (e.toString().includes("Invalid bookmark value")) {
+            let error = {}
+            error.message = "Invalid bookmark value";
+            error.status = 400;
+            next(error);
+        }
+        else {
+            generateError(e, next);
+        }
     }
 });
 

@@ -148,6 +148,15 @@ router.get('/request/all', async (req, res, next) => {
     if (!pageSize) {
         return res.json(fieldErrorMessage('\'pageSize\''));
     }
+
+    if (typeof pageSize === 'string' && typeof parseInt(pageSize) !== 'number') {
+        return res.json(fieldErrorMessage('\'pageSize\''));
+    }
+    let alpha = /^[0-9a-zA-Z]*$/;
+    if (typeof bookmark === 'string' && !bookmark.match(alpha)) {
+        return res.json(fieldErrorMessage('\'bookmark\''));
+    }
+
     if (!status) {
         return res.json(fieldErrorMessage('\'status\''));
     }
@@ -163,7 +172,7 @@ router.get('/request/all', async (req, res, next) => {
     if (req.orgName === 'ngo') {
         queryString['selector']['from'] = userDLTName
     }
-    else if(req.orgName !== 'creditsauthority') {
+    else if (req.orgName !== 'creditsauthority') {
         return res.json({ success: false, message: messages.error.UNAUTHORISED_REDEEM_ACCESS })
     }
 
@@ -195,7 +204,16 @@ router.get('/request/all', async (req, res, next) => {
         return res.json(getMessage(true, finalResponse))
     }
     catch (e) {
-        generateError(e, next);
+        if (e.toString().includes("Invalid bookmark value")) {
+            let error = {}
+            error.message = "Invalid bookmark value";
+            error.status = 400;
+            next(error);
+        }
+        else {
+            generateError(e, next);
+        }
+        // generateError(e, next);
     }
 });
 
@@ -211,6 +229,15 @@ router.get('/request/forUserprofile', async (req, res, next) => {
     if (!pageSize) {
         return res.json(fieldErrorMessage('\'pageSize\''));
     }
+
+    if (typeof pageSize === 'string' && typeof parseInt(pageSize) !== 'number') {
+        return res.json(fieldErrorMessage('\'pageSize\''));
+    }
+    let alpha = /^[0-9a-zA-Z]*$/;
+    if (typeof bookmark === 'string' && !bookmark.match(alpha)) {
+        return res.json(fieldErrorMessage('\'bookmark\''));
+    }
+
     if (!status) {
         return res.json(fieldErrorMessage('\'status\''));
     }
@@ -244,7 +271,7 @@ router.get('/request/forUserprofile', async (req, res, next) => {
     } else if (communityName && communityPlace) {
         queryString['selector']['communityName'] = communityName
         queryString['selector']['communityPlace'] = communityPlace
-    } 
+    }
     // else {
     //     return res.json({ success: false, message: messages.error.UNAUTHORISED_REDEEM_ACCESS })
     // }
@@ -278,7 +305,16 @@ router.get('/request/forUserprofile', async (req, res, next) => {
         return res.json(getMessage(true, finalResponse))
     }
     catch (e) {
-        generateError(e, next);
+        if (e.toString().includes("Invalid bookmark value")) {
+            let error = {}
+            error.message = "Invalid bookmark value";
+            error.status = 400;
+            next(error);
+        }
+        else {
+            generateError(e, next);
+        }
+        // generateError(e, next);
     }
 });
 

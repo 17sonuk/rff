@@ -49,8 +49,8 @@ const limiter = rateLimit({
 // app.options('*', cors());
 // app.use(cors());
 app.use(cors({
-    // origin: ['https://3.7.60.222:4200', 'http://localhost:4200', 'https://rff-staging-ui-1496463348.ap-south-1.elb.amazonaws.com'],
-    origin: ['http://localhost:4200', 'https://rff-staging-ui-1496463348.ap-south-1.elb.amazonaws.com'],
+    // origin: ['https://3.7.60.222:4200', 'http://localhost:4200', 'https://rff-staging-ui-1496463348.ap-south-1.elb.amazonaws.com', 'https://blockchain.rainforestfoundation.org'],
+    origin: ['http://localhost:4200', 'https://blockchain.rainforestfoundation.org'],
     methods: ['GET', 'POST', 'DELETE', 'UPDATE', 'PUT', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'device-remember-token', 'Access-Control-Allow-Origin', 'Origin', 'Accept', 'csrtoken', 'responseType', 'x-cc-webhook-signature']
 }));
