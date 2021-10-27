@@ -34,14 +34,14 @@ var (
 	ErrorLogger   *log.Logger
 )
 
-const NgoMSP = "NgoMSP"
-const CorporateMSP = "CorporateMSP"
-const CreditsAuthorityMSP = "CreditsAuthorityMSP"
+const NgoMSP = "Org3MSP"
+const CorporateMSP = "Org2MSP"
+const CreditsAuthorityMSP = "Org1MSP"
 
-const corporate = "corporate"
-const ngo = "ngo"
-const creditsauthority = "creditsauthority"
-const domain = "csr.com"
+const corporate = "org2"
+const ngo = "org3"
+const creditsauthority = "org1"
+const domain = "example.com"
 const guest = "guest"
 
 func main() {
