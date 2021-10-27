@@ -26,8 +26,9 @@ async function main(userName, orgName, functionName, chaincodeName, channelName,
     let listener;
     logger.debug(userName + "," + orgName + "," + functionName + "," + chaincodeName + "," + channelName + "," + args);
     // load the network configuration
-    const ccpPath = path.resolve(__dirname, '..', '..', 'test-network', 'organizations', 'peerOrganizations', `${orgName}.${BLOCKCHAIN_DOMAIN}.com`, `connection-${orgName}.json`);
-    // const ccpPath = path.resolve(__dirname, '..', '..', 'FabricMultiHostDeployment', 'setup1', 'vm1', 'api-2.0', 'config', `connection-${orgName}.json`);
+    // const ccpPath = path.resolve(__dirname, '..', '..', 'test-network', 'organizations', 'peerOrganizations', `${orgName}.${BLOCKCHAIN_DOMAIN}.com`, `connection-${orgName}.json`);
+    const ccpPath = path.resolve(__dirname, '..', '..', '..', 'FabricMultiHostDeployment', 'setup1', 'vm1', 'api-2.0', 'config', `connection-${orgName}.json`);
+
     let ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf8'));
 
     // Create a new file system based wallet for managing identities.
@@ -45,7 +46,7 @@ async function main(userName, orgName, functionName, chaincodeName, channelName,
 
     // Create a new gateway for connecting to our userName node.
     const gateway = new Gateway();
-    await gateway.connect(ccp, { wallet, identity: userName, discovery: { enabled: true, asLocalhost: true } });
+    await gateway.connect(ccp, { wallet, identity: userName, discovery: { enabled: true, asLocalhost: false } });
     logger.debug('gateway connected')
 
     logger.debug('channel: ' + channelName);
