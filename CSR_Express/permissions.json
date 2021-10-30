@@ -9,7 +9,11 @@
         "/country/countries",
         "/country/states",
         "/country/cities",
-        "/mongo/project/countryAndProjectTypeFilter"
+        "/mongo/project/countryAndProjectTypeFilter",
+        "/project/transactions",
+        "/redeem/request/all"
+
+
     ],
     "ngo": [
         "/mongo/common/community",
@@ -27,7 +31,6 @@
         "/project/all",
         "/project/ngo-project-transactions",
         "/redeem/request",
-        "/redeem/request/all",
         "/query/balance",
         "/query/funds-raised-by-ngo",
         "/mongo/file/upload",
@@ -80,9 +83,7 @@
         "/project/all",
         "/project/total-ongoing-projects",
         "/project/corporate-project-transactions",
-        "/project/transactions",
         "/project/validate-phase",
-        "/redeem/request/all",
         "/redeem/approve",
         "/redeem/reject",
         "/utils/unspent/transfer",

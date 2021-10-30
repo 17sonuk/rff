@@ -355,6 +355,7 @@ router.get('/transactions', async (req, res, next) => {
         return res.json(fieldErrorMessage('\'projectId\''));
     }
 
+    //changes
     let queryString = {
         "selector": {
             "docType": "Transaction",
@@ -369,6 +370,9 @@ router.get('/transactions', async (req, res, next) => {
         }
     }
 
+    if (req.orgName === 'corporate') {
+        queryString["fields"] = ["date", "docType", "from", "objRef", "phaseNumber", "qty", "to", "txType"]
+    }
     const args = JSON.stringify(queryString)
     logger.debug('args : ' + args);
 

@@ -76,11 +76,12 @@ mainRouter.use((req, res, next) => {
     let e = new Error('Unauthorized User')
     e.status = 401
 
+    // to check if beneficiary registration is done by regulator
     if (req.path === '/mongo/user/onboard' && req.body['role'] === 'Ngo' && (req.userName !== CA_USERNAME || req.orgName !== 'creditsauthority')) {
         generateError(e, next);
     }
 
-    let skip = ['/mongo/user/onboard', '/mongo/user/checkUserNameValidity', '/users', '/psp/coinbase/chargeStatus', '/country/countries', '/country/states', '/country/cities', '/mongo/common/community/listed', '/project/filtered-projects'];
+    let skip = ['/mongo/user/onboard', '/mongo/user/checkUserNameValidity', '/users', '/psp/coinbase/chargeStatus', '/country/countries', '/country/states', '/country/cities', '/mongo/common/community/listed', '/project/filtered-projects', '/project/transactions', '/redeem/request/all'];
     if (skip.includes(req.path)) {
         return next();
     }

@@ -137,10 +137,10 @@ router.post('/reject', async (req, res, next) => {
 router.get('/request/all', async (req, res, next) => {
     logger.debug('==================== QUERY BY CHAINCODE: getAllRedeemRequests ==================');
     const userDLTName = req.userName + "." + orgMap[req.orgName.toLowerCase()] + "." + BLOCKCHAIN_DOMAIN + ".com";
-
     const pageSize = req.query.pageSize;
     const bookmark = req.query.bookmark;
     const status = req.query.status;
+    const projectId = req.query.projectId;
 
     logger.debug('pageSize : ' + pageSize + ' bookmark : ' + bookmark);
     logger.debug('status : ' + status);
@@ -161,7 +161,7 @@ router.get('/request/all', async (req, res, next) => {
         return res.json(fieldErrorMessage('\'status\''));
     }
 
-    let queryString = {
+    var queryString = {
         "selector": {
             "docType": "Redeem",
             "status": status
@@ -169,11 +169,16 @@ router.get('/request/all', async (req, res, next) => {
         "sort": [{ "date": "asc" }]
     }
 
+    if (projectId) {
+        queryString['selector']['projectId'] = projectId;
+    }
+
+    if (req.orgName === 'corporate') {
+        queryString["fields"] = ["communityName", "communityPlace", "date", "docType", "forBeneficiary", "from", "key", "projectId", "projectName", "qty", "status"]
+    }
+
     if (req.orgName === 'ngo') {
         queryString['selector']['from'] = userDLTName
-    }
-    else if (req.orgName !== 'creditsauthority') {
-        return res.json({ success: false, message: messages.error.UNAUTHORISED_REDEEM_ACCESS })
     }
 
     let args = [JSON.stringify(queryString), pageSize, bookmark];
