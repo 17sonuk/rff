@@ -27,6 +27,10 @@ const logger = require('../loggers/logger');
 const checkJwt = require('../utils/checkJwt');
 const { fieldErrorMessage, generateError, getMessage } = require('../utils/functions');
 
+mainRouter.get('/', (req, res) => {
+    res.send("Welcome")
+})
+
 // Authentication
 mainRouter.use((req, res, next) => {
     let skip = ['/users', '/psp/coinbase/chargeStatus']
