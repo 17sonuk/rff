@@ -81,7 +81,7 @@ mainRouter.use((req, res, next) => {
     e.status = 401
 
     // to check if beneficiary registration is done by regulator
-    if (req.path === '/mongo/user/onboard' && req.body['role'] === 'Ngo' && (req.userName !== CA_USERNAME || req.orgName !== 'creditsauthority')) {
+    if (req.path === '/mongo/user/onboard' && req.body['role'] === 'Ngo' && (req.userName !== 'ca' || req.orgName !== 'creditsauthority')) {
         generateError(e, next);
     }
 
@@ -152,7 +152,7 @@ mainRouter.post('/users', async (req, res, next) => {
     } else if (email === CA_EMAIL || email === IT_EMAIL) {
         mongoResponse = { role: "CreditsAuthority", userName: user };
         // userName = user;
-        userName = 'ca'
+        userName = 'ca';
         orgName = 'creditsauthority';
     } else {
         mongoResponse = await userService.login(email);
