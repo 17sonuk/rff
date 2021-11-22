@@ -8,6 +8,9 @@ CSR_Express/node_modules
 CSR_Express/wallet-corporate
 CSR_Express/wallet-creditsauthority
 CSR_Express/wallet-ngo
+CSR_Express/wallet-org1
+CSR_Express/wallet-org2
+CSR_Express/wallet-org3
 CSR_Express/package-lock.json
 
 *.tar.gz
