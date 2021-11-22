@@ -136,7 +136,7 @@ commonService.sendEmailToDonor = async (email, name, amount, projectId, address)
     let htmlBody = await donorEmailTemplate.donorEmail(name, amount, projectDetails.projectName, 'Rainforest Blockchain Platform', moment().format('MMMM Do YYYY'), address)
     transporter.verify().then(() => {
         transporter.sendMail({
-            from: '"CSR Test Mail" <rainforest.csr@gmail.com', // sender address
+            from: '"GreenLink - RFUS" <rainforest.csr@gmail.com', // sender address
             to: email, //receiver address'
             subject: `Here is your donation receipt for ${PLATFORM_NAME} - ${projectDetails.projectName}`, // Subject line
             html: htmlBody, // html body
@@ -183,7 +183,7 @@ commonService.projectInitiation = async (projectId, username, orgname) => {
         for (i = 0; i < emailList.length; i++) {
             let htmlBody = initiateEmailTemplate.projectInitiationEmail(projectName, emailList[i].firstName, desc, moment(endDate).format('MMMM MM YYYY'))
             transporter.sendMail({
-                from: '"CSR Test Mail" <csr.rainforest@gmail.com', // sender address
+                from: '"GreenLink - RFUS" <csr.rainforest@gmail.com', // sender address
                 to: emailList[i].email, // list of receivers
                 subject: `${projectName} has initiated work - stay tuned for project updates`, // Subject line
                 html: htmlBody, // html body
@@ -268,7 +268,7 @@ commonService.ProjectCompletionEmail = async (projectId, username, orgname) => {
 
                         transporter.verify().then((data) => {
                             transporter.sendMail({
-                                from: '"CSR Test Mail" <rainforest.csr@gmail.com', // sender address
+                                from: '"GreenLink - RFUS" <rainforest.csr@gmail.com', // sender address
                                 to: donorList[i].email, // list of receivers
                                 subject: `${PLATFORM_NAME}: ${message['Record']['projectName']} is successfully completed!`, // Subject line
                                 html: htmlBody, // html body
@@ -326,7 +326,7 @@ commonService.MilestoneEmail = async (projectId, phaseNumber, username, orgname)
 
                     transporter.verify().then((data) => {
                         transporter.sendMail({
-                            from: '"CSR Test Mail" <rainforest.csr@gmail.com', // sender address
+                            from: '"GreenLink - RFUS" <rainforest.csr@gmail.com', // sender address
                             to: donorList[i].email, // list of receivers
                             subject: `${PLATFORM_NAME}: ${message['Record']['projectName']} successfully met a project milestone!`, // Subject line
                             html: htmlBody, // html body

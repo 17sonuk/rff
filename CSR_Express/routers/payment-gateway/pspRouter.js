@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { COINBASE_API_KEY, COINBASE_WEBHOOK_SECRET } = process.env;
+const { COINBASE_API_KEY, COINBASE_WEBHOOK_SECRET, PLATFORM_NAME } = process.env;
 const logger = require('../../loggers/logger');
 const paymentService = require('./paymentService');
 const { Client, resources, Webhook } = require('coinbase-commerce-node');
@@ -39,7 +39,7 @@ router.post('/coinbase/charge', async (req, res, next) => {
 
     const chargeData = {
         name: req.body.requestType,
-        description: 'testing coinbase gateway',
+        description: PLATFORM_NAME,
         local_price: {
             amount: req.body.payload.amount,
             currency: 'USD'

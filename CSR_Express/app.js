@@ -46,14 +46,14 @@ const limiter = rateLimit({
     },
 });
 
-// app.options('*', cors());
-// app.use(cors());
-app.use(cors({
-    // origin: ['https://3.7.60.222:4200', 'http://localhost:4200', 'https://rff-staging-ui-1496463348.ap-south-1.elb.amazonaws.com', 'https://blockchain.rainforestfoundation.org'],
-    origin: ['http://localhost:4200', 'https://blockchain.rainforestfoundation.org'],
-    methods: ['GET', 'POST', 'DELETE', 'UPDATE', 'PUT', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'device-remember-token', 'Access-Control-Allow-Origin', 'Origin', 'Accept', 'csrtoken', 'responseType', 'x-cc-webhook-signature']
-}));
+app.options('*', cors());
+app.use(cors());
+// app.use(cors({
+//     // origin: ['https://3.7.60.222:4200', 'http://localhost:4200', 'https://rff-staging-ui-1496463348.ap-south-1.elb.amazonaws.com', 'https://blockchain.rainforestfoundation.org'],
+//     origin: ['http://localhost:4200', 'https://blockchain.rainforestfoundation.org','https://RFF-Production-UI-1673079190.us-east-1.elb.amazonaws.com'],
+//     methods: ['GET', 'POST', 'DELETE', 'UPDATE', 'PUT', 'PATCH'],
+//     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'device-remember-token', 'Access-Control-Allow-Origin', 'Origin', 'Accept', 'csrtoken', 'responseType', 'x-cc-webhook-signature']
+// }));
 
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({
@@ -84,7 +84,7 @@ app.use(mainRouter);
 
 app.use((err, req, res, next) => {
     res.locals.message = err.message;
-    res.locals.error = NODE_ENV === 'development' ? err : {};
+    res.locals.error = NODE_ENV === 'production' ? err : {};
 
     // add this line to include winston logging
     logger.error(err.stack || err.message || err);
