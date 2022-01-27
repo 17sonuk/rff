@@ -84,7 +84,7 @@ app.use(mainRouter);
 
 app.use((err, req, res, next) => {
     res.locals.message = err.message;
-    res.locals.error = NODE_ENV === 'production' ? err : {};
+    res.locals.error = NODE_ENV === 'development' ? err : {};
 
     // add this line to include winston logging
     logger.error(err.stack || err.message || err);
