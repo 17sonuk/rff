@@ -365,6 +365,12 @@ func (s *SmartContract) ApproveProject(ctx contractapi.TransactionContextInterfa
 		return false, fmt.Errorf("Failed to add a Tx: " + err.Error())
 	}
 
+	eventPayload := newProjectObj.ProjectName + " project has been approved by Rainforest Foundation US. "
+
+	notification := &Notification{TxId: txId, Description: eventPayload, Users: []string{newProjectObj.NGO}}
+	notificationtAsBytes, _ := json.Marshal(notification)
+	ctx.GetStub().SetEvent("Notification", notificationtAsBytes)
+
 	return true, nil
 }
 
@@ -493,7 +499,7 @@ func (s *SmartContract) ValidatePhase(ctx contractapi.TransactionContextInterfac
 		return false, fmt.Errorf(err.Error())
 	}
 
-	err = createTransaction(ctx, commonName, projectObj.NGO, 0.0, date, "Project_PhaseValidation", projectId, txId, phaseNumber)
+	err = createTransaction(ctx, commonName, projectObj.NGO, 0.0, date, "Project_Phase_Validation", projectId, txId, phaseNumber)
 	if err != nil {
 		return false, fmt.Errorf(err.Error())
 	}

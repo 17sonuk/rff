@@ -6,7 +6,7 @@
 
 'use strict';
 
-const { Gateway, Wallets } = require('fabric-network');
+const { Gateway, Wallets, DefaultEventHandlerStrategies } = require('fabric-network');
 const fs = require('fs');
 const path = require('path');
 const logger = require('../loggers/logger');
@@ -46,7 +46,7 @@ async function main(userName, orgName, functionName, chaincodeName, channelName,
 
     // Create a new gateway for connecting to our userName node.
     const gateway = new Gateway();
-    await gateway.connect(ccp, { wallet, identity: userName, discovery: { enabled: true, asLocalhost: false } });
+    await gateway.connect(ccp, { wallet, identity: userName, discovery: { enabled: true, asLocalhost: false }, eventHandlerOptions:{strategy:DefaultEventHandlerStrategies.MSPID_SCOPE_ALLFORTX} });
     logger.debug('gateway connected')
 
     logger.debug('channel: ' + channelName);

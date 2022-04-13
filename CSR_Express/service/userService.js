@@ -9,7 +9,7 @@ const messages = require('../loggers/messages');
 const userService = {};
 const { v4: uuid } = require('uuid');
 require('dotenv').config();
-const { SMTP_EMAIL, APP_PASSWORD, PLATFORM_NAME } = process.env;
+const { SMTP_EMAIL, APP_PASSWORD, PLATFORM_NAME, RFF_EMAIL_SENDER_FORMAT } = process.env;
 const nodemailer = require('nodemailer');
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
@@ -564,7 +564,8 @@ userService.sendEmailForDonorRegistration = async (req) => {
                 console.log(data);
                 console.log('sending email to :' + emailList);
                 transporter.sendMail({
-                    from: '"CSR Test Mail" <csr.rainforest@gmail.com', // sender address
+                    // from: '"CSR Test Mail" <csr.rainforest@gmail.com', // sender address
+                    from: `${RFF_EMAIL_SENDER_FORMAT}`,
                     to: emailList, // list of receivers
                     subject: `Thank you for joining ${PLATFORM_NAME}`, // Subject line
                     html: htmlBody, // html body
