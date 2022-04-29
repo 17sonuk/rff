@@ -2,15 +2,21 @@ const logger = require('../loggers/logger');
 const bcrypt = require("bcrypt");
 const CryptoJS = require('crypto-js');
 const userModel = require('../model/userModel');
+const { orgModel } = require('../model/models')
 const mongoError = require('../model/mongoError')
 const individualRegEmailTemplate = require('../email-templates/individualRegEmail');
 const institutionRegEmailTemplate = require('../email-templates/institutionRegEmail');
+const userNameEmailTemplate = require('../email-templates/userNameEmail');
 const messages = require('../loggers/messages');
 const userService = {};
 const { v4: uuid } = require('uuid');
 require('dotenv').config();
 const { SMTP_EMAIL, APP_PASSWORD, PLATFORM_NAME, RFF_EMAIL_SENDER_FORMAT } = process.env;
 const nodemailer = require('nodemailer');
+const request = require("request");
+const axios = require("axios");
+
+
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,
@@ -193,19 +199,6 @@ userService.getUserRedeemAccount = (userName) => {
     })
 }
 
-//get user unapproved users
-// userService.getUnapprovedUserDetails = () => {
-//     return userModel.getUnapprovedUserDetails().then(data => {
-//         if (data) {
-//             return data;
-//         } else {
-//             let err = new Error(messages.error.BAD_CONNECTION)
-//             err.status = 500
-//             throw err
-//         }
-//     })
-// }
-
 // get approved institutional donors
 userService.getApprovedInstitutions = async () => {
     try {
@@ -232,63 +225,14 @@ userService.markInstitutionalDonorAsSeen = async (id) => {
     }
 }
 
-//approve user
-// userService.approveUser = (userName) => {
-//     return userModel.approveUser(userName).then(approveResp => {
-//         if (approveResp && approveResp['nModified'] == 1) {
-//             return userModel.getUserDetails(userName, 'userName').then(userData => {
-//                 if (userData) {
-//                     return userData['role'].toLowerCase();
-//                 } else {
-//                     let err = new Error(`${userName} does not exist in mongo`)
-//                     err.status = 500
-//                     throw err
-//                 }
-//             })
-//         } else if (approveResp && approveResp['n'] == 1) {
-//             let err = new Error(`${userName} is already approved`)
-//             err.status = 500
-//             throw err
-//         } else {
-//             let err = new Error(`${userName} does not exist in mongo`)
-//             err.status = 500
-//             throw err
-//         }
-//     })
-// }
-
-//reset user status bcoz register user failed in blockchain, but succeeded in mongo.
-// userService.resetUserStatus = (userName) => {
-//     return userModel.resetUserStatus(userName)
-//         .then(data => {
-//             if (data) {
-//                 return true;
-//             } else {
-//                 let err = new Error(messages.error.RESET_USER)
-//                 err.status = 500
-//                 throw err
-//             }
-//         })
-//         .catch(err => { throw err });
-// }
-
-//reject user
-// userService.rejectUser = (userName) => {
-//     return userModel.rejectUser(userName).then(data => {
-//         if (data) {
-//             return data;
-//         } else {
-//             let err = new Error(messages.error.BAD_CONNECTION)
-//             err.status = 500
-//             throw err
-//         }
-//     })
-// }
 
 //login user
 userService.login = (email) => {
     return userModel.getUserDetails(email).then(data => {
         if (data) {
+            if (data["active"] === false) {
+                return { success: false, message: messages.error.INVALID_USER }
+            }
             if (data['status'] == 'approved') {
                 let finalResponse = {
                     'success': true,
@@ -313,42 +257,6 @@ userService.login = (email) => {
     });
 }
 
-// amount of corporate to convert in credits
-// userService.getAmountFromBalanceSheet = (userName) => {
-//     return userModel.getAmountFromBalanceSheet(userName).then(data => {
-//         if (data) {
-//             let d = new Date();
-//             let y = d.getFullYear();
-//             let m = d.getMonth();
-//             let year_p1 = '';
-//             let year_p2 = '';
-//             let year_p3 = '';
-//             if (m < 3) {
-//                 year_p1 = String(y - 2) + '-' + String(y - 1);
-//                 year_p2 = String(y - 3) + '-' + String(y - 2);
-//                 year_p3 = String(y - 4) + '-' + String(y - 3);
-//             } else {
-//                 year_p1 = String(y - 1) + '-' + String(y);
-//                 year_p2 = String(y - 2) + '-' + String(y - 1);
-//                 year_p3 = String(y - 3) + '-' + String(y - 2);
-//             }
-//             let total = 0;
-//             let j = 0;
-//             for (let i = 0; i < data.file.length; i++) {
-//                 if (data.file[i].year == year_p1 || data.file[i].year == year_p2 || data.file[i].year == year_p3) {
-//                     total += Number(data.file[i].amount); j++;
-//                 }
-//             }
-//             if (j == 3) {
-//                 return { success: true, amount: Math.ceil(total / 3) * 0.02 };
-//             } else if (j < 3) {
-//                 return { success: false, message: 'balance sheets are not available.' };
-//             }
-//         } else {
-//             return { success: false, message: 'not getting files from db' };
-//         }
-//     })
-// }
 
 //Create notification
 userService.createNotification = (project) => {
@@ -564,7 +472,6 @@ userService.sendEmailForDonorRegistration = async (req) => {
                 console.log(data);
                 console.log('sending email to :' + emailList);
                 transporter.sendMail({
-                    // from: '"CSR Test Mail" <csr.rainforest@gmail.com', // sender address
                     from: `${RFF_EMAIL_SENDER_FORMAT}`,
                     to: emailList, // list of receivers
                     subject: `Thank you for joining ${PLATFORM_NAME}`, // Subject line
@@ -579,7 +486,7 @@ userService.sendEmailForDonorRegistration = async (req) => {
         }
     }
 }
-userService.deleteUser = (userName) => {
+userService.deleteMongoUser = (userName) => {
     return userModel.rejectUser(userName).then(data => {
         if (data) return data;
 
@@ -588,4 +495,209 @@ userService.deleteUser = (userName) => {
         throw err
     })
 }
+
+userService.updateEmail = function (userName, oldEmail, updateData, results) {
+    // update in auth0
+    var options = {
+        method: 'POST',
+        url: 'https://dev-28fiz9hg.us.auth0.com/oauth/token',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+            "client_id": "6EjK37JFY0u1hE2v1qdGIPKjj9yaw8kC",
+            "client_secret": "feJLbX0j7hzUsmqMePhePiKNHufKfMcwiaPrbgSn2a33HSaz_CpkJNyHz1xP28WT",
+            "audience": "https://dev-28fiz9hg.us.auth0.com/api/v2/",
+            "grant_type": "client_credentials"
+        })
+    };
+    request(options, function (error, response, body) {
+        if (error) {
+            return { success: false, data: error };
+        }
+        let token = JSON.parse(body).access_token;
+        const options1 = {
+            method: "GET",
+            url: "https://dev-28fiz9hg.us.auth0.com/api/v2/users-by-email?email=" + encodeURIComponent(oldEmail),
+            headers: { "authorization": "Bearer " + token },
+        };
+        axios(options1).then(response => {
+            if (response.data.length < 1) {
+                return { success: false, data: "User does not exist with email:" + oldEmail };
+            }
+            let userData = response.data[0];
+            let url = "https://dev-28fiz9hg.us.auth0.com/api/v2/users/" + encodeURIComponent(userData.user_id);
+            let body = { email: updateData.newEmail, name: updateData.newEmail }
+            axios.patch(url, body, {
+                headers: {
+                    "content-type": "application/json",
+                    "authorization": "Bearer " + token
+                }
+            }).then(result => {
+                if (result.data.length < 1) {
+                    results(null, { success: true, data: "Unable to update email Address please try again later!" });
+                }
+
+                userModel.updateEmail(userName, oldEmail, updateData).then(data => {
+                    if (data) {
+                        if (data['nModified'] > 0) results(null, { success: true, message: 'Email ID Updated Successfully!' });
+                        else results(null, { success: false, message: 'Something ent wrong try again later' })
+
+                    }
+
+                    let err = new Error(messages.error.TRY_AGAIN)
+                    err.status = 500
+                    throw err
+                })
+                // return {success:true,data:response.data};
+            }).catch(error => {
+                // return { success: false, error: error };
+                results(null, { success: false, error: error });
+            });
+        }).catch(error => {
+            // return { success: false, error: error };
+            results(null, { success: false, error: error });
+        });
+    })
+
+}
+
+
+// deactivate user
+userService.deActivateUser = (userName, email) => {
+    return userModel.deActivateUser(userName).then(data => {
+        if (data) {
+            //call auth0 delete function here
+
+            var options = {
+                method: 'POST',
+                url: 'https://dev-28fiz9hg.us.auth0.com/oauth/token',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({
+                    "client_id": "6EjK37JFY0u1hE2v1qdGIPKjj9yaw8kC",
+                    "client_secret": "feJLbX0j7hzUsmqMePhePiKNHufKfMcwiaPrbgSn2a33HSaz_CpkJNyHz1xP28WT",
+                    "audience": "https://dev-28fiz9hg.us.auth0.com/api/v2/",
+                    "grant_type": "client_credentials"
+                })
+            };
+            request(options, function (error, response, body) {
+                if (error) {
+                    return { success: false, data: error };
+                }
+                let token = JSON.parse(body).access_token;
+                const options1 = {
+                    method: "GET",
+                    url: "https://dev-28fiz9hg.us.auth0.com/api/v2/users-by-email?email=" + encodeURIComponent(email),
+                    headers: { "authorization": "Bearer " + token },
+                };
+                axios(options1).then(response => {
+                    if (response.data.length < 1) {
+                        return { success: false, data: "User does not exist with email:" + email };
+                    }
+                    let userData = response.data[0];
+                    let url = "https://dev-28fiz9hg.us.auth0.com/api/v2/users/" + encodeURIComponent(userData.user_id);
+                    // let body = { email: updateData.newEmail }
+                    axios.delete(url, {
+                        headers: {
+                            "content-type": "application/json",
+                            "authorization": "Bearer " + token
+                        }
+                    }).then(result => {
+                        if (result.data.length < 1) {
+                            return { success: true, data: "Unable to update email Address please try again later!" };
+                        }
+                    }).catch(error => {
+                        return { success: false, error: error };
+                        // results(null, { success: false, error: error });
+                    });
+                }).catch(error => {
+                    return { success: false, error: error };
+                    // results(null, { success: false, error: error });
+                });
+            })
+            return data;
+        } else {
+            let err = new Error(messages.error.BAD_CONNECTION)
+            err.status = 500
+            throw err
+        }
+    })
+}
+
+userService.sendUserNameEmail = (email, userName) => {
+    let htmlBody = userNameEmailTemplate.userNameEmail(userName)
+    transporter.verify().then((data) => {
+        console.log(data);
+        console.log('sending email to :' + email);
+        transporter.sendMail({
+            from: `${RFF_EMAIL_SENDER_FORMAT}`,
+            to: email, // list of receivers
+            subject: `User Name For ${PLATFORM_NAME}`, // Subject line
+            html: htmlBody, // html body
+        }).then(info => {
+            console.log({ info });
+        }).catch(console.error);
+    }).catch(console.error);
+
+}
+
+// delete user
+userService.deleteUser = (userName, email) => {
+    return userModel.deleteUser(userName, email).then(data => {
+        if (data) {
+            //call auth0 delete function here
+
+            var options = {
+                method: 'POST',
+                url: 'https://dev-28fiz9hg.us.auth0.com/oauth/token',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({
+                    "client_id": "6EjK37JFY0u1hE2v1qdGIPKjj9yaw8kC",
+                    "client_secret": "feJLbX0j7hzUsmqMePhePiKNHufKfMcwiaPrbgSn2a33HSaz_CpkJNyHz1xP28WT",
+                    "audience": "https://dev-28fiz9hg.us.auth0.com/api/v2/",
+                    "grant_type": "client_credentials"
+                })
+            };
+            request(options, function (error, response, body) {
+                if (error) {
+                    return { success: false, data: error };
+                }
+                let token = JSON.parse(body).access_token;
+                const options1 = {
+                    method: "GET",
+                    url: "https://dev-28fiz9hg.us.auth0.com/api/v2/users-by-email?email=" + encodeURIComponent(email),
+                    headers: { "authorization": "Bearer " + token },
+                };
+                axios(options1).then(response => {
+                    if (response.data.length < 1) {
+                        return { success: false, data: "User does not exist with email:" + email };
+                    }
+                    let userData = response.data[0];
+                    let url = "https://dev-28fiz9hg.us.auth0.com/api/v2/users/" + encodeURIComponent(userData.user_id);
+                    // let body = { email: updateData.newEmail }
+                    axios.delete(url, {
+                        headers: {
+                            "content-type": "application/json",
+                            "authorization": "Bearer " + token
+                        }
+                    }).then(result => {
+                        if (result.data.length < 1) {
+                            return { success: true, data: "Unable to update email Address please try again later!" };
+                        }
+                    }).catch(error => {
+                        return { success: false, error: error };
+                        // results(null, { success: false, error: error });
+                    });
+                }).catch(error => {
+                    return { success: false, error: error };
+                    // results(null, { success: false, error: error });
+                });
+            })
+            return data;
+        } else {
+            let err = new Error(messages.error.BAD_CONNECTION)
+            err.status = 500
+            throw err
+        }
+    })
+}
+
 module.exports = userService;

@@ -1,11 +1,11 @@
 require('dotenv').config();
-const { PLATFORM_NAME, PLATFORM_URL, PLATFORM_HASTAG } = process.env;
+const { PLATFORM_NAME, PLATFORM_URL, PLATFORM_HASHTAG } = process.env;
 
 const commonFields = {};
 //getting these fields from .env file
 commonFields["PLATFORM_NAME"] = PLATFORM_NAME;
 commonFields["PLATFORM_URL"] = PLATFORM_URL;
-commonFields["PLATFORM_HASTAG"] = PLATFORM_HASTAG;
+commonFields["PLATFORM_HASHTAG"] = PLATFORM_HASHTAG;
 
 commonFields["FEEDBACK_EMAIL"] = "blockchain@rffny.org";
 commonFields["CURRENCY"] = "USD";

@@ -43,7 +43,7 @@ module.exports = {
         }
         else {
             let addressHtml = '';
-            if ((address.zipCode != '' && address.city != '' && address.state != '')) {
+            if (address && address.addressLine1 && address.addressLine2 && address.zipCode && address.city && address.state) {
                 addressHtml = `<div margin-top: 10px; margin-right: 10px; margin-left: 10px;>
             <p>${firstName}</p>
             <p>${address.addressLine1}</p>

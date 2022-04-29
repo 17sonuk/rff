@@ -1,12 +1,25 @@
 const express = require('express');
 const router = express.Router();
 const projectService = require('../../service/projectService')
+const { v4: uuid } = require('uuid');
 
 //to Create project
 router.post('/create', (req, res, next) => {
     // return project data object from service
     projectService.createProject(req.userName, req.body)
         .then((data) => {
+            //let obj= {projectId:req.body.projecttId}
+            projectService.deleteSavedProject(req.userName, req.body)
+                .then((data1) => {
+                    console.log("inside save project delete method*********", data1);
+                    res.json(data);
+                }).catch(err => {
+                    if (err) {
+                        err.status = 400
+                        err.message = err['_message'];
+                    }
+                })
+
             res.json(data)
         })
         .catch(err => {
@@ -75,6 +88,60 @@ router.get('/byId', (req, res, next) => {
             res.json(data)
         })
         .catch(err => next(err))
+})
+
+
+//save-project
+router.post('/drafts-project', (req, res, next) => {
+    let projectId = ''
+    if (!req.body.projectId) {
+        projectId = uuid().toString()
+        req.body['projectId'] = projectId;
+    } else {
+        projectId = req.body.projectId;
+    }
+    projectService.saveProject(req.userName, req.body)
+        .then((data) => {
+            res.json(data)
+        })
+        .catch(err => {
+            if (err['_message']) {
+                err.status = 400
+                err.message = err['_message'];
+            }
+            next(err)
+        })
+})
+
+//fetch drafts project details
+router.post('/get-drafts-project', (req, res, next) => {
+    projectService.getsavedProject(req.userName, req.body)
+        .then((data) => {
+            res.json(data)
+        })
+        .catch(err => {
+            if (err['_message']) {
+                err.status = 400
+                err.message = err['_message'];
+            }
+            next(err)
+        })
+})
+
+// delete drafts projects
+router.post('/delete-drafts-project', (req, res, next) => {
+    let username = req.userName;
+    //console.log("inside delete project");
+    projectService.deleteSavedProject(req.userName, req.body)
+        .then((data) => {
+            res.json(data);
+        }).catch(err => {
+            if (err) {
+                err.status = 400
+                err.message = err['_message'];
+            }
+            next(err)
+        })
 })
 
 // //is it really getting used? : not using

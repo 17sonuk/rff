@@ -7,6 +7,7 @@ const { generateError, getMessage } = require('../../utils/functions');
 const userService = require('../../service/userService');
 const mongoProjectService = require('../../service/projectService');
 const registerUser = require('../../fabric-sdk/registerUser');
+const deleteUser = require('../../fabric-sdk/deleteUser');
 const { orgModel } = require('../../model/models')
 const nodemailer = require('nodemailer');
 const messages = require('../../loggers/messages');
@@ -31,6 +32,12 @@ let orgMap = {
 router.post('/onboard', (req, res, next) => {
     return userService.registerUser(req.body)
         .then((data) => {
+            if (data.message === "active") {
+                return res.json(getMessage(true, messages.success.REGISTER_USER));
+            }else if(data.message === "emailUsername"){
+                userService.sendUserNameEmail(req.body.email,data.userName);
+                res.json({ success: false, message: "Please use the userName emailed to your email account"})
+            }
             return registerUser(req.body.userName, req.body['role'].toLowerCase())
                 .then((response) => {
                     userService.sendEmailForDonorRegistration(req);
@@ -39,7 +46,7 @@ router.post('/onboard', (req, res, next) => {
                 })
                 .catch((err) => {
                     //call delete service to delete user in mongo
-                    userService.deleteUser(req.body.userName)
+                    userService.deleteMongoUser(req.body.userName);
                     return generateError(err, next, 500, messages.error.FAILED_REGISTER_USER);
                 });
         })
@@ -136,98 +143,67 @@ router.put('/update', (req, res, next) => {
 })
 
 
+router.put('/updateEmail', (req, res, next) => {
+    console.log("inside router", req.userName, req.email, req.body);
+    orgModel.find({ email: req.body.newEmail }, { _id: 0, userName: 1 }).then(data => {
+        if (data.length > 0) {
+            res.json({ success: false, message: "Email already exists" });
+        } else {
+            userService.updateEmail(req.userName, req.email, req.body, function (err, data) {
+                console.log("data from service", data);
+                if (err)
+                    res.send(err);
+                res.json(data);
+            })
+        }
+    }).catch(err => next(err))
+})
 
-// //approve user : not using
-// router.post('/approve-user', async (req, res, next) => {
-//     try {
-//         let orgName = await userService.approveUser(req.body.userName);
-//         try {
-//             await registerUser(req.body.userName, orgName);
-//             transporter.verify()
-//                 .then((data) => {
-//                     let receiverEmail = ''
-//                     orgModel.findOne({ userName: req.body.userName }, { _id: 0, email: 1 })
-//                         .then((email) => {
-//                             receiverEmail = email
-//                             transporter.sendMail({
-//                                 from: '"CSR Test Mail" <csr.rainforest@gmail.com', // sender address
-//                                 to: receiverEmail.email, // list of receivers // 'c1@gmail.com, c2@outlook.com'
-//                                 subject: "Testing csr mail", // Subject line
-//                                 text: "Congrats " + req.body.userName + ", You have successfully onboarded to the CSR platform!", // plain text body
-//                                 //html: "<b>You have successfully onboarded to the CSR platform</b>", // html body
-//                             }).then(info => {
-//                                 console.log({ info });
-//                             }).catch(console.error);
-//                         })
-//                 })
-//                 .catch(console.error);
-//             return res.json(getMessage(true, "User approved successfully!"));
-//         } catch (registerError) {
-//             if (registerError.status === 400) {
-//                 return generateError(registerError, next, 400, `${req.body.userName} is already registered in blockchain`);
-//             }
-//             try {
-//                 await userService.resetUserStatus(req.body.userName)
-//                 return generateError(registerError, next, 500, 'Couldn\'t register user in blockchain!');
-//             } catch (resetStatusError) {
-//                 return generateError(resetStatusError, next);
-//             }
-//         }
-//     } catch (approveErr) {
-//         return generateError(approveErr, next);
-//     }
-// })
+router.post('/sendUserNameEmail', (req, res, next) => {
+    orgModel.find({ email: req.body.email }, { _id: 0, userName: 1 }).then(data => {
+        if (data.length > 0) {
+            userService.sendUserNameEmail(req.body.email,data[0].userName);
+            res.json({ success: true, message: "User Name exists. Please check the email", username:data[0].userName})
+        } else {
+            res.json({ success: false, message: "No data exists" });
+        }
+    }).catch(err => next(err))
+})
 
+//delete user
+router.post('/deActivateUser', (req, res, next) => {
+    let uname = req.userName
+    let email = req.email
+    if (req.orgName === 'creditsauthority') {
+        uname = req.body.userName
+        email = req.body.email
+    }
+    return userService.deActivateUser(uname, email).then((data) => {
+        res.json(data)
+    }).catch(err => next(err))
 
-// //project completed : not using
+})
 
-// router.post('/project-completed', async (req, res, next) => {
-//     try {
-//         let projectData = await mongoProjectService.getProjectById(req.body.projectId)
-//         try {
-//             let emailList = orgModel.find({ userName: { $in: contributorsList } }, { _id: 0, email: 1 })
-//             for (let i = 0; i < emailList.length; i++) {
-//                 if (i != 0) {
-//                     emailList += ', '
-//                 }
-//             }
-//             transporter.verify().then((data) => {
-//                 transporter.sendMail({
-//                     from: '"CSR Test Mail" <csr.rainforest@gmail.com', // sender address
-//                     bcc: emailList, // list of receivers
-//                     subject: `${projectData.projectName} is now completed`, // Subject line
-//                     text: ` Hi ${donorList.name}, ${projectData.projectName} is now completed, thanks for your contribution `, // plain text body
-//                     //html: "<b>You have successfully onboarded to the CSR platform</b>", // html body
-//                 }).then(info => {
-//                     console.log({ info });
-//                 }).catch(console.error);
-//             }).catch(console.error);
-//             return res.json(getMessage(true, "Project has been completed and donors have been notified!"));
-//         } catch (err3) {
-//             return generateError(err3, next);
-//         }
-//     } catch (err4) {
-//         return generateError(err4, next);
-//     }
-// })
+//delete user
+router.delete('/delete-user', (req, res, next) => {
+    let uname = req.userName
+    // let oname = req.orgNames
+    let email = req.email
+    if (req.orgName === 'creditsauthority') {
+        uname = req.body.userName
+        // oname = req.body.orgName
+        email = req.body.email
+    }
+    // return deleteUser(uname, oname).then((data) => {
+    // console.log("data from delete user from blockchain: ", data)
+    return userService.deleteUser(uname, email).then((data) => {
+        res.json(data)
+    }).catch(err => next(err))
 
-// //reject user : not using
-// router.post('/reject-user', (req, res, next) => {
-//     userService.rejectUser(req.body.userName)
-//         .then((data) => {
-//             res.json(data)
-//         })
-//         .catch(err => next(err))
-// })
+    // }).catch(err => next(err))
 
-// //get profit amount of corporate for Current financial year : not using
-// router.get('/profit-corporate', (req, res, next) => {
-//     userService.getAmountFromBalanceSheet(req.query.userName)
-//         .then((data) => {
-//             res.json(data)
-//         })
-//         .catch(err => next(err))
-// })
+})
+
 
 
 module.exports = router;

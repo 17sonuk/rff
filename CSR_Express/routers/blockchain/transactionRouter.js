@@ -62,31 +62,5 @@ router.get('/parked-by-corporate', async (req, res, next) => {
     }
 });
 
-// // get snapshot and transfer to gov Transactions for CA : not using
-// router.get('/transactions', async function (req, res, next) {
-
-//     let queryString = {
-//         "selector": {
-//             "docType": "Transaction",
-//             "from": req.userName + '.' + ORG1_NAME + '.' + BLOCKCHAIN_DOMAIN + ".com"
-//         }
-//     }
-
-//     const args = JSON.stringify(queryString)
-
-//     try {
-//         let message = await query.main(req.userName, req.orgName, 'CommonQuery', CHAINCODE_NAME, CHANNEL_NAME, args);
-//         message = JSON.parse(message.toString());
-
-//         message.forEach(elem => {
-//             elem['Record'] = JSON.parse(elem['Record'])
-//         })
-
-//         return res.json(getMessage(true, message));
-//     }
-//     catch (e) {
-//         generateError(e, next);
-//     }
-// });
 
 module.exports = router;

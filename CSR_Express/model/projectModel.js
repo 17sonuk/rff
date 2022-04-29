@@ -1,4 +1,4 @@
-const { projectModel } = require('./models');
+const { projectModel, saveprojectModel } = require('./models');
 const messages = require('../loggers/messages');
 const projectModelObj = {}
 
@@ -87,7 +87,7 @@ projectModelObj.deleteProjectById = (projectId) => {
 projectModelObj.updateProjectForApproval = async (projectId, projectObj) => {
     try {
         await projectModel.updateOne({ projectId: projectId }, { $set: projectObj });
-        return { success: true, message: messages.success.PROJECT_APPROVAL}
+        return { success: true, message: messages.success.PROJECT_APPROVAL }
     }
     catch (error) {
         throw error;
@@ -156,5 +156,48 @@ projectModelObj.getProjectsByCommunity = (communityId) => {
         return data
     })
 }
+
+//save project
+projectModelObj.saveProject = (projectData) => {
+    return saveprojectModel.find({ projectId: projectData.projectId }).then(p => {
+        if (p.length > 0) {
+            return saveprojectModel.updateOne({ projectId: projectData.projectId }, { $set: projectData }).then(data => {
+                console.log("data from mongo after update", data);
+                if (data) {
+                    return data;
+                } else {
+                    return null
+                }
+            })
+        } else {
+            return saveprojectModel.create(projectData).then(data => {
+                console.log("data from mongo after save", data);
+                if (data) {
+                    return data
+                } else {
+                    return null
+                }
+            })
+        }
+    })
+}
+// get saved project
+projectModelObj.getsavedProject = (projectData) => {
+    console.log("input data ", projectData);
+    return saveprojectModel.find({ orgName: projectData.orgName }).then(p => {
+        //console.log("fetching  datat************",p);
+        return p;
+    })
+}
+
+// delete saved projects
+projectModelObj.deleteSavedProject = (projectData) => {
+    console.log("project data is ****************", projectData);
+    return saveprojectModel.deleteOne({ projectId: projectData.projectId }).then(response => {
+        console.log("deleting data from save project schema", response);
+        return response;
+    })
+}
+
 
 module.exports = projectModelObj;

@@ -63,7 +63,7 @@ func (s *SmartContract) RequestTokens(ctx contractapi.TransactionContextInterfac
 	}
 
 	fromAddress := commonName
-	toAddress := "ca." + creditsauthority + "." + domain
+	toAddress := ca + "." + creditsauthority + "." + domain
 	bankTxId := args[1]
 	paymentStatus := args[2]
 	comments := args[3]
@@ -216,7 +216,7 @@ func (s *SmartContract) AssignTokens(ctx contractapi.TransactionContextInterface
 	ctx.GetStub().PutState(bankTxId, tokenReqBytes)
 
 	//save a transaction
-	err = createTransaction(ctx, "ca."+creditsauthority+"."+domain, tokenRequest.From, tokenRequest.Qty, date, "AssignToken", bankTxId, txId, -1)
+	err = createTransaction(ctx, ca+"."+creditsauthority+"."+domain, tokenRequest.From, tokenRequest.Qty, date, "AssignToken", bankTxId, txId, -1)
 	if err != nil {
 		return false, fmt.Errorf("Failed to add a Tx: " + err.Error())
 	}
@@ -290,7 +290,7 @@ func (s *SmartContract) RejectTokens(ctx contractapi.TransactionContextInterface
 	tokenRequestAsBytes, _ = json.Marshal(tokenRequest)
 	ctx.GetStub().PutState(bankTxId, tokenRequestAsBytes)
 
-	err = createTransaction(ctx, "ca."+creditsauthority+"."+domain, tokenRequest.From, tokenRequest.Qty, date, "TokenReject", bankTxId, txId, -1)
+	err = createTransaction(ctx, ca+"."+creditsauthority+"."+domain, tokenRequest.From, tokenRequest.Qty, date, "TokenReject", bankTxId, txId, -1)
 	if err != nil {
 		return false, fmt.Errorf("Failed to add a Tx: " + err.Error())
 	}

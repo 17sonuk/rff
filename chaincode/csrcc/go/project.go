@@ -235,7 +235,7 @@ func (s *SmartContract) CreateProject(ctx contractapi.TransactionContextInterfac
 
 	eventPayload := "A new project '" + projectObj.ProjectName + "' is waiting for your approval."
 
-	notification := &Notification{TxId: txId, Description: eventPayload, Users: []string{"ca." + creditsauthority + "." + domain}}
+	notification := &Notification{TxId: txId, Description: eventPayload, Users: []string{ca + "." + creditsauthority + "." + domain}}
 	notificationtAsBytes, err := json.Marshal(notification)
 	ctx.GetStub().SetEvent("Notification", notificationtAsBytes)
 
@@ -730,7 +730,7 @@ func (s *SmartContract) UpdateProject(ctx contractapi.TransactionContextInterfac
 
 	notification := &Notification{TxId: txId, Description: eventPayload, Users: tmpList}
 	if state == "Seeking Validation" {
-		notification.Users = []string{"ca." + creditsauthority + "." + domain}
+		notification.Users = []string{ca + "." + creditsauthority + "." + domain}
 		eventPayload = "Your validation is requested for the project '" + projectState.ProjectName + "'"
 		notification.Description = eventPayload
 	}

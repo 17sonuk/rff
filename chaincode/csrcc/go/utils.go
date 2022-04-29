@@ -139,7 +139,7 @@ func (s *SmartContract) AddCorporateEmail(ctx contractapi.TransactionContextInte
 	mspId, commonName, _ := getTxCreatorInfo(ctx, creator)
 	InfoLogger.Printf("current logged in user:", commonName, "with mspId:", mspId)
 
-	if mspId != CreditsAuthorityMSP || !strings.HasPrefix(commonName, "ca") {
+	if mspId != CreditsAuthorityMSP || !strings.HasPrefix(commonName, ca) {
 		InfoLogger.Printf("only creditsauthority can initiate addCorporateEmail")
 		return false, fmt.Errorf("only creditsauthority can initiate addCorporateEmail")
 	}

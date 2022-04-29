@@ -1,7 +1,7 @@
 const CryptoJS = require('crypto-js');
 const mongoError = require('./mongoError')
 const logger = require('../loggers/logger');
-const { notificationModel, orgModel, txDescriptionModel } = require('./models');
+const { notificationModel, orgModel, txDescriptionModel, donorModel } = require('./models');
 const messages = require('../loggers/messages');
 const userModel = {}
 
@@ -55,6 +55,39 @@ userModel.deleteOne = async (filter) => {
     }
 }
 
+// // onboarding of user
+// userModel.registerUser = async (obj) => {
+//     let criteria = [{ userName: obj.userName }, { email: obj.email }]
+//     try {
+//         let user = await orgModel.find({ $or: criteria })
+//         if (user.length > 0) {
+//             let message = 'Already used. Please try with other ';
+//             if (user[0].email == obj.email) {
+//                 message += 'email, ';
+//             }
+//             if (user[0].userName == obj.userName) {
+//                 message += 'userName, ';
+//             }
+//             message = message.slice(0, -2);
+//             return { success: false, message };
+//         } else {
+//             try {
+//                 console.log('mongo user')
+//                 let result = await orgModel.create(obj)
+//                 if (result) {
+//                     return { success: true, message: messages.success.REGISTER_USER };
+//                 } else {
+//                     return null
+//                 }
+//             } catch (createError) {
+//                 return mongoError(createError)
+//             }
+//         }
+//     } catch (findError) {
+//         return mongoError(findError)
+//     }
+// }
+
 
 // onboarding of user
 userModel.registerUser = async (obj) => {
@@ -63,6 +96,29 @@ userModel.registerUser = async (obj) => {
         let user = await orgModel.find({ $or: criteria })
         if (user.length > 0) {
             let message = 'Already used. Please try with other ';
+            if (user[0].active === false && user[0].email === obj.email) {
+                obj["active"] = true
+                if (user[0].userName === obj.userName) {
+                    await orgModel.updateOne({ userName: user[0].userName }, { $set: obj })
+                    return { success: true, message: "active" }
+                } else {
+                    // userService.sendUserNameEmail(req.body.email,data[0].userName);
+                    return { success: true, message: "emailUsername",userName:user[0].userName };
+                    // Please use the userName emailed to your email account
+                    // // let result = await orgModel.create(obj)
+                    // let data = await orgModel.find({ userName: obj.userName })
+                    // if (data.length > 0) {
+                    //     return { success: false, message: message };
+                    // }
+                    // let result = await orgModel.updateOne({ email: obj.email }, { $set: obj })
+                    // if (result) {
+                    //     return { success: true, message: messages.success.REGISTER_USER };
+                    // } else {
+                    //     return null
+                    // }
+                    // // return { success: false, message: message }
+                }
+            }
             if (user[0].email == obj.email) {
                 message += 'email, ';
             }
@@ -168,7 +224,33 @@ userModel.resetUserStatus = (userName) => {
         })
 }
 
-// reject users
+// delete users
+userModel.deleteUser = (userName, mail) => {
+    return orgModel.updateOne({ userName: userName }, { $set: { active: false } }).then(data => {
+        return donorModel.deleteOne({ email: mail }).then(data => {
+            if (data) {
+                return data
+            } else {
+                return null
+            }
+        })
+
+    })
+}
+
+// deactivate users
+userModel.deActivateUser = (userName) => {
+    return orgModel.updateOne({ userName: userName }, { $set: { active: false } }).then(data => {
+        if (data) {
+            return data
+        } else {
+            return null
+        }
+
+    })
+}
+
+// delete users
 userModel.rejectUser = (userName) => {
     return orgModel.deleteOne({ userName: userName }).then(data => {
         if (data) {
@@ -271,5 +353,25 @@ userModel.updateUserProfile = (userN, profileData) => {
         throw err
     })
 }
+
+userModel.updateEmail = (userN, oldEmail, updateData) => {
+    console.log(updateData)
+    return donorModel.updateOne({ email: oldEmail }, { $set: { email: updateData.newEmail } }).then((data) => {
+        // return data;
+        return orgModel.updateOne({ userName: userN }, { $set: { email: updateData.newEmail } }).then((data) => {
+            return data;
+        }).catch((error) => {
+            let err = new Error(messages.error.BAD_CONNECTION)
+            err.status = 500
+            throw err
+        })
+    }).catch((error) => {
+        let err = new Error(messages.error.BAD_CONNECTION)
+        err.status = 500
+        throw err
+    })
+
+}
+
 
 module.exports = userModel;

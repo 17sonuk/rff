@@ -102,7 +102,7 @@ func (s *SmartContract) RedeemRequest(ctx contractapi.TransactionContextInterfac
 	date, _ := strconv.Atoi(args[2])
 	txId := args[3]
 	from := commonName
-	to := "ca." + creditsauthority + "." + domain
+	to := ca + "." + creditsauthority + "." + domain
 
 	//check if the redeemId incoming is already used
 	getUuidAsBytes, _ := ctx.GetStub().GetState(redeemId)

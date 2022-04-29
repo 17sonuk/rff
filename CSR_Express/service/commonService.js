@@ -133,7 +133,7 @@ commonService.sendEmailToDonor = async (email, name, amount, projectId, address)
         throw err;
     }
 
-    let htmlBody = await donorEmailTemplate.donorEmail(name, amount, projectDetails.projectName, 'Rainforest Blockchain Platform', moment().format('MMMM Do YYYY'), address)
+    let htmlBody = await donorEmailTemplate.donorEmail(name, amount, projectDetails.projectName, moment().format('MMMM Do YYYY'), address)
     transporter.verify().then(() => {
         transporter.sendMail({
             // from: '"GreenLink - RFUS" <rainforest.csr@gmail.com', // sender address
@@ -149,12 +149,12 @@ commonService.sendEmailToDonor = async (email, name, amount, projectId, address)
 
 commonService.sendEmail = (email, name, amount, projectId, address) => {
     commonService.sendEmailToDonor(email, name, amount, projectId, address)
-    .then((data) => {
-        logger.debug('email sent to donor')
-    })
-    .catch(err => {
-        generateError(err, next, 500, 'Failed to send email to donor');
-    })
+        .then((data) => {
+            logger.debug('email sent to donor')
+        })
+        .catch(err => {
+            generateError(err, next, 500, 'Failed to send email to donor');
+        })
 }
 
 commonService.projectInitiation = async (projectId, username, orgname) => {
@@ -317,6 +317,11 @@ commonService.MilestoneEmail = async (projectId, phaseNumber, username, orgname)
             if (donorList.length > 0) {
                 let projectData = await mongoProjectService.getProjectById(projectId)
                 let desc1 = projectData.phases[phaseNumber].description
+                let desc2 = ''
+                const nextphase=parseInt(phaseNumber)+parseInt(1)
+                if (projectData.phases[nextphase]) {
+                    desc2 = projectData.phases[nextphase].description
+                }
                 for (let i = 0; i < donorList.length; i++) {
 
                     let name = donorList[i].firstName
@@ -325,7 +330,7 @@ commonService.MilestoneEmail = async (projectId, phaseNumber, username, orgname)
                     }
                     let amount = message['Record'].phases[phaseNumber]['qty'] - message['Record'].phases[phaseNumber]['outstandingQty']
 
-                    let htmlBody = await MilestoneEmailTemplate.milestoneEmail(name, message['Record']['projectName'], amount, projectId, desc1)
+                    let htmlBody = await MilestoneEmailTemplate.milestoneEmail(name, message['Record']['projectName'], amount, projectId, desc1, desc2)
 
                     transporter.verify().then((data) => {
                         transporter.sendMail({

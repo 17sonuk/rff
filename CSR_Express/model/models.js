@@ -122,7 +122,9 @@ const orgSchema = new Schema({
     website: { type: String, maxLength: [50, 'Website name cannot exceed 50 characters'] },
     phone: [phoneSchema],
     paymentDetails: paymentSchema,
-    seen: { type: Boolean, default: false }
+    seen: { type: Boolean, default: false },
+    hide: { type: Boolean, default: false },
+    active: { type: Boolean, default: true }
 }, { collection: "OrganisationProfile" })
 
 orgSchema.index({ username: 1, email: 1 }, { unique: true });
@@ -168,6 +170,54 @@ const countrySchema = new Schema({
     states: [stateSchema],
 }, { collection: "Country" })
 
+
+//save project
+const savephaseSchema = new Schema({
+    phaseName: { type: String, maxLength: 200 },
+    description: { type: String, maxLength: 200 },
+    startDate: { type : Date },
+    endDate: { type : Date },
+    qty : { type : Number },
+    validationCriteria: { type : [String] },
+})
+const saveprojectSchema = new Schema({
+    projectId: { type: String, unique: true },
+    projectName: { type: String, maxLength: 50 },
+    projectType: { type: String, maxLength: 50 },
+    contributorsList: [String],
+    ngo: { type: String },
+    place: { type: String, maxLength: 50 },
+    projectSummary: { type: String, maxLength: 200 },
+    description: { type: String, maxLength: 2500 },
+
+    // 1) Who benefits from this project?
+    question1: { type: String, maxLength: 500 },
+
+    // 2) What environmental challenges are faced by the targeted population and how can we help them?
+    question2: { type: String, maxLength: 500 },
+
+    // 3) What activities will be conducted under this project?
+    question3: { type: String, maxLength: 500 },
+
+    // 4) What are the expected results from this project?
+    question4: { type: String,  maxLength: 500 },
+
+    // 5) What evidence will be submitted to verify the expected results?
+    question5: { type: String,  maxLength: 500 },
+
+    // 6) How does the community plan to reinvest the proceeds from this project?
+    question6: { type: String, maxLength: 500 },
+
+    // 7) Comments on the timeline (if any) (optional field)
+    question7: { type: String, maxLength: 500 },
+
+    images: { type: [String] },
+    phases: { type: [savephaseSchema] },
+    communities: { type: [String] },
+    orgName: { type: String, maxLength: 50 }
+}, { collection: "SaveProject" })
+
+
 module.exports = {
     'notificationModel': models['Notification'] || model('Notification', notificationSchema),
     'orgModel': models['OrganisationProfile'] || model('OrganisationProfile', orgSchema),
@@ -176,5 +226,6 @@ module.exports = {
     'fileModel': models['File'] || model('File', fileDataSchema),
     'communityModel': models['Community'] || model('Community', communitySchema),
     'donorModel': models['Donor'] || model('Donor', donorSchema),
-    'countryModel': models['Country'] || model('Country', countrySchema)
+    'countryModel': models['Country'] || model('Country', countrySchema),
+    'saveprojectModel': models['SaveProject'] || model('SaveProject', saveprojectSchema)
 };

@@ -1,5 +1,5 @@
 const messages = {
-	error : {
+	error: {
 		//userservice
 		DB_CONNECT: 'Database connection issue! Please report',
 		BAD_CONNECTION: 'Bad Connection',
@@ -13,7 +13,7 @@ const messages = {
 		INVALID_USER_NAME: 'User name is missing/invalid',
 		USER_NAME_LENGTH: 'User name cannot exceed 50 characters',
 		INVALID_DONOR_TYPE: 'Donor type is missing/invalid',
-        INVALID_COMPANY_NAME: 'Company/Foundation/Fund Name is missing/invalid',
+		INVALID_COMPANY_NAME: 'Company/Foundation/Fund Name is missing/invalid',
 		INVALID_ADDRESS: 'Address data is missing/invalid',
 		INVALID_BANK_ADDRESS: 'Bank address is missing/invalid',
 		MISSING_PAYMENT_DETAILS: 'Payment details are missing',
@@ -54,7 +54,7 @@ const messages = {
 		NO_DATA: 'No data found',
 		DONOR_EXIST: 'Donor already exists',
 		MONGO_ERROR: 'Failed to connect to mongo DB',
-		
+
 		//user
 		FAILED_REGISTER_USER: 'Couldn\'t register user in blockchain! Please report',
 
@@ -78,7 +78,7 @@ const messages = {
 		SEND_EMAIL_ERROR: 'Failed to send email to donor'
 	},
 
-	success : {
+	success: {
 		//user
 		NOTIFICATION_CREATED: 'Notification is created in DB',
 		TRANSACTION_DESCRIPTION: 'Transaction description is created in DB',
@@ -110,7 +110,9 @@ const messages = {
 		ABANDON_PROJECT: 'Abandoned project successfully',
 		VALIDATE_PHASE: 'Phase is validated successfully',
 		INVOKE_DOCUMENT_HASH: 'Successfully invoked Add Document Hash',
-		PROJECT_INITIATED: 'Project has been initiated and donors have been notified'
+		PROJECT_INITIATED: 'Project has been initiated and donors have been notified',
+		//save project
+		PROJECT_UPDATE: 'Project updated successfully'
 
 	}
 }

@@ -164,4 +164,55 @@ projectService.getProjectsByCommunity = (communityId) => {
     })
 }
 
+
+//save project
+
+projectService.saveProject = (userName, project) => {
+    return userModel.getNgoOrgName(userName)
+        .then(data => {
+            project.orgName = data;
+            //console.log("data storing in mongo ",project);
+            return projectModel.saveProject(project).then(projectData => {
+                //console.log("mongo **********",projectData);
+                if (projectData && projectData.error === true) {
+                    return { success: false, message: projectData.message };
+                }
+                else if (!projectData) {
+                    let err = new Error(messages.error.BAD_CONNECTION)
+                    err.status = 500
+                    throw err
+                }
+                else {
+                    return { success: true, message: messages.success.PROJECT_CREATED, projectId: project.projectId };
+                }
+            })
+        })
+}
+// fetch drafts projects
+projectService.getsavedProject = (userName, data) => {
+    return projectModel.getsavedProject(data).then(response => {
+        if (response) {
+            return response;
+        } else {
+            let err = new Error(messages.error.NO_RECORDS)
+            err.status = 500
+            throw err
+        }
+    })
+}
+
+// delete drafts project
+projectService.deleteSavedProject = (userName, data) => {
+    return projectModel.deleteSavedProject(data).then(response => {
+        if (response) {
+            return response
+        } else {
+            let err = new Error(message.error.No_RECORDS);
+            err.status = 500
+            throw err
+        }
+    })
+}
+
+
 module.exports = projectService;

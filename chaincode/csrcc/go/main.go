@@ -43,6 +43,7 @@ const ngo = "org3"
 const creditsauthority = "org1"
 const domain = "example.com"
 const guest = "guest"
+const ca = "ca"
 
 func main() {
 	//initialize custom loggers
