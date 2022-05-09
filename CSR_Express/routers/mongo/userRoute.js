@@ -36,7 +36,8 @@ router.post('/onboard', (req, res, next) => {
                 return res.json(getMessage(true, messages.success.REGISTER_USER));
             }else if(data.message === "emailUsername"){
                 userService.sendUserNameEmail(req.body.email,data.userName);
-                res.json({ success: false, message: "Please use the userName emailed to your email account"})
+                // res.json({ success: false, message: "Please use the userName emailed to your email account"})
+                res.json({ success: false, message: "This username was previously deactivated. You will receive an email shortly with the username associated with your email account. Please try registering again using the associated username."})
             }
             return registerUser(req.body.userName, req.body['role'].toLowerCase())
                 .then((response) => {

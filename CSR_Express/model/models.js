@@ -16,25 +16,25 @@ const projectSchema = new Schema({
     description: { type: String, maxLength: 2500 },
 
     // 1) Who benefits from this project?
-    question1: { type: String, required: true, maxLength: 500 },
+    question1: { type: String, required: true, maxLength: 1000 },
 
     // 2) What environmental challenges are faced by the targeted population and how can we help them?
-    question2: { type: String, required: true, maxLength: 500 },
+    question2: { type: String, required: true, maxLength: 1000 },
 
     // 3) What activities will be conducted under this project?
-    question3: { type: String, required: true, maxLength: 500 },
+    question3: { type: String, required: true, maxLength: 1000 },
 
     // 4) What are the expected results from this project?
-    question4: { type: String, required: true, maxLength: 500 },
+    question4: { type: String, required: true, maxLength: 1000 },
 
     // 5) What evidence will be submitted to verify the expected results?
-    question5: { type: String, required: true, maxLength: 500 },
+    question5: { type: String, required: true, maxLength: 1000 },
 
     // 6) How does the community plan to reinvest the proceeds from this project?
-    question6: { type: String, required: true, maxLength: 500 },
+    question6: { type: String, required: true, maxLength: 1000 },
 
     // 7) Comments on the timeline (if any) (optional field)
-    question7: { type: String, maxLength: 500 },
+    question7: { type: String, maxLength: 1000 },
 
     images: { type: [String], validate: [imageLimit, 'max 3 images allowed!'] },
     phases: { type: [phaseSchema], validate: [phaseLimit, 'Number of phases should be greater than or equal to 1'] },
@@ -191,25 +191,25 @@ const saveprojectSchema = new Schema({
     description: { type: String, maxLength: 2500 },
 
     // 1) Who benefits from this project?
-    question1: { type: String, maxLength: 500 },
+    question1: { type: String, maxLength: 1000 },
 
     // 2) What environmental challenges are faced by the targeted population and how can we help them?
-    question2: { type: String, maxLength: 500 },
+    question2: { type: String, maxLength: 1000 },
 
     // 3) What activities will be conducted under this project?
-    question3: { type: String, maxLength: 500 },
+    question3: { type: String, maxLength: 1000 },
 
     // 4) What are the expected results from this project?
-    question4: { type: String,  maxLength: 500 },
+    question4: { type: String,  maxLength: 1000 },
 
     // 5) What evidence will be submitted to verify the expected results?
-    question5: { type: String,  maxLength: 500 },
+    question5: { type: String,  maxLength: 1000 },
 
     // 6) How does the community plan to reinvest the proceeds from this project?
-    question6: { type: String, maxLength: 500 },
+    question6: { type: String, maxLength: 1000 },
 
     // 7) Comments on the timeline (if any) (optional field)
-    question7: { type: String, maxLength: 500 },
+    question7: { type: String, maxLength: 1000 },
 
     images: { type: [String] },
     phases: { type: [savephaseSchema] },
