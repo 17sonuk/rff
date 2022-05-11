@@ -161,13 +161,35 @@ router.get('/request/all', async (req, res, next) => {
         return res.json(fieldErrorMessage('\'status\''));
     }
 
-    var queryString = {
-        "selector": {
-            "docType": "Redeem",
-            "status": status
-        },
-        "sort": [{ "date": "asc" }]
+    // var queryString = {
+    //     "selector": {
+    //         "docType": "Redeem",
+    //         "status": status
+    //     },
+    //     "sort": [{ "date": "asc" }]
+    // }
+
+    if (status.includes("[")) {
+        let statusarr = []
+        statusarr = JSON.parse(status);
+        var queryString = {
+            "selector": {
+                "docType": "Redeem",
+                "status": { $in: statusarr }
+            },
+            "sort": [{ "date": "asc" }]
+        }
+    } else {
+
+        var queryString = {
+            "selector": {
+                "docType": "Redeem",
+                "status": status
+            },
+            "sort": [{ "date": "asc" }]
+        }
     }
+
 
     if (projectId) {
         queryString['selector']['projectId'] = projectId;
