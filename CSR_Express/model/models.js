@@ -14,7 +14,8 @@ const projectSchema = new Schema({
     place: { type: String, maxLength: 50 },
     projectSummary: { type: String, required: true, maxLength: 200 },
     description: { type: String, maxLength: 2500 },
-
+    areaUrl: { type: String },
+    areaUrl1: { type: String },
     // 1) Who benefits from this project?
     question1: { type: String, required: true, maxLength: 1000 },
 
@@ -175,10 +176,10 @@ const countrySchema = new Schema({
 const savephaseSchema = new Schema({
     phaseName: { type: String, maxLength: 200 },
     description: { type: String, maxLength: 200 },
-    startDate: { type : Date },
-    endDate: { type : Date },
-    qty : { type : Number },
-    validationCriteria: { type : [String] },
+    startDate: { type: Date },
+    endDate: { type: Date },
+    qty: { type: Number },
+    validationCriteria: { type: [String] },
 })
 const saveprojectSchema = new Schema({
     projectId: { type: String, unique: true },
@@ -189,7 +190,8 @@ const saveprojectSchema = new Schema({
     place: { type: String, maxLength: 50 },
     projectSummary: { type: String, maxLength: 200 },
     description: { type: String, maxLength: 2500 },
-
+    areaUrl: { type: String },
+    areaUrl1: { type: String },
     // 1) Who benefits from this project?
     question1: { type: String, maxLength: 1000 },
 
@@ -200,10 +202,10 @@ const saveprojectSchema = new Schema({
     question3: { type: String, maxLength: 1000 },
 
     // 4) What are the expected results from this project?
-    question4: { type: String,  maxLength: 1000 },
+    question4: { type: String, maxLength: 1000 },
 
     // 5) What evidence will be submitted to verify the expected results?
-    question5: { type: String,  maxLength: 1000 },
+    question5: { type: String, maxLength: 1000 },
 
     // 6) How does the community plan to reinvest the proceeds from this project?
     question6: { type: String, maxLength: 1000 },
