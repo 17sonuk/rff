@@ -95,7 +95,7 @@ userModel.registerUser = async (obj) => {
     try {
         let user = await orgModel.find({ $or: criteria })
         if (user.length > 0) {
-            let message = 'Already used. Please try with other ';
+            let message = 'Username/Email is already in use. Please try again with another username/email.';
             if (user[0].active === false && user[0].email === obj.email) {
                 obj["active"] = true
                 if (user[0].userName === obj.userName) {
