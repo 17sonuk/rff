@@ -79,3 +79,6 @@ test-network/organizations/fabric-ca/creditsauthority/fabric-ca-server.db
 
 CSR_Express/.nyc_output
 CSR_Express/.env
+
+CSR_Express\.scannerwork
+.scannerwork
