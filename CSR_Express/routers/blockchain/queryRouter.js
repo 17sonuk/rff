@@ -98,7 +98,7 @@ router.get('/getRecord', async function (req, res, next) {
                 message = message[0]
                 message['Record']['ngo'] = splitOrgName(message['Record']['ngo'])
                 // message['Record']['totalReceived'] = 0;
-                message['Record']['totalReceived'] = message['Record'].totalReceived;
+                // message['Record']['totalReceived'] = message['Record'].totalReceived;
                 let fundReceived = 0
 
                 for (let f = 0; f < message['Record'].phases.length; f++) {
