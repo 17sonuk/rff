@@ -11,7 +11,7 @@ const messages = require('../loggers/messages');
 const userService = {};
 const { v4: uuid } = require('uuid');
 require('dotenv').config();
-const { SMTP_EMAIL, APP_PASSWORD, PLATFORM_NAME, RFF_EMAIL_SENDER_FORMAT } = process.env;
+const { SMTP_EMAIL, APP_PASSWORD, PLATFORM_NAME, RFF_EMAIL_SENDER_FORMAT, AUTH0_DOMAIN, CLIENT_ID, CLIENT_SECRET } = process.env;
 const nodemailer = require('nodemailer');
 const request = require("request");
 const axios = require("axios");
@@ -502,12 +502,12 @@ userService.updateEmail = function (userName, oldEmail, updateData, results) {
     // update in auth0
     var options = {
         method: 'POST',
-        url: 'https://dev-28fiz9hg.us.auth0.com/oauth/token',
+        url: `https://${AUTH0_DOMAIN}/oauth/token`,
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-            "client_id": "6EjK37JFY0u1hE2v1qdGIPKjj9yaw8kC",
-            "client_secret": "feJLbX0j7hzUsmqMePhePiKNHufKfMcwiaPrbgSn2a33HSaz_CpkJNyHz1xP28WT",
-            "audience": "https://dev-28fiz9hg.us.auth0.com/api/v2/",
+            "client_id": CLIENT_ID,
+            "client_secret": CLIENT_SECRET,
+            "audience": `https://${AUTH0_DOMAIN}/api/v2/`,
             "grant_type": "client_credentials"
         })
     };
@@ -518,7 +518,7 @@ userService.updateEmail = function (userName, oldEmail, updateData, results) {
         let token = JSON.parse(body).access_token;
         const options1 = {
             method: "GET",
-            url: "https://dev-28fiz9hg.us.auth0.com/api/v2/users-by-email?email=" + encodeURIComponent(oldEmail),
+            url: `https://${AUTH0_DOMAIN}/api/v2/users-by-email?email=` + encodeURIComponent(oldEmail),
             headers: { "authorization": "Bearer " + token },
         };
         axios(options1).then(response => {
@@ -526,7 +526,7 @@ userService.updateEmail = function (userName, oldEmail, updateData, results) {
                 return { success: false, data: "User does not exist with email:" + oldEmail };
             }
             let userData = response.data[0];
-            let url = "https://dev-28fiz9hg.us.auth0.com/api/v2/users/" + encodeURIComponent(userData.user_id);
+            let url = `https://${AUTH0_DOMAIN}/api/v2/users/` + encodeURIComponent(userData.user_id);
             let body = { email: updateData.newEmail, name: updateData.newEmail }
             axios.patch(url, body, {
                 headers: {
@@ -571,12 +571,12 @@ userService.deActivateUser = (userName, email) => {
 
             var options = {
                 method: 'POST',
-                url: 'https://dev-28fiz9hg.us.auth0.com/oauth/token',
+                url: `https://${AUTH0_DOMAIN}/oauth/token`,
                 headers: { 'content-type': 'application/json' },
                 body: JSON.stringify({
-                    "client_id": "6EjK37JFY0u1hE2v1qdGIPKjj9yaw8kC",
-                    "client_secret": "feJLbX0j7hzUsmqMePhePiKNHufKfMcwiaPrbgSn2a33HSaz_CpkJNyHz1xP28WT",
-                    "audience": "https://dev-28fiz9hg.us.auth0.com/api/v2/",
+                    "client_id": CLIENT_ID,
+                    "client_secret": CLIENT_SECRET,
+                    "audience": `https://${AUTH0_DOMAIN}/api/v2/`,
                     "grant_type": "client_credentials"
                 })
             };
@@ -587,7 +587,7 @@ userService.deActivateUser = (userName, email) => {
                 let token = JSON.parse(body).access_token;
                 const options1 = {
                     method: "GET",
-                    url: "https://dev-28fiz9hg.us.auth0.com/api/v2/users-by-email?email=" + encodeURIComponent(email),
+                    url: `https://${AUTH0_DOMAIN}/api/v2/users-by-email?email=` + encodeURIComponent(email),
                     headers: { "authorization": "Bearer " + token },
                 };
                 axios(options1).then(response => {
@@ -595,7 +595,7 @@ userService.deActivateUser = (userName, email) => {
                         return { success: false, data: "User does not exist with email:" + email };
                     }
                     let userData = response.data[0];
-                    let url = "https://dev-28fiz9hg.us.auth0.com/api/v2/users/" + encodeURIComponent(userData.user_id);
+                    let url = `https://${AUTH0_DOMAIN}/api/v2/users/` + encodeURIComponent(userData.user_id);
                     // let body = { email: updateData.newEmail }
                     axios.delete(url, {
                         headers: {
@@ -649,12 +649,12 @@ userService.deleteUser = (userName, email) => {
 
             var options = {
                 method: 'POST',
-                url: 'https://dev-28fiz9hg.us.auth0.com/oauth/token',
+                url: `https://${AUTH0_DOMAIN}/oauth/token`,
                 headers: { 'content-type': 'application/json' },
                 body: JSON.stringify({
-                    "client_id": "6EjK37JFY0u1hE2v1qdGIPKjj9yaw8kC",
-                    "client_secret": "feJLbX0j7hzUsmqMePhePiKNHufKfMcwiaPrbgSn2a33HSaz_CpkJNyHz1xP28WT",
-                    "audience": "https://dev-28fiz9hg.us.auth0.com/api/v2/",
+                    "client_id": CLIENT_ID,
+                    "client_secret": CLIENT_SECRET,
+                    "audience": `https://${AUTH0_DOMAIN}/api/v2/`,
                     "grant_type": "client_credentials"
                 })
             };
@@ -665,7 +665,7 @@ userService.deleteUser = (userName, email) => {
                 let token = JSON.parse(body).access_token;
                 const options1 = {
                     method: "GET",
-                    url: "https://dev-28fiz9hg.us.auth0.com/api/v2/users-by-email?email=" + encodeURIComponent(email),
+                    url: `https://${AUTH0_DOMAIN}/api/v2/users-by-email?email=` + encodeURIComponent(email),
                     headers: { "authorization": "Bearer " + token },
                 };
                 axios(options1).then(response => {
@@ -673,7 +673,7 @@ userService.deleteUser = (userName, email) => {
                         return { success: false, data: "User does not exist with email:" + email };
                     }
                     let userData = response.data[0];
-                    let url = "https://dev-28fiz9hg.us.auth0.com/api/v2/users/" + encodeURIComponent(userData.user_id);
+                    let url = `https://${AUTH0_DOMAIN}/api/v2/users/` + encodeURIComponent(userData.user_id);
                     // let body = { email: updateData.newEmail }
                     axios.delete(url, {
                         headers: {
