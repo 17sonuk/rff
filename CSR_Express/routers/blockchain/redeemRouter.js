@@ -152,7 +152,7 @@ router.get('/request/all', async (req, res, next) => {
     if (typeof pageSize === 'string' && typeof parseInt(pageSize) !== 'number') {
         return res.json(fieldErrorMessage('\'pageSize\''));
     }
-    let alpha = /^[0-9a-zA-Z]*$/;
+    let alpha = /^[.0-9a-zA-Z_-]*$/;
     if (typeof bookmark === 'string' && !bookmark.match(alpha)) {
         return res.json(fieldErrorMessage('\'bookmark\''));
     }
@@ -260,7 +260,7 @@ router.get('/request/forUserprofile', async (req, res, next) => {
     if (typeof pageSize === 'string' && typeof parseInt(pageSize) !== 'number') {
         return res.json(fieldErrorMessage('\'pageSize\''));
     }
-    let alpha = /^[0-9a-zA-Z]*$/;
+    let alpha = /^[.0-9a-zA-Z_-]*$/;
     if (typeof bookmark === 'string' && !bookmark.match(alpha)) {
         return res.json(fieldErrorMessage('\'bookmark\''));
     }
