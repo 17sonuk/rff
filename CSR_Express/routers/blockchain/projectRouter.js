@@ -170,7 +170,7 @@ router.post('/validate-phase', async (req, res, next) => {
         if (isValid === "true") {
             commonService.MilestoneEmail(projectId, phaseNumber, req.userName, req.orgName)
         }
-        commonService.ProjectCompletionEmail(projectId, req.userName, req.orgName)
+        // commonService.ProjectCompletionEmail(projectId, req.userName, req.orgName)
         return res.json(getMessage(true, messages.success.VALIDATE_PHASE))
     }
     catch (e) {

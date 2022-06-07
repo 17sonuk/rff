@@ -2,7 +2,7 @@ const { PLATFORM_NAME, PLATFORM_HASHTAG, PLATFORM_URL, FEEDBACK_EMAIL } = requir
 
 module.exports = {
     projectCompleteEmail: (name, projectName, amount, projectId) => {
-        let url = PLATFORM_URL + "/projectDetails?projectid=" + projectId
+        let url = PLATFORM_URL + "/projectDetails?projectId=" + projectId
         return `<!DOCTYPE html>
         <html style="height:100%;">
         <head>

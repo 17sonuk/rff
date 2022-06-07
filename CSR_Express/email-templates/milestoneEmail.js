@@ -2,7 +2,7 @@ const { PLATFORM_NAME, PLATFORM_HASHTAG, PLATFORM_URL, FEEDBACK_EMAIL } = requir
 
 module.exports = {
     milestoneEmail: (name, projectName, amount, projectId, desc1, desc2) => {
-        let url = PLATFORM_URL + "/projectDetails?projectid=" + projectId
+        let url = PLATFORM_URL + "/projectDetails?projectId=" + projectId
         if (desc2 !== '') {
             return `<!DOCTYPE html>
         <html style="height:100%;">

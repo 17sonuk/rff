@@ -127,7 +127,7 @@ fileService.checkFormat = async (fileName, fileData, fileSize, mimeType) => {
 
             if (err) reject(err);
 
-            if (fileSize > 1048576) {
+            if (fileSize > 10485760) {
                 reject(new Error(messages.error.INVALID_FILE));
             }
             if (!validMimeTypes.includes(mimeType)) {
