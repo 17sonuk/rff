@@ -65,8 +65,9 @@ fileService.getFiles = (fileHash) => {
                 reject(err)
             }
 
+            let filename=data.Metadata['fileName']?data.Metadata['fileName']:data.Metadata['filename']
             let getFileResponse = {
-                fileName: data.Metadata['fileName'],
+                fileName: filename,
                 fileData: data['Body'].toString('base64'),
             }
             resolve(getFileResponse)
@@ -127,7 +128,7 @@ fileService.checkFormat = async (fileName, fileData, fileSize, mimeType) => {
 
             if (err) reject(err);
 
-            if (fileSize > 10485760) {
+            if (fileSize > 5242880) {
                 reject(new Error(messages.error.INVALID_FILE));
             }
             if (!validMimeTypes.includes(mimeType)) {

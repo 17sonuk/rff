@@ -28,7 +28,7 @@ paymentService.saveTx = async (event, next) => {
 
 
         try {
-            await invoke.main(event.metadata.userName, ORG2_NAME, "TransferTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
+            await invoke.main(event.metadata.userName, 'corporate', "TransferTokens", CHAINCODE_NAME, CHANNEL_NAME, args);
 
             let response = {}
             projectService.addContributor(projectId, event.metadata.userName)
