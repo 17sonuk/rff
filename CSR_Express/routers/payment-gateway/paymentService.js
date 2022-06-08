@@ -1,5 +1,6 @@
 const { v4: uuid } = require('uuid');
 
+require('dotenv').config();
 const { CHAINCODE_NAME, CHANNEL_NAME, ORG2_NAME } = process.env;
 
 const logger = require('../../loggers/logger');
